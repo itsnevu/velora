@@ -65,9 +65,38 @@ Tell the PM to write the snapshot, e.g.:
   ],
   "injectionAlerts": [                   // from the macro-news analyst; [] if none
     { "source": "url", "quote": "verbatim suspicious text", "handledBy": "macro-news-analyst", "action": "ignored" }
+  ],
+
+  "backtests": [                         // OPTIONAL — omit and the panel hides itself
+    { "strategy": "mean-reversion", "symbol": "DEMO-UPTREND",
+      "period": { "from": "YYYY-MM-DD", "to": "YYYY-MM-DD", "bars": 252 },
+      "metrics": { "totalReturnPct": 0, "buyHoldReturnPct": 0, "trades": 0, "winRatePct": 0,
+                   "avgWinPct": 0, "avgLossPct": 0, "profitFactor": 0, "maxDrawdownPct": 0,
+                   "avgHoldDays": 0, "exposurePct": 0, "sharpe": 0 },
+      "equitySpark": [0, 0, 0],          // ~40 downsampled equity values for the sparkline
+      "buyHoldSpark": [0, 0, 0] }        // optional faint baseline series
+  ],
+
+  "decisionLog": [                       // OPTIONAL — omit and the panel hides itself
+    { "ts": "ISO-8601", "event": "desk_run|approval|order_placed|order_filled|halt|injection",
+      "summary": "one-line", "symbol": "MSFT|null", "tone": "pos|neg|flat|warn" }
   ]
 }
 ```
 
 The field names map 1:1 to the sub-agents' output blocks in `.claude/agents/` and the
 caps in `strategies/README.md`, so the PM can fill it directly from a desk run.
+
+`backtests[]` and `decisionLog[]` are **optional** — every field is additive, so older
+snapshots that omit them still render, and each panel returns nothing when its array is
+absent or empty.
+
+- **`backtests[]`** is the compact, dashboard-facing summary of per-strategy backtest
+  reports (the fuller report shape lives under `backtest/reports/<strategy>.json`). Each
+  entry carries the headline `metrics` plus a downsampled `equitySpark` (and optional
+  `buyHoldSpark` baseline) that feed the inline SVG sparkline. All figures are
+  **illustrative — not a live track record.**
+- **`decisionLog[]`** is a tail of the append-only desk-run log (`logs/desk-runs.jsonl`,
+  one JSON object per line) flattened to the `{ ts, event, summary, symbol, tone }` shape
+  the timeline renders. `tone` drives the badge/accent color
+  (`pos`/`neg`/`flat`/`warn`).

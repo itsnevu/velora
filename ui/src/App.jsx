@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react'
 import {
   AccountHeader, RiskPanel, Positions, Candidates,
   ProposedTrade, ActivityLog, InjectionAlerts, RunControls,
+  Backtests, DecisionTimeline,
 } from './components.jsx'
 
 const POLL_MS = 5000
@@ -62,6 +63,7 @@ export default function App() {
         <div className="col-main">
           <RunControls />
           <ProposedTrade trade={state.proposedTrade} />
+          {state.backtests && <Backtests backtests={state.backtests} />}
           <Candidates candidates={state.candidates} />
           <Positions positions={state.positions} />
           <InjectionAlerts alerts={state.injectionAlerts} />
@@ -69,6 +71,7 @@ export default function App() {
         <aside className="col-side">
           <RiskPanel caps={state.riskCaps} account={state.account} positions={state.positions} />
           <ActivityLog orders={state.recentOrders} />
+          {state.decisionLog && <DecisionTimeline log={state.decisionLog} />}
         </aside>
       </main>
 

@@ -353,3 +353,120 @@ export function InjectionAlerts({ alerts }) {
     </section>
   )
 }
+
+/* ---------- sparkline (dependency-free inline SVG) ---------- */
+
+export function Sparkline({ values, baseline, width = 120, height = 32 }) {
+  const vals = (values || []).filter((n) => n != null && !Number.isNaN(n))
+  if (vals.length < 2) return null
+  const base = (baseline || []).filter((n) => n != null && !Number.isNaN(n))
+  const pad = 2
+  const all = base.length ? vals.concat(base) : vals
+  const min = Math.min(...all)
+  const max = Math.max(...all)
+  const span = max - min || 1
+  const xAt = (i, len) => pad + (i / (len - 1)) * (width - pad * 2)
+  const yAt = (v) => height - pad - ((v - min) / span) * (height - pad * 2)
+  const toPath = (arr) =>
+    arr.map((v, i) => `${i ? 'L' : 'M'}${xAt(i, arr.length).toFixed(1)} ${yAt(v).toFixed(1)}`).join(' ')
+  // green when the series ends at or above where it started, else red
+  const up = vals[vals.length - 1] >= vals[0]
+  return (
+    <svg
+      className={`sparkline ${up ? 'pos' : 'neg'}`}
+      viewBox={`0 0 ${width} ${height}`}
+      width={width}
+      height={height}
+      preserveAspectRatio="none"
+      role="img"
+      aria-hidden="true"
+    >
+      {base.length > 1 && <path className="spark-baseline" d={toPath(base)} fill="none" />}
+      <path className="spark-line" d={toPath(vals)} fill="none" />
+    </svg>
+  )
+}
+
+/* ---------- strategy backtests ---------- */
+
+function BtMetric({ k, v, cls = '', sub }) {
+  return (
+    <div className="bt-metric">
+      <div className="bt-metric-k">{k}</div>
+      <div className={`bt-metric-v ${cls}`}>{v}</div>
+      {sub != null && <div className="bt-metric-sub">{sub}</div>}
+    </div>
+  )
+}
+
+export function Backtests({ backtests }) {
+  if (!backtests || backtests.length === 0) return null
+  return (
+    <section className="panel">
+      <h2>Strategy Backtests <span className="count">{backtests.length}</span></h2>
+      <div className="bt-cards">
+        {(backtests || []).map((b, i) => {
+          const m = b.metrics || {}
+          const beat = (m.totalReturnPct ?? 0) - (m.buyHoldReturnPct ?? 0)
+          const pf = m.profitFactor
+          return (
+            <article className="bt-card" key={`${b.strategy}-${b.symbol}-${i}`}>
+              <div className="bt-head">
+                <span className="tag">{b.strategy}</span>
+                <span className="sym">{b.symbol}</span>
+                <span className="bt-period dim">
+                  {b.period?.from} → {b.period?.to}
+                  {b.period?.bars != null && <> · {num(b.period.bars)} bars</>}
+                </span>
+                <Sparkline values={b.equitySpark} baseline={b.buyHoldSpark} />
+              </div>
+              <div className="bt-metrics">
+                <BtMetric
+                  k="Total return"
+                  v={pct(m.totalReturnPct)}
+                  cls={signClass(m.totalReturnPct)}
+                  sub={`vs B&H ${pct(m.buyHoldReturnPct)} (${beat >= 0 ? '+' : ''}${beat.toFixed(1)})`}
+                />
+                <BtMetric k="Win rate" v={m.winRatePct != null ? `${num(m.winRatePct)}%` : '—'} sub={`${num(m.trades)} trades`} />
+                <BtMetric k="Profit factor" v={num(pf)} cls={pf != null ? (pf >= 1 ? 'pos' : 'neg') : ''} />
+                <BtMetric k="Max drawdown" v={pct(m.maxDrawdownPct)} cls={signClass(m.maxDrawdownPct)} />
+                <BtMetric k="Sharpe" v={num(m.sharpe)} cls={signClass(m.sharpe)} />
+                <BtMetric k="Exposure" v={m.exposurePct != null ? `${num(m.exposurePct)}%` : '—'} sub={m.avgHoldDays != null ? `${num(m.avgHoldDays)}d avg hold` : null} />
+              </div>
+              <div className="bt-cap">Illustrative backtest — not a track record.</div>
+            </article>
+          )
+        })}
+      </div>
+    </section>
+  )
+}
+
+/* ---------- decision timeline ---------- */
+
+export function DecisionTimeline({ log }) {
+  if (!log || log.length === 0) return null
+  const tones = { pos: 'pos', neg: 'neg', flat: 'flat', warn: 'warn' }
+  return (
+    <section className="panel">
+      <h2>Decision Log <span className="count">{log.length}</span></h2>
+      <ul className="timeline">
+        {(log || []).map((d, i) => {
+          const tone = tones[d.tone] || 'flat'
+          return (
+            <li className={`tl-item tone-${tone}`} key={i}>
+              <div className="tl-top">
+                <span className={`badge tone-${tone}`}>{(d.event || '—').replace(/_/g, ' ')}</span>
+                <span className="tl-time dim">{timeAgo(d.ts)}</span>
+              </div>
+              <div className="tl-body">
+                {d.symbol && <span className="chip flat tl-sym">{d.symbol}</span>}
+                <span className="tl-summary">{d.summary}</span>
+              </div>
+            </li>
+          )
+        })}
+      </ul>
+    </section>
+  )
+}
