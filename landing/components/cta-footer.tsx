@@ -1,17 +1,23 @@
-import { BrandMark } from "@/components/ui/pixel-art";
+import { VeloraLogo } from "@/components/ui/velora-logo";
+import { SquaresBg } from "@/components/ui/squares-bg";
+import { Magnetic } from "@/components/ui/magnetic";
+import { ScrambleHover } from "@/components/ui/scramble-hover";
+import { GITHUB_URL } from "@/lib/links";
 
-const FOOT_LINKS = [
+const FOOT_LINKS: { label: string; href: string; external?: boolean }[] = [
   { label: "THE DESK", href: "#desk" },
   { label: "HOW IT WORKS", href: "#flow" },
   { label: "THE TEAM", href: "#team" },
   { label: "GUARDRAILS", href: "#safety" },
-  { label: "ROADMAP", href: "#roadmap" },
+  { label: "DOCS", href: "/docs" },
+  { label: "GITHUB", href: GITHUB_URL, external: true },
 ];
 
 export function CtaFooter() {
   return (
     <>
       <section className="sec dark cta-band" id="access" style={{ borderBottom: "3px solid var(--ink)" }}>
+        <SquaresBg tone="lime" />
         <div className="wrap">
           <span className="eyebrow">// 04 — ACCESS</span>
           <h2>Open the desk.</h2>
@@ -19,9 +25,11 @@ export function CtaFooter() {
             Talk to the desk in plain language. It researches your watchlist and hands you a preview —
             you decide whether it ever becomes an order.
           </p>
-          <a href="#top" className="btn btn-lime">
-            Request Access ▸
-          </a>
+          <Magnetic>
+            <a href="#top" className="btn btn-lime">
+              <ScrambleHover text="Request Access" /> ▸
+            </a>
+          </Magnetic>
         </div>
       </section>
 
@@ -29,13 +37,13 @@ export function CtaFooter() {
         <div className="wrap">
           <div className="foot-top">
             <a href="#top" className="brand">
-              <BrandMark />
+              <VeloraLogo />
               VELORA
             </a>
             <div className="foot-links">
               {FOOT_LINKS.map((l) => (
-                <a key={l.href} href={l.href}>
-                  {l.label}
+                <a key={l.href} href={l.href} {...(l.external ? { target: "_blank", rel: "noreferrer" } : {})}>
+                  <ScrambleHover text={l.label} />
                 </a>
               ))}
             </div>

@@ -1,4 +1,5 @@
 import { Reveal } from "@/components/ui/reveal";
+import { GlitchText } from "@/components/ui/glitch-text";
 import { CheckPixel, CrossPixel } from "@/components/ui/pixel-art";
 import { COMPARE } from "@/lib/data";
 
@@ -18,24 +19,24 @@ export function WhyDifferent() {
         <Reveal className="compare">
           <div className="col bad">
             <div className="ch">
-              <CrossPixel /> {COMPARE.bad.head}
+              <CrossPixel /> <GlitchText text={COMPARE.bad.head} mode="hover" />
             </div>
-            {COMPARE.bad.rows.map((r) => (
-              <div className="crow" key={r}>
+            {COMPARE.bad.rows.map((r, i) => (
+              <Reveal className="crow hover:bg-[rgba(226,59,59,.08)]" delay={i * 40} key={r}>
                 <CrossPixel />
                 {r}
-              </div>
+              </Reveal>
             ))}
           </div>
           <div className="col good">
             <div className="ch">
-              <CheckPixel /> {COMPARE.good.head}
+              <CheckPixel /> <GlitchText text={COMPARE.good.head} mode="hover" />
             </div>
-            {COMPARE.good.rows.map((r) => (
-              <div className="crow" key={r}>
+            {COMPARE.good.rows.map((r, i) => (
+              <Reveal className="crow hover:bg-[rgba(22,24,13,.05)]" delay={i * 40} key={r}>
                 <CheckPixel />
                 {r}
-              </div>
+              </Reveal>
             ))}
           </div>
         </Reveal>

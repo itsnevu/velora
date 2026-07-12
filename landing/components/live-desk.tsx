@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Candles } from "@/components/candles";
+import { BorderScan } from "@/components/ui/border-scan";
 import { DESK_RUN, type TermTag } from "@/lib/data";
 
 type Line = { tag: string; cls: TermTag | "you"; text: string };
@@ -122,14 +123,15 @@ export function LiveDesk() {
 
         <div className="livedesk">
           {/* terminal */}
-          <div className="term">
+          <div className="term" style={{ position: "relative" }}>
+            <BorderScan color="#e23b3b" size={10} speed={90} />
             <div className="term-bar">
               <span className="term-dot" />
               <span className="term-dot" style={{ background: "var(--warn)" }} />
               <span className="term-dot" style={{ background: "var(--green)" }} />
               <span className="grow">velora@desk — run</span>
             </div>
-            <div className="term-body" ref={bodyRef}>
+            <div className="term-body" ref={bodyRef} data-lenis-prevent>
               {phase === "idle" && lines.length === 0 && (
                 <div className="term-line">
                   <span className="tg cmd">$</span>press RUN DESK to begin

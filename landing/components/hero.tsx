@@ -1,9 +1,18 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import dynamic from "next/dynamic";
 import { PixelBot, PixelHill } from "@/components/ui/pixel-art";
-import { HeroBackdrop } from "@/components/hero-backdrop";
+import { DecryptText } from "@/components/ui/decrypt-text";
+import { GlitchText } from "@/components/ui/glitch-text";
+import { Magnetic } from "@/components/ui/magnetic";
+import { Typewriter } from "@/components/ui/typewriter";
 import { RED, WHITE } from "@/lib/brand";
+
+const HeroScene = dynamic(
+  () => import("@/components/three/hero-scene").then((m) => m.HeroScene),
+  { ssr: false },
+);
 
 /** Hero with cursor-tracking red eyes (ROBIN DROIDS style) + subtle scene parallax. */
 export function Hero() {
@@ -49,7 +58,7 @@ export function Hero() {
 
   return (
     <section className="hero" id="top">
-      <HeroBackdrop />
+      <HeroScene />
       <span className="hud tl" aria-hidden="true" />
       <span className="hud tr" aria-hidden="true" />
       <span className="hud bl" aria-hidden="true" />
@@ -76,21 +85,32 @@ export function Hero() {
           <span className="dot" /> VLR // DESK_01
         </span>
         <h1 className="title">
-          VELORA<span className="dot">.</span>
+          <GlitchText text="VELORA" mode="always" />
+          <span className="dot">.</span>
         </h1>
-        <div className="subtitle">Agentic AI Trading Research Desk</div>
-        <div className="lede">
-          THE DESK NEVER SLEEPS //
-          <br />
-          THE TRIGGER IS ALWAYS YOURS.
+        <DecryptText
+          as="div"
+          className="subtitle"
+          text="Agentic AI Trading Research Desk"
+          delay={150}
+        />
+        <div className="lede" style={{ whiteSpace: "pre-line" }}>
+          <Typewriter
+            text={"THE DESK NEVER SLEEPS //\nTHE TRIGGER IS ALWAYS YOURS."}
+            delay={500}
+          />
         </div>
         <div className="hero-cta">
-          <a href="#access" className="btn btn-primary">
-            Request Access ▸
-          </a>
-          <a href="#flow" className="btn btn-ghost">
-            See The Desk
-          </a>
+          <Magnetic>
+            <a href="#access" className="btn btn-primary">
+              Request Access ▸
+            </a>
+          </Magnetic>
+          <Magnetic>
+            <a href="#flow" className="btn btn-ghost">
+              See The Desk
+            </a>
+          </Magnetic>
         </div>
         <div className="status">
           <span className="live" /> DESK STATUS / RESEARCH-ONLY · HUMAN-IN-THE-LOOP

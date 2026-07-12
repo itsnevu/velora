@@ -342,6 +342,66 @@ section[id] { scroll-margin-top: 84px; }
 @keyframes blink { 50% { opacity: .18; } }
 @keyframes bob { 50% { transform: translateY(-8px); } }
 
+/* ══════════ FX PASS — lenis / three.js / pixel primitives ══════════ */
+
+/* lenis smooth scroll (classes applied to <html> by Lenis) */
+html.lenis, html.lenis body { height: auto; }
+.lenis.lenis-smooth { scroll-behavior: auto !important; }
+.lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
+.lenis.lenis-stopped { overflow: hidden; }
+
+/* three.js canvases render low-res on purpose — keep them chunky */
+.hero-3d { position: absolute; inset: 0; z-index: 1; pointer-events: none; opacity: .8; }
+.hero-3d canvas, .pixel-coin canvas { image-rendering: pixelated; width: 100% !important; height: 100% !important; }
+.pixel-coin { width: 100%; aspect-ratio: 1; max-width: 300px; margin: 0 auto; pointer-events: none; }
+
+/* GlitchText — RGB-split slices (red/mint ghosts) */
+.glitch { position: relative; display: inline-block; }
+.glitch::before, .glitch::after { content: attr(data-text); position: absolute; inset: 0; opacity: 0; pointer-events: none; }
+.glitch:hover::before { animation: glitch-a .34s steps(1) infinite; color: var(--red); opacity: .75; }
+.glitch:hover::after { animation: glitch-b .34s steps(1) infinite; color: var(--mint); opacity: .75; }
+.glitch-always::before { animation: glitch-burst-a 3.6s steps(1) infinite; color: var(--red); }
+.glitch-always::after { animation: glitch-burst-b 3.6s steps(1) infinite; color: var(--mint); }
+@keyframes glitch-a {
+  0% { transform: translate(-3px,-2px); clip-path: inset(0 0 62% 0); }
+  34% { transform: translate(3px,1px); clip-path: inset(28% 0 30% 0); }
+  67% { transform: translate(-2px,2px); clip-path: inset(60% 0 0 0); }
+}
+@keyframes glitch-b {
+  0% { transform: translate(3px,2px); clip-path: inset(55% 0 0 0); }
+  34% { transform: translate(-3px,-1px); clip-path: inset(0 0 58% 0); }
+  67% { transform: translate(2px,-2px); clip-path: inset(30% 0 32% 0); }
+}
+@keyframes glitch-burst-a {
+  0%, 87% { opacity: 0; }
+  88% { opacity: .75; transform: translate(-3px,-2px); clip-path: inset(0 0 62% 0); }
+  92% { opacity: .75; transform: translate(3px,1px); clip-path: inset(28% 0 30% 0); }
+  96% { opacity: .75; transform: translate(-2px,2px); clip-path: inset(60% 0 0 0); }
+  100% { opacity: 0; }
+}
+@keyframes glitch-burst-b {
+  0%, 87% { opacity: 0; }
+  88% { opacity: .75; transform: translate(3px,2px); clip-path: inset(55% 0 0 0); }
+  92% { opacity: .75; transform: translate(-3px,-1px); clip-path: inset(0 0 58% 0); }
+  96% { opacity: .75; transform: translate(2px,-2px); clip-path: inset(30% 0 32% 0); }
+  100% { opacity: 0; }
+}
+
+/* PixelCard — hover pixel-burst canvas behind card content */
+.pixel-card { position: relative; }
+.pixel-card-fx { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; image-rendering: pixelated; z-index: 0; }
+.pixel-card-content { position: relative; z-index: 1; }
+
+/* SquaresBg — drifting grid canvas behind a section (content lives in .wrap, z2) */
+.squares-bg { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+
+/* TiltCard — quantized tilt; the transition smooths the 1.5° snaps */
+.tilt-card { transition: transform .16s ease; will-change: transform; }
+
+/* pixel divider now marches */
+.divider { animation: divider-march 1.2s steps(4) infinite; }
+@keyframes divider-march { to { background-position-x: -44px; } }
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition-duration: .001ms !important; }
   html { scroll-behavior: auto; }

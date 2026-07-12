@@ -1,9 +1,12 @@
+import { GlitchText } from "@/components/ui/glitch-text";
 import { Reveal } from "@/components/ui/reveal";
+import { SquaresBg } from "@/components/ui/squares-bg";
 import { GUARDS } from "@/lib/data";
 
 export function Guardrails() {
   return (
     <section className="sec dark" id="safety">
+      <SquaresBg tone="lime" />
       <div className="wrap">
         <div className="sec-head">
           <div>
@@ -18,7 +21,7 @@ export function Guardrails() {
           {GUARDS.map((g, i) => (
             <Reveal key={g.title} delay={i * 50} className="guard">
               <h3>
-                <span className="b" /> {g.title}
+                <span className="b" /> <GlitchText text={g.title} mode="hover" />
               </h3>
               <p>{g.body}</p>
             </Reveal>

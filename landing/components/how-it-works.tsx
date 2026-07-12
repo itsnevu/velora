@@ -1,9 +1,12 @@
+import { BorderScan } from "@/components/ui/border-scan";
 import { Reveal } from "@/components/ui/reveal";
+import { SquaresBg } from "@/components/ui/squares-bg";
 import { STEPS } from "@/lib/data";
 
 export function HowItWorks() {
   return (
     <section className="sec dark" id="flow">
+      <SquaresBg tone="lime" />
       <div className="wrap">
         <div className="sec-head">
           <div>
@@ -18,13 +21,17 @@ export function HowItWorks() {
           </p>
         </div>
         <div className="flow">
-          {STEPS.map((s, i) => (
-            <Reveal key={s.num} delay={i * 50} className={"step" + (("you" in s && s.you) ? " you" : "")}>
-              <div className="num">{s.num}</div>
-              <h3>{s.title}</h3>
-              <p>{s.body}</p>
-            </Reveal>
-          ))}
+          {STEPS.map((s, i) => {
+            const isYou = "you" in s && s.you;
+            return (
+              <Reveal key={s.num} delay={i * 60} className={"step" + (isYou ? " you" : "")}>
+                {isYou && <BorderScan color="#e23b3b" size={10} speed={90} />}
+                <div className="num">{s.num}</div>
+                <h3>{s.title}</h3>
+                <p>{s.body}</p>
+              </Reveal>
+            );
+          })}
         </div>
       </div>
     </section>

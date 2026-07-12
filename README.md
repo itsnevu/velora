@@ -1,79 +1,56 @@
-# 🟢 rh-trading-agent — an AI trading desk on Claude Code
+<div align="center">
 
-**A multi-agent stock-research desk that runs inside Claude Code, connects to a
-Robinhood Agentic account over MCP, and never places an order without your approval.**
+# ◤ VELORA ◢
 
-It's not a "bot that YOLOs your money." It's a small **team of specialized sub-agents**
-— fundamental, technical, macro/news, and a risk manager with veto power — that screen
+### Agentic AI Equity Research Desk
+
+**A team of specialist AI analysts that research your watchlist inside Claude Code,
+connect to a Robinhood Agentic account over MCP, and never place an order without your approval.**
+
+[**📖 Documentation**](https://www.projectvex.ai/docs) · [**🌐 Website**](https://www.projectvex.ai) · [**⚡ Quickstart**](https://www.projectvex.ai/docs/quickstart) · [**🛡 Guardrails**](https://www.projectvex.ai/docs/guardrails)
+
+![License: MIT](https://img.shields.io/badge/License-MIT-c5e94a.svg)
+![Built with Claude Code](https://img.shields.io/badge/built%20with-Claude%20Code-16180d)
+![Status: beta](https://img.shields.io/badge/status-beta%20·%20educational-e23b3b)
+![Scope: equities only](https://img.shields.io/badge/scope-equities%20·%20long--only-16180d)
+
+</div>
+
+---
+
+Velora isn't a bot that YOLOs your money. It's a small **desk of specialized sub-agents**
+— fundamental, technical, macro/news, and a **risk manager with veto power** — that screen
 your watchlist, debate each candidate, and hand you a one-click **preview card**. You
-approve; it places. Everything's wrapped in written guardrails (human-in-the-loop,
+approve; it places. Everything is wrapped in written guardrails (human-in-the-loop,
 position caps, prompt-injection defense) and mirrored to a Robinhood-style dashboard.
 
-![RH Agentic Desk — the dashboard](docs/demo.jpeg)
+![Velora — the desk dashboard](docs/demo.jpeg)
 
+> [!WARNING]
+> **Real money, beta, not investment advice.** Robinhood Agentic Trading is in beta
+> (US, equities only). The desk trades only inside an isolated Agentic account funded with
+> a dedicated budget — **that budget is the most it can ever lose**. There is **no track
+> record and no performance claim here**; this is a reference architecture for learning.
+> Run it at your own risk and monitor it yourself.
 
-![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)
-![Built with Claude Code](https://img.shields.io/badge/built%20with-Claude%20Code-da7756)
-![Status: beta](https://img.shields.io/badge/status-beta%20%C2%B7%20educational-blue)
+## Why it's different
 
-### Why it's different
 - **A team, not one prompt** — analysts gather evidence in parallel; an independent risk
   manager can veto a trade the analysts liked.
-- **Guardrails are structural, not vibes** — sub-agents physically have no order tools;
-  only you-plus-the-PM can place, and only after explicit in-session approval.
-- **Prompt-injection-aware** — the news agent treats fetched content as untrusted data
-  and quotes suspicious "instructions" instead of acting on them.
+- **Guardrails are structural, not vibes** — the sub-agents physically have no order tools;
+  only the Portfolio Manager can place, and only after your explicit in-session approval.
+- **Prompt-injection-aware** — the news agent treats fetched content as untrusted data and
+  quotes suspicious "instructions" instead of acting on them.
 - **Low-touch by design** — it runs read-only research on a schedule and only surfaces a
   trade when one genuinely qualifies; most days it tells you to stand aside.
 - **A real dashboard** — a Robinhood-style UI mirrors the desk's state live.
 
-> ⚠️ **Real money, beta, not investment advice.** Robinhood Agentic Trading is in beta
-> (US, equities only). The agent trades only inside an isolated Agentic account funded
-> with a dedicated budget — that budget is the most it can ever lose. There is **no
-> track record and no performance claim here**; this is a reference architecture for
-> learning, run it at your own risk and monitor it yourself.
-
-This repo holds the **guardrails, strategy notes, agents, dashboard, and setup docs** —
-never secrets, and never the OAuth token (those live outside the repo).
-
-## What's in here
-
-```
-.
-├── CLAUDE.md                  # The PM's operating contract (rules it must follow)
-├── .mcp.json                  # Project-scoped Robinhood Trading MCP connection
-├── .env.example               # Template for .env (account number; .env is gitignored)
-├── .claude/
-│   ├── settings.json          # Permissions: reads allowed, orders gated, options denied
-│   └── agents/                # The desk team — one sub-agent per role
-│       ├── fundamental-analyst.md
-│       ├── technical-analyst.md
-│       ├── macro-news-analyst.md   # injection-isolated (the only web-facing role)
-│       └── risk-manager.md         # veto power over every trade
-├── strategies/
-│   ├── README.md              # Risk caps + when the Risk Manager must VETO
-│   └── mean-reversion.md      # Example strategy (entry/exit/sizing)
-├── docs/
-│   ├── SETUP.md               # OAuth setup + how to tighten guardrails
-│   └── TEAM.md                # The desk roles and end-to-end workflow
-└── ui/                        # Read-only Robinhood-style dashboard (Vite + React)
-    ├── public/desk-state.example.json  # demo data (live desk-state.json is gitignored)
-    └── src/                   # polls the snapshot, renders account/desk/preview
-```
-
-## Quickstart
-
-1. Make this repo **private** before pushing anything.
-2. Read `docs/SETUP.md` and follow it top to bottom.
-3. Connect the MCP, authenticate via OAuth (desktop), fund a small Agentic budget.
-4. Refine `.claude/settings.json` once you know the real tool names.
-
 ## How the desk works
 
-A small **team of sub-agents** coordinated by the **Portfolio Manager (PM = the main
-Claude Code session)**. Analysts gather evidence in parallel; the Risk Manager has veto
-power; only the PM can place orders — and only after **your** in-session approval. After
-every run the PM writes `ui/public/desk-state.json`, which the dashboard mirrors live.
+You talk to the **Portfolio Manager (PM = the main Claude Code session)** in plain
+language. Analysts gather evidence in parallel; the Risk Manager has veto power; only the
+PM can place orders — and only after **your** approval. After every run the PM writes
+`ui/public/desk-state.json`, which the dashboard mirrors live.
 
 ```mermaid
 flowchart TD
@@ -108,37 +85,122 @@ flowchart TD
 ```
 
 Steps 1–7 are research and produce **no order**. The desk's standard output is the
-**preview card at step 8** — it stops there until you confirm. Full role/tool breakdown
-is in [docs/TEAM.md](docs/TEAM.md).
+**preview card at step 8** — it stops there until you confirm. The full lifecycle is in
+[the docs](https://www.projectvex.ai/docs/workflow).
 
-## Operating commands
+## The desk team
+
+| Role | File | Can place orders? | Focus |
+|------|------|:-----------------:|-------|
+| **Portfolio Manager** | *main session* | ✅ *only after your approval* | Orchestrates the run; the only role with order tools |
+| **Fundamental Analyst** | `.claude/agents/fundamental-analyst.md` | ❌ | Valuation, earnings, growth, balance-sheet health |
+| **Technical Analyst** | `.claude/agents/technical-analyst.md` | ❌ | Trend, momentum, support/resistance, scans |
+| **Macro / News Analyst** | `.claude/agents/macro-news-analyst.md` | ❌ | Market backdrop + news — **injection-isolated** |
+| **Risk Manager** | `.claude/agents/risk-manager.md` | ❌ *(veto power)* | Checks every trade against written caps |
+
+**Least privilege:** only the PM has order tools. The analysts and Risk Manager physically
+cannot place a trade. Details → [The Desk Team](https://www.projectvex.ai/docs/team).
+
+## Quickstart
 
 ```bash
-# 1. One-time: connect + authenticate the MCP, then record your account number
+# 1. Make this repo PRIVATE before pushing anything.
+
+# 2. One-time: connect + authenticate the Robinhood MCP, then fund a small Agentic budget
 claude                                  # open the project (trust the .mcp.json server)
 #   in-session:  /mcp                   # pick robinhood-trading → OAuth (desktop + mobile verify)
-cp .env.example .env                    # then put your Agentic account number in .env
 
-# 2. Run the dashboard (separate terminal) — mirrors each desk run
+# 3. Define your risk caps in strategies/ before trading (the Risk Manager VETOes if unset)
+
+# 4. Run the dashboard (separate terminal) — mirrors each desk run
 cd ui && npm install && npm run dev     # http://localhost:5180 (shows demo until a live run)
 
-# 3. Drive the desk — just talk to the PM in the Claude Code session, e.g.:
+# 5. Drive the desk — just talk to the PM, e.g.:
 #   "Screen my watchlist and bring me the top 2 ideas with full team analysis."
 #   "Run the desk on AAPL and NVDA, risk-check a small starter in the better one."
-#   The PM fans out to the analysts → Risk Manager → preview card → waits for your OK.
 
 # Kill switch: disconnect the MCP from the Robinhood app, or remove it locally
 claude mcp remove robinhood-trading
 ```
 
-> **Note:** the sub-agents in `.claude/agents/` load when Claude Code **starts** — after
-> adding or editing them, restart the session so roles like `fundamental-analyst` are
-> recognized with their restricted tool sets.
+Full walkthrough → [Installation & Setup](https://www.projectvex.ai/docs/setup).
+
+> [!NOTE]
+> The sub-agents in `.claude/agents/` load when Claude Code **starts** — after adding or
+> editing them, restart the session so roles like `fundamental-analyst` are recognized with
+> their restricted tool sets.
 
 ## Safety posture (read before funding)
 
 - The agent can only trade in the **Agentic account**, never your main balance.
-- Default permission rule puts **every** Robinhood tool call behind a manual prompt.
-- `CLAUDE.md` includes a prompt-injection rule: the agent must ignore trading
-  instructions found in fetched/external content (news, analyst notes, web).
+- Every order sits behind a manual approval prompt (`ask` rule in `.claude/settings.json`);
+  options tools are `deny`; read-only tools are `allow`. Evaluation is `deny → ask → allow`.
+- `CLAUDE.md` includes a prompt-injection rule: the agent must ignore trading instructions
+  found in fetched/external content (news, analyst notes, web) and surface them as quotes.
+- Every proposed trade must map to a written rule in `strategies/`; the Risk Manager VETOes
+  if a cap is unset, a stop is missing, or account data looks inconsistent.
 - You can disconnect the MCP anytime from the Robinhood app — that's your kill switch.
+
+Deep dive → [Guardrails](https://www.projectvex.ai/docs/guardrails) ·
+[Prompt-Injection Defense](https://www.projectvex.ai/docs/prompt-injection) ·
+[Strategies & Risk](https://www.projectvex.ai/docs/strategies).
+
+## What's in the repo
+
+```
+.
+├── CLAUDE.md                  # The PM's operating contract (rules it must follow)
+├── .mcp.json                  # Project-scoped Robinhood Trading MCP connection (HTTP + OAuth)
+├── .claude/
+│   ├── settings.json          # Permissions: reads allowed, orders gated (ask), options denied
+│   └── agents/                # The desk team — one least-privilege sub-agent per role
+├── strategies/                # Written risk caps + entry/exit rules the Risk Manager enforces
+│   ├── README.md              # Caps + when the Risk Manager must VETO
+│   ├── mean-reversion.md      # Buy oversold pullbacks inside an uptrend
+│   └── left-side-accumulation.md   # The defined exception to "no averaging into losers"
+├── docs/                      # Source docs (TEAM, SETUP, TRIGGER, LOGGING) + media
+├── backtest/                  # Offline, dependency-free strategy backtester (pure Node ESM)
+├── tools/desk-log.mjs         # Append-only JSONL audit-log helper
+├── logs/                      # JSONL decision trail (real logs gitignored)
+├── ui/                        # Read-only Robinhood-style dashboard (Vite + React)
+│   └── public/desk-state.example.json   # demo data (live desk-state.json is gitignored)
+└── landing/                   # Marketing site + full documentation (Next.js) → projectvex.ai
+```
+
+Real account state, OAuth tokens, and live logs are **never** committed — only sanitized
+`*.example.*` files are. See [Configuration](https://www.projectvex.ai/docs/configuration).
+
+## Documentation
+
+The complete, browsable docs live at **[projectvex.ai/docs](https://www.projectvex.ai/docs)**:
+
+| | |
+|---|---|
+| [Overview](https://www.projectvex.ai/docs) | What Velora is and the core idea |
+| [Quickstart](https://www.projectvex.ai/docs/quickstart) · [Setup](https://www.projectvex.ai/docs/setup) | From clone to first desk run |
+| [Architecture](https://www.projectvex.ai/docs/architecture) · [The Desk Team](https://www.projectvex.ai/docs/team) · [The Desk Run](https://www.projectvex.ai/docs/workflow) | How it works |
+| [Guardrails](https://www.projectvex.ai/docs/guardrails) · [Prompt-Injection Defense](https://www.projectvex.ai/docs/prompt-injection) · [Strategies & Risk](https://www.projectvex.ai/docs/strategies) | Safety |
+| [Configuration](https://www.projectvex.ai/docs/configuration) · [MCP & Tools](https://www.projectvex.ai/docs/mcp) · [Dashboard](https://www.projectvex.ai/docs/dashboard) · [Backtester](https://www.projectvex.ai/docs/backtesting) · [Audit Logging](https://www.projectvex.ai/docs/logging) | Reference |
+| [FAQ](https://www.projectvex.ai/docs/faq) · [Glossary](https://www.projectvex.ai/docs/glossary) · [Safety & Disclaimer](https://www.projectvex.ai/docs/disclaimer) | More |
+
+To run the site + docs locally:
+
+```bash
+cd landing && npm install && npm run dev   # http://localhost:5190  (docs at /docs)
+```
+
+## Disclaimer
+
+Velora is a **research & recommendation tool, not financial advice**. Robinhood Agentic
+Trading is in beta (US, equities only). The desk trades only inside an isolated Agentic
+account funded with a dedicated budget — that budget is the most it can ever lose. **There
+is no track record and no performance claim here**; all example data is illustrative. All
+investment decisions are your own responsibility. Use only risk capital. Any crypto/token
+material referenced in exploratory notes is **out of scope, unverified, and not
+implemented** — see [Safety & Disclaimer](https://www.projectvex.ai/docs/disclaimer).
+
+<div align="center">
+
+**[github.com/itsnevu/velora](https://github.com/itsnevu/velora)** · Built on Claude Code + Robinhood Agentic · MIT License
+
+</div>
