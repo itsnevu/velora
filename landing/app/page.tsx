@@ -29,7 +29,9 @@ const SECTIONS = [
   { id: "vx-desk", label: "One Desk" },
   { id: "vx-angles", label: "Every Angle" },
   { id: "vx-built", label: "Built For" },
+  { id: "vx-signals", label: "Signals" },
   { id: "vx-decide", label: "You Decide" },
+  { id: "vx-view", label: "In View" },
   { id: "vx-run", label: "Run" },
 ];
 
@@ -38,7 +40,8 @@ function scrollToId(id: string) {
   if (!el) return;
   const l = getLenis();
   if (l) l.scrollTo(el, { offset: 0, duration: 1.4 });
-  else el.scrollIntoView({ behavior: "smooth" });
+  // no Lenis == the user prefers reduced motion — jump, don't animate
+  else el.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
 }
 
 /* small diamond glyph for the "built for" trio icons */
@@ -83,6 +86,9 @@ function useScrollChoreography(enabled: boolean) {
 
         inner.style.transform = `translate3d(0, ${drift.toFixed(2)}px, 0) scale(${scale.toFixed(4)})`;
         inner.style.opacity = o.toFixed(3);
+        // gate the blur-in reveals: they play once the act is actually pinned
+        // (the hero counts as live immediately — the preloader gates it)
+        inner.classList.toggle("vx-live", i === 0 || p > 0.001);
       }
       raf = requestAnimationFrame(tick);
     };
@@ -93,6 +99,7 @@ function useScrollChoreography(enabled: boolean) {
         if (inner) {
           inner.style.transform = "";
           inner.style.opacity = "";
+          inner.classList.add("vx-live"); // never leave reveals locked shut
         }
       }
     };
@@ -280,6 +287,22 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ── SIGNALS (river chapter) ── */}
+      <section className="vx-sec vx-h-mid" id="vx-signals">
+        <div className="vx-sec__inner">
+          <Reveal className="vx-kicker" i={0}>Through the noise</Reveal>
+          <RevealChars text="Signals, Not Noise" as="h2" className="vx-title" />
+          <RevealLines
+            className="vx-desc"
+            step={70}
+            lines={[
+              "Headlines, filings, price action — distilled into what",
+              "actually moves your names. Quoted, sourced, never blind.",
+            ]}
+          />
+        </div>
+      </section>
+
       {/* ── YOU DECIDE ── */}
       <section className="vx-sec vx-h-mid" id="vx-decide">
         <div className="vx-sec__inner">
@@ -291,6 +314,22 @@ export default function HomePage() {
             lines={[
               "The desk proposes; you dispose. Position caps, stop rules and",
               "no averaging into losers — enforced in code, not vibes.",
+            ]}
+          />
+        </div>
+      </section>
+
+      {/* ── EVERYTHING IN VIEW (lake chapter) ── */}
+      <section className="vx-sec vx-h-view" id="vx-view">
+        <div className="vx-sec__inner">
+          <Reveal className="vx-kicker" i={0}>From above</Reveal>
+          <RevealChars text="Everything In View" as="h2" className="vx-title" />
+          <RevealLines
+            className="vx-desc"
+            step={70}
+            lines={[
+              "Positions, buying power, risk caps — one calm picture",
+              "of the whole book. Nothing hidden, nothing assumed.",
             ]}
           />
         </div>

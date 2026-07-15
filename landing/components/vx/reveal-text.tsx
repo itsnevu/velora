@@ -4,8 +4,10 @@ import { useEffect, useRef, type ReactNode, type CSSProperties } from "react";
 
 /**
  * Blur-in reveal primitives for the cinematic route. When the element scrolls
- * into view we add `.in`; the CSS in experience.css does the blur→sharp,
- * translate-up, fade. Children stagger via a `--i` custom property.
+ * into view we add `.in`; the CSS in vx.css does the blur→sharp, translate-up,
+ * fade. Children stagger via a `--i` custom property. Section content is
+ * additionally gated by the scroll choreography adding `.vx-live` to the
+ * pinned wrapper, so the animation plays when the act is actually on screen.
  * Progressive enhancement: no IntersectionObserver → reveal immediately.
  */
 function useReveal<T extends HTMLElement>(once = true) {
@@ -88,7 +90,8 @@ export function RevealLines({
   );
 }
 
-/** Headline split into characters that blur in one after another. */
+/** Headline split into characters that blur in one after another.
+ *  Chars are grouped per word (nowrap) so lines only break at spaces. */
 export function RevealChars({
   text,
   className = "",
@@ -101,7 +104,8 @@ export function RevealChars({
   step?: number;
 }) {
   const ref = useReveal<HTMLElement>();
-  const chars = [...text];
+  const words = text.split(" ");
+  let ci = 0;
   return (
     <Tag
       ref={ref as React.Ref<never>}
@@ -109,9 +113,19 @@ export function RevealChars({
       style={{ "--step": `${step}ms` }}
       aria-label={text}
     >
-      {chars.map((ch, i) => (
-        <span className="vx-reveal" style={{ "--i": i }} key={i} aria-hidden="true">
-          {ch === " " ? " " : ch}
+      {words.map((word, wi) => (
+        <span key={wi} aria-hidden="true">
+          <span className="vx-word">
+            {[...word].map((ch) => {
+              const i = ci++;
+              return (
+                <span className="vx-reveal" style={{ "--i": i }} key={i}>
+                  {ch}
+                </span>
+              );
+            })}
+          </span>
+          {wi < words.length - 1 ? " " : null}
         </span>
       ))}
     </Tag>

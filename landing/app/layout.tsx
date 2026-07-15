@@ -38,7 +38,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="id" className={`${display.variable} ${pixel.variable} ${mono.variable} ${serif.variable} ${sans.variable}`}>
+    <html lang="en" className={`${display.variable} ${pixel.variable} ${mono.variable} ${serif.variable} ${sans.variable}`}>
       <body>
         <noscript>
           {/* Progressive enhancement: without JS, reveal content and hide the JS-driven boot overlay. */}

@@ -190,9 +190,23 @@ body:has(.vx-root)::after {
   will-change: transform, opacity;
 }
 .vx-h-hero { height: 130vh; }
+.vx-h-view { height: 160vh; }
+/* soft local scrim behind the hero title — keeps the thin serif readable
+   where the pale haze band crosses the letters */
+.vx-h-hero .vx-sec__inner::before {
+  content: "";
+  position: absolute;
+  left: 6%;
+  right: 6%;
+  top: 26%;
+  bottom: 30%;
+  background: radial-gradient(52% 46% at 50% 50%, rgba(20, 40, 56, 0.3), transparent 74%);
+  z-index: -1;
+  pointer-events: none;
+}
 .vx-h-tall { height: 200vh; }
-.vx-h-mid  { height: 165vh; }
-.vx-h-last { height: 120vh; }
+.vx-h-mid  { height: 180vh; }
+.vx-h-last { height: 140vh; }
 
 /* ── type: thin high-contrast serif over the bright world ─────────────── */
 .vx-kicker {
@@ -212,7 +226,11 @@ body:has(.vx-root)::after {
   letter-spacing: 0.015em;
   text-transform: uppercase;
   color: var(--white);
-  text-shadow: 0 2px 50px rgba(20, 45, 70, 0.4);
+  /* layered shadow keeps the thin serif legible over the pale haze band */
+  text-shadow:
+    0 2px 20px rgba(22, 45, 68, 0.65),
+    0 6px 64px rgba(18, 40, 64, 0.55),
+    0 0 5px rgba(26, 50, 74, 0.4);
 }
 .vx-title {
   font-family: var(--font-serif), Georgia, serif;
@@ -472,6 +490,20 @@ body:has(.vx-root)::after {
 .vx-chars .vx-reveal {
   display: inline-block;
   white-space: pre;
+}
+/* chars are grouped per word so headlines never break mid-word */
+.vx-word {
+  display: inline-block;
+  white-space: nowrap;
+}
+/* reveals inside a pinned act hold until the choreography marks it live,
+   so the stagger plays when the act is actually visible (not during the
+   sticky approach, and never behind the preloader) */
+.vx-sec__inner:not(.vx-live) .vx-reveal {
+  opacity: 0;
+  filter: blur(0.28em);
+  transform: translateY(0.5em);
+  transition: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
