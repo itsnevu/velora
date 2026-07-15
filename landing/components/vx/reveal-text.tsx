@@ -2,6 +2,13 @@
 
 import { useEffect, useRef, type ReactNode, type CSSProperties } from "react";
 
+// let `style` carry CSS custom properties (--i, --step) used by the reveals
+declare module "react" {
+  interface CSSProperties {
+    [key: `--${string}`]: string | number | undefined;
+  }
+}
+
 /**
  * Blur-in reveal primitives for the cinematic route. When the element scrolls
  * into view we add `.in`; the CSS in vx.css does the blur→sharp, translate-up,
