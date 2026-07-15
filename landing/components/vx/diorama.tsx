@@ -59,10 +59,11 @@ function blackoutAt(s: number): number {
     THREE.MathUtils.smoothstep(s, 0.335, 0.372),
     1 - THREE.MathUtils.smoothstep(s, 0.4, 0.45),
   );
-  // #2: river → lake (You-Decide seam, s ≈ 0.650)
+  // #2: river → lake — timed so the lake is already revealing while the
+  // You-Decide copy is pinned (pin window ≈ 0.650–0.708)
   const b2 = Math.min(
-    THREE.MathUtils.smoothstep(s, 0.618, 0.65),
-    1 - THREE.MathUtils.smoothstep(s, 0.678, 0.722),
+    THREE.MathUtils.smoothstep(s, 0.6, 0.64),
+    1 - THREE.MathUtils.smoothstep(s, 0.655, 0.695),
   );
   return Math.max(b1, b2);
 }
@@ -631,8 +632,8 @@ const PAINT_CHAPTERS: PaintCfg[] = [
   // chapter C — the lake finale (holds to the end; dusk dim grades it)
   {
     url: TEX.lake, order: 945, zoomFrom: 1.45, zoomTo: 1.12, panY: 0.2,
-    opacity: (s) => THREE.MathUtils.smoothstep(s, 0.68, 0.745),
-    prog: (s) => Math.min(1, Math.max(0, (s - 0.68) / 0.32)),
+    opacity: (s) => THREE.MathUtils.smoothstep(s, 0.655, 0.71),
+    prog: (s) => Math.min(1, Math.max(0, (s - 0.65) / 0.35)),
   },
 ];
 
