@@ -932,3 +932,96 @@
     transition: none;
   }
 }
+
+/* ══════════ DESIGN ENHANCE PASS ══════════ */
+
+/* scroll-progress bar under the docs topbar */
+.docs-scroll-prog {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 3px;
+  width: 0;
+  background: var(--red);
+  z-index: 45;
+  will-change: width;
+}
+
+/* topbar gets a subtle raised feel */
+.docs-topbar {
+  box-shadow: 0 2px 0 rgba(22, 24, 13, 0.06);
+}
+
+/* h2: a red pixel tick before the section title */
+.doc-h2::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 18px;
+  width: 12px;
+  height: 12px;
+  background: var(--red);
+  transform: translateX(-22px);
+}
+@media (max-width: 880px) {
+  .doc-h2::before { display: none; }
+}
+
+/* cards gain the signature press-in hover */
+.doc-card {
+  transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+}
+.doc-card:hover {
+  transform: translate(2px, 2px);
+  box-shadow: 4px 4px 0 var(--ink);
+  background: var(--lime);
+}
+.doc-card:hover .doc-card-badge {
+  border-color: var(--ink);
+  color: var(--ink);
+}
+
+/* steps: left accent turns red on hover for scannability */
+.doc-step {
+  transition: border-color 0.12s ease, transform 0.12s ease;
+}
+.doc-step:hover {
+  border-left-color: var(--red);
+  transform: translateX(2px);
+}
+
+/* callouts get a corner notch accent */
+.doc-callout {
+  position: relative;
+  overflow: hidden;
+}
+.doc-callout::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 14px;
+  height: 14px;
+  background: currentColor;
+  opacity: 0.12;
+  clip-path: polygon(100% 0, 0 0, 100% 100%);
+}
+
+/* pills: press-in on hover */
+.doc-pill {
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+.doc-pill:hover {
+  transform: translate(1px, 1px);
+  box-shadow: 2px 2px 0 var(--ink);
+}
+
+/* sidebar active link gets a tiny inner glow line */
+.docs-nav-link.active {
+  box-shadow: inset 3px 0 0 var(--red);
+}
+
+/* nicer table header contrast on the new reference pages */
+.doc-table tbody tr:hover {
+  background: rgba(197, 233, 74, 0.22);
+}

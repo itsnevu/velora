@@ -53,6 +53,13 @@ export const DOCS_NAV: NavGroup[] = [
     ],
   },
   {
+    group: "Going Public",
+    items: [
+      { slug: "public-architecture", label: "Public Architecture" },
+      { slug: "backend-api", label: "Backend API" },
+    ],
+  },
+  {
     group: "More",
     items: [
       { slug: "faq", label: "FAQ" },

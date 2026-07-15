@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { VeloraLogo } from "@/components/ui/velora-logo";
 import { GITHUB_URL } from "../_content/site";
@@ -11,6 +11,7 @@ import { cn } from "@/lib/cn";
 /** Sticky docs top bar: brand, back-to-site, GitHub, and the mobile nav drawer. */
 export function DocsTopbar() {
   const [open, setOpen] = useState(false);
+  const progRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
@@ -19,8 +20,30 @@ export function DocsTopbar() {
     };
   }, [open]);
 
+  // Reading-progress bar under the topbar.
+  useEffect(() => {
+    let raf = 0;
+    const onScroll = () => {
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
+        raf = 0;
+        const h = document.documentElement;
+        const max = h.scrollHeight - h.clientHeight;
+        const p = max > 0 ? (h.scrollTop / max) * 100 : 0;
+        if (progRef.current) progRef.current.style.width = p + "%";
+      });
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, []);
+
   return (
     <>
+      <div className="docs-scroll-prog" ref={progRef} />
       <header className="docs-topbar">
         <div className="docs-topbar-inner">
           <Link href="/docs" className="docs-brand">

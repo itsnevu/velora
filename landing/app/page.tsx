@@ -1,43 +1,335 @@
-import { BootOverlay } from "@/components/boot-overlay";
-import { SiteHeader } from "@/components/site-header";
-import { Hero } from "@/components/hero";
-import { Marquee } from "@/components/marquee";
-import { LiveDesk } from "@/components/live-desk";
-import { StatsStrip } from "@/components/stats-strip";
-import { PixelDivider } from "@/components/pixel-divider";
-import { WhyDifferent } from "@/components/why-different";
-import { HowItWorks } from "@/components/how-it-works";
-import { Team } from "@/components/team";
-import { RiskLab } from "@/components/risk-lab";
-import { Guardrails } from "@/components/guardrails";
-import { Roadmap } from "@/components/roadmap";
-import { Faq } from "@/components/faq";
-import { Token } from "@/components/token";
-import { CtaFooter } from "@/components/cta-footer";
-import { MARQUEE2 } from "@/lib/data";
+"use client";
 
-export default function Page() {
+import { useEffect, useRef, useState } from "react";
+import dynamic from "next/dynamic";
+import { getLenis } from "@/lib/lenis-store";
+import { Reveal, RevealLines, RevealChars } from "@/components/vx/reveal-text";
+import "./vx.css";
+
+const Diorama = dynamic(() => import("@/components/vx/diorama"), { ssr: false });
+
+/* Velora "V" mark */
+function VMark({ className }: { className?: string }) {
   return (
-    <>
-      <BootOverlay />
-      <SiteHeader />
-      <main>
-        <Hero />
-        <Marquee />
-        <LiveDesk />
-        <StatsStrip />
-        <PixelDivider />
-        <WhyDifferent />
-        <HowItWorks />
-        <Team />
-        <RiskLab />
-        <Guardrails />
-        <Roadmap />
-        <Faq />
-        <Token />
-        <Marquee items={MARQUEE2} alt />
-      </main>
-      <CtaFooter />
-    </>
+    <svg viewBox="0 0 32 32" className={className} xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d="M4 6 L16 27 L28 6 L22.6 6 L16 17.4 L9.4 6 Z" />
+      <rect x="13.4" y="2.2" width="5.2" height="5.2" rx="0.4" transform="rotate(45 16 4.8)" />
+    </svg>
+  );
+}
+
+const ArrowUpRight = () => (
+  <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <path d="M8 6h10v10h-2.2V9.8L6.6 18.8 5.2 17.4 14.2 8.2H8z" />
+  </svg>
+);
+
+const SECTIONS = [
+  { id: "vx-hero", label: "Top" },
+  { id: "vx-desk", label: "One Desk" },
+  { id: "vx-angles", label: "Every Angle" },
+  { id: "vx-built", label: "Built For" },
+  { id: "vx-decide", label: "You Decide" },
+  { id: "vx-run", label: "Run" },
+];
+
+function scrollToId(id: string) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const l = getLenis();
+  if (l) l.scrollTo(el, { offset: 0, duration: 1.4 });
+  else el.scrollIntoView({ behavior: "smooth" });
+}
+
+/* small diamond glyph for the "built for" trio icons */
+const Diamond = () => (
+  <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <path d="M12 2l10 10-10 10L2 12z" fill="none" stroke="currentColor" strokeWidth="1.5" />
+    <path d="M12 7l5 5-5 5-5-5z" />
+  </svg>
+);
+
+/**
+ * Scroll-linked choreography — the vvvhound trick. Every RAF we compute each
+ * section's progress through its runway (0 pinned-in → 1 about to unpin) and
+ * write transform/opacity directly, so the CONTENT scrubs with the scroll
+ * exactly like the WebGL scene behind it. Enter-once blur reveals still run
+ * on top for the first impression; this drives the continuous motion.
+ */
+function useScrollChoreography(enabled: boolean) {
+  useEffect(() => {
+    if (!enabled) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    const secs = Array.from(document.querySelectorAll<HTMLElement>(".vx-sec"));
+    const inners = secs.map((s) => s.querySelector<HTMLElement>(".vx-sec__inner"));
+    let raf = 0;
+
+    const tick = () => {
+      const vh = window.innerHeight;
+      for (let i = 0; i < secs.length; i++) {
+        const inner = inners[i];
+        if (!inner) continue;
+        const r = secs[i].getBoundingClientRect();
+        const total = r.height - vh;
+        const p = total > 0 ? Math.min(1, Math.max(0, -r.top / total)) : 0.5;
+
+        // content drifts up through its act; eases in/out at the seams
+        const drift = (p - 0.5) * -72;
+        const fadeIn = i === 0 ? 1 : Math.min(1, p / 0.14);
+        const fadeOut = Math.min(1, (1 - p) / 0.14);
+        const o = Math.max(0, Math.min(fadeIn, fadeOut));
+        const scale = i === 0 ? 1 - p * 0.06 : 1; // hero gently recedes
+
+        inner.style.transform = `translate3d(0, ${drift.toFixed(2)}px, 0) scale(${scale.toFixed(4)})`;
+        inner.style.opacity = o.toFixed(3);
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => {
+      cancelAnimationFrame(raf);
+      for (const inner of inners) {
+        if (inner) {
+          inner.style.transform = "";
+          inner.style.opacity = "";
+        }
+      }
+    };
+  }, [enabled]);
+}
+
+/** Heavier, more cinematic smooth-scroll while this page is mounted. */
+function useCinematicLenis() {
+  useEffect(() => {
+    const l = getLenis();
+    if (!l) return;
+    const prevLerp = l.options.lerp;
+    l.options.lerp = 0.085;
+    return () => {
+      l.options.lerp = prevLerp;
+    };
+  }, []);
+}
+
+export default function HomePage() {
+  const [pct, setPct] = useState(0);
+  const [ready, setReady] = useState(false);
+  const [active, setActive] = useState(0);
+  const barRef = useRef<HTMLDivElement>(null);
+
+  useCinematicLenis();
+  useScrollChoreography(ready);
+
+  // preloader count 0→100
+  useEffect(() => {
+    let raf = 0;
+    let start = 0;
+    const dur = 1500;
+    const tick = (t: number) => {
+      if (!start) start = t;
+      const p = Math.min(1, (t - start) / dur);
+      setPct(Math.round(p * 100));
+      if (p < 1) raf = requestAnimationFrame(tick);
+      else setTimeout(() => setReady(true), 300);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, []);
+
+  // scroll progress + active section
+  useEffect(() => {
+    const onScroll = () => {
+      const max = document.documentElement.scrollHeight - window.innerHeight;
+      const frac = max > 0 ? window.scrollY / max : 0;
+      if (barRef.current) barRef.current.style.width = `${frac * 100}%`;
+      const mid = window.scrollY + window.innerHeight * 0.5;
+      let idx = 0;
+      for (let i = 0; i < SECTIONS.length; i++) {
+        const el = document.getElementById(SECTIONS[i].id);
+        if (el && el.offsetTop <= mid) idx = i;
+      }
+      setActive(idx);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    onScroll();
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
+  }, []);
+
+  return (
+    <div className="vx-root">
+      {/* preloader */}
+      <div className={`vx-preload ${ready ? "is-done" : ""}`}>
+        <div className="vx-preload__mark">
+          <VMark />
+        </div>
+        <div className="vx-preload__pct">{pct}%</div>
+      </div>
+
+      {/* WebGL scene + veils */}
+      <Diorama />
+      <div className="vx-veil" aria-hidden="true" />
+      <div className="vx-grain" aria-hidden="true" />
+
+      {/* scroll progress */}
+      <div className="vx-progress" ref={barRef} aria-hidden="true" />
+
+      {/* header */}
+      <header className="vx-header">
+        <a className="vx-logo" href="/" aria-label="Velora home">
+          <VMark />
+          <span>Velora</span>
+        </a>
+        <nav className="vx-nav">
+          <a className="vx-nav-hide" href="/docs">Docs</a>
+          <a href="/desk">Desk →</a>
+        </nav>
+      </header>
+
+      {/* section navigator */}
+      <div className="vx-navdots" role="navigation" aria-label="Sections">
+        {SECTIONS.map((s, i) => (
+          <button
+            key={s.id}
+            className={i === active ? "is-active" : ""}
+            aria-label={s.label}
+            aria-current={i === active}
+            onClick={() => scrollToId(s.id)}
+          />
+        ))}
+      </div>
+
+      {/* ── HERO ── */}
+      <section className="vx-sec vx-h-hero" id="vx-hero">
+        <div className="vx-sec__inner">
+          <Reveal className="vx-kicker" i={0}>Agentic research desk</Reveal>
+          <RevealChars text="VELORA" as="h1" className="vx-hero-title" step={70} />
+          <Reveal className="vx-sub" i={4} style={{ marginTop: "0.4em" }}>
+            Scroll to enter
+          </Reveal>
+        </div>
+        <div className="vx-cue" aria-hidden="true">
+          <span>Scroll</span>
+          <span className="vx-cue__line" />
+        </div>
+      </section>
+
+      {/* ── ONE DESK ── */}
+      <section className="vx-sec vx-h-tall" id="vx-desk">
+        <div className="vx-sec__inner">
+          <div className="vx-mark">
+            <VMark />
+          </div>
+          <RevealChars text="One Desk" as="h2" className="vx-title" />
+          <RevealLines
+            className="vx-sub"
+            lines={["Reads the tape.", "Weighs the risk.", "Waits for you."]}
+          />
+          <RevealLines
+            className="vx-desc"
+            step={70}
+            lines={[
+              "A desk of AI analysts researching your watchlist around the",
+              "clock — and never placing an order without your explicit yes.",
+            ]}
+          />
+        </div>
+      </section>
+
+      {/* ── EVERY ANGLE ── */}
+      <section className="vx-sec vx-h-mid" id="vx-angles">
+        <div className="vx-sec__inner">
+          <Reveal className="vx-kicker" i={0}>Every angle</Reveal>
+          <RevealChars text="Nothing Slips" as="h2" className="vx-title" />
+          <RevealLines
+            className="vx-desc"
+            step={70}
+            lines={[
+              "Fundamental, technical and macro analysts debate each name.",
+              "A Risk Manager holds veto power over them all.",
+            ]}
+          />
+        </div>
+      </section>
+
+      {/* ── BUILT FOR ── */}
+      <section className="vx-sec vx-h-tall" id="vx-built">
+        <div className="vx-sec__inner">
+          <Reveal className="vx-kicker" i={0}>Built for the deliberate</Reveal>
+          <div className="vx-trio">
+            <Reveal className="vx-trio__item" i={1}>
+              <span className="vx-trio__icon"><Diamond /></span>
+              <h3>Traders</h3>
+              <p>See the setup before you commit — levels, momentum and risk, read for you.</p>
+            </Reveal>
+            <Reveal className="vx-trio__item" i={2}>
+              <span className="vx-trio__icon"><Diamond /></span>
+              <h3>Holders</h3>
+              <p>Know what you own. Positions and buying power, watched every session.</p>
+            </Reveal>
+            <Reveal className="vx-trio__item" i={3}>
+              <span className="vx-trio__icon"><Diamond /></span>
+              <h3>Researchers</h3>
+              <p>Ask anything about any ticker — fundamentals, catalysts and the macro backdrop.</p>
+            </Reveal>
+          </div>
+        </div>
+      </section>
+
+      {/* ── YOU DECIDE ── */}
+      <section className="vx-sec vx-h-mid" id="vx-decide">
+        <div className="vx-sec__inner">
+          <Reveal className="vx-kicker" i={0}>Approved by you</Reveal>
+          <RevealChars text="You Decide" as="h2" className="vx-title" />
+          <RevealLines
+            className="vx-desc"
+            step={70}
+            lines={[
+              "The desk proposes; you dispose. Position caps, stop rules and",
+              "no averaging into losers — enforced in code, not vibes.",
+            ]}
+          />
+        </div>
+      </section>
+
+      {/* ── RUN / CTA ── */}
+      <section className="vx-sec vx-h-last" id="vx-run">
+        <div className="vx-sec__inner">
+          <RevealChars text="One Desk. Every Angle." as="h2" className="vx-title" step={26} />
+          <RevealLines
+            className="vx-desc"
+            step={70}
+            lines={["The calm layer over your watchlist — one reviewed decision at a time."]}
+          />
+          <Reveal className="vx-cta-row" i={2}>
+            <a className="vx-btn vx-btn-lime" href="/desk">
+              <span>Enter the desk</span>
+              <ArrowUpRight />
+            </a>
+            <a className="vx-btn vx-btn-glass" href="/docs">
+              <span>Read the docs</span>
+            </a>
+          </Reveal>
+        </div>
+      </section>
+
+      <footer className="vx-foot">
+        <Reveal className="vx-kicker" i={0}>Approved by you. Executed with care.</Reveal>
+        <RevealChars text="Run with Velora" as="h2" className="vx-title" step={22} />
+        <Reveal className="vx-cta-row" i={2}>
+          <a className="vx-btn vx-btn-lime" href="/desk"><span>Launch the desk</span><ArrowUpRight /></a>
+          <a className="vx-btn vx-btn-glass" href="/docs"><span>Docs</span></a>
+        </Reveal>
+        <p className="vx-foot__legal">
+          <b>Not investment advice.</b> Velora is an agentic research tool for Robinhood
+          Agentic (beta), equities only. Every order requires explicit human approval in
+          session. Nothing here is a recommendation to buy or sell any security.
+        </p>
+      </footer>
+    </div>
   );
 }

@@ -1,18 +1,12 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import dynamic from "next/dynamic";
 import { PixelBot, PixelHill } from "@/components/ui/pixel-art";
 import { DecryptText } from "@/components/ui/decrypt-text";
 import { GlitchText } from "@/components/ui/glitch-text";
 import { Magnetic } from "@/components/ui/magnetic";
 import { Typewriter } from "@/components/ui/typewriter";
 import { RED, WHITE } from "@/lib/brand";
-
-const HeroScene = dynamic(
-  () => import("@/components/three/hero-scene").then((m) => m.HeroScene),
-  { ssr: false },
-);
 
 /** Hero with cursor-tracking red eyes (ROBIN DROIDS style) + subtle scene parallax. */
 export function Hero() {
@@ -58,7 +52,6 @@ export function Hero() {
 
   return (
     <section className="hero" id="top">
-      <HeroScene />
       <span className="hud tl" aria-hidden="true" />
       <span className="hud tr" aria-hidden="true" />
       <span className="hud bl" aria-hidden="true" />

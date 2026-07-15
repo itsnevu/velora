@@ -1,0 +1,485 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   VELORA — /experience : cinematic scroll-scrubbed route.
+   Rebuilt in the spirit of vvvhound.com on three.js, Velora-branded.
+   Scoped under .vx-root; overrides the site's lime-flood body for this page.
+   Reuses the root layout's font vars: --ff-display / --ff-pixel / --ff-mono.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* take over the body only while this route is mounted */
+body:has(.vx-root) {
+  background: #0a1109;
+  overflow-x: hidden;
+}
+body:has(.vx-root)::before,
+body:has(.vx-root)::after {
+  display: none !important;
+}
+
+.vx-root {
+  --cream: #f3f8de;
+  --cream-dim: rgba(243, 248, 222, 0.62);
+  --cream-faint: rgba(243, 248, 222, 0.34);
+  --lime: #c5e94a;
+  --deep: #16281a;
+  --line: rgba(243, 248, 222, 0.14);
+  position: relative;
+  z-index: 1;
+  color: var(--cream);
+  font-family: var(--ff-mono);
+}
+
+/* ── fixed WebGL backdrop + cinematic veils ───────────────────────────── */
+.vx-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0;
+  animation: vx-bg-in 1.6s 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.vx-bg canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+@keyframes vx-bg-in {
+  to {
+    opacity: 1;
+  }
+}
+/* vignette + grain over the scene for depth */
+.vx-veil {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(120% 90% at 50% 32%, transparent 42%, rgba(6, 12, 8, 0.55) 100%),
+    linear-gradient(to bottom, rgba(6, 12, 8, 0.45) 0%, transparent 22%, transparent 74%, rgba(6, 12, 8, 0.6) 100%);
+}
+.vx-grain {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+  background-image: repeating-linear-gradient(0deg, transparent 0 2px, rgba(255, 255, 255, 0.5) 2px 3px);
+}
+
+/* ── header ───────────────────────────────────────────────────────────── */
+.vx-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: clamp(16px, 2.4vw, 30px) clamp(18px, 3.4vw, 54px);
+}
+.vx-header::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(to bottom, rgba(6, 12, 8, 0.5), transparent);
+  z-index: -1;
+}
+.vx-logo,
+.vx-nav a {
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.55);
+}
+.vx-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--ff-display);
+  font-size: 18px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #fff;
+}
+.vx-logo svg {
+  width: 26px;
+  height: 26px;
+}
+.vx-nav {
+  display: flex;
+  align-items: center;
+  gap: clamp(14px, 2vw, 30px);
+}
+.vx-nav a {
+  font-family: var(--ff-pixel);
+  font-size: 9px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #fff;
+  opacity: 0.85;
+  transition: opacity 0.2s;
+}
+.vx-nav a:hover {
+  opacity: 1;
+}
+@media (max-width: 720px) {
+  .vx-nav a.vx-nav-hide {
+    display: none;
+  }
+}
+
+/* ── right-side section navigator ─────────────────────────────────────── */
+.vx-navdots {
+  position: fixed;
+  right: clamp(14px, 2vw, 30px);
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.vx-navdots button {
+  width: 12px;
+  height: 12px;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+.vx-navdots button::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  transform: rotate(45deg);
+  background: rgba(243, 248, 222, 0.35);
+  transition: background 0.3s, transform 0.3s, box-shadow 0.3s;
+}
+.vx-navdots button:hover::before {
+  background: var(--cream);
+}
+.vx-navdots button.is-active::before {
+  background: var(--lime);
+  transform: rotate(45deg) scale(1.25);
+  box-shadow: 0 0 12px rgba(197, 233, 74, 0.7);
+}
+@media (max-width: 720px) {
+  .vx-navdots {
+    display: none;
+  }
+}
+
+/* ── top scroll-progress bar ──────────────────────────────────────────── */
+.vx-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 2px;
+  background: linear-gradient(90deg, rgba(197, 233, 74, 0.4), var(--lime));
+  z-index: 25;
+  width: 0;
+  will-change: width;
+}
+
+/* ── sections: tall runway, pinned centered content ───────────────────── */
+.vx-sec {
+  position: relative;
+  width: 100%;
+}
+.vx-sec__inner {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0 clamp(20px, 6vw, 90px);
+  gap: 1.1em;
+  /* scroll-linked choreography (JS writes transform/opacity every frame) */
+  will-change: transform, opacity;
+}
+.vx-h-hero { height: 130vh; }
+.vx-h-tall { height: 200vh; }
+.vx-h-mid  { height: 165vh; }
+.vx-h-last { height: 120vh; }
+
+/* type */
+.vx-kicker {
+  font-family: var(--ff-pixel);
+  font-size: clamp(9px, 1vw, 11px);
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: var(--lime);
+  text-shadow: 0 0 18px rgba(197, 233, 74, 0.35);
+}
+.vx-hero-title {
+  font-family: var(--ff-display);
+  font-size: clamp(4rem, 20vw, 17rem);
+  line-height: 0.86;
+  letter-spacing: -0.03em;
+  text-transform: uppercase;
+  text-shadow: 0 0 80px rgba(10, 20, 10, 0.5), 0 2px 30px rgba(0, 0, 0, 0.35);
+}
+.vx-title {
+  font-family: var(--ff-display);
+  font-size: clamp(2.6rem, 9vw, 7rem);
+  line-height: 0.92;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+  text-shadow: 0 2px 34px rgba(0, 0, 0, 0.4);
+}
+.vx-title .lime { color: var(--lime); }
+.vx-sub {
+  font-family: var(--ff-pixel);
+  font-size: clamp(10px, 1.5vw, 13px);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--cream-dim);
+  max-width: 26ch;
+  line-height: 2.4;
+}
+.vx-desc {
+  font-family: var(--ff-mono);
+  font-size: clamp(13px, 1.5vw, 16px);
+  line-height: 1.95;
+  color: var(--cream-dim);
+  max-width: 54ch;
+  text-shadow: 0 1px 16px rgba(0, 0, 0, 0.5);
+}
+
+/* diamond logo mark echo (blurred glass square) behind hero/section marks */
+.vx-mark {
+  position: relative;
+  width: clamp(120px, 22vw, 260px);
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  margin: 0 auto;
+}
+.vx-mark::before {
+  content: "";
+  position: absolute;
+  width: 62%;
+  height: 62%;
+  transform: rotate(45deg);
+  background: rgba(243, 248, 222, 0.05);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(243, 248, 222, 0.14);
+}
+.vx-mark svg {
+  position: relative;
+  width: 46%;
+  height: 46%;
+  fill: var(--cream);
+  filter: drop-shadow(0 0 20px rgba(197, 233, 74, 0.3));
+}
+
+/* ── "built for" trio ─────────────────────────────────────────────────── */
+.vx-trio {
+  display: flex;
+  gap: clamp(20px, 5vw, 72px);
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-start;
+  max-width: 1000px;
+}
+.vx-trio__item {
+  flex: 1 1 220px;
+  max-width: 300px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+.vx-trio__icon {
+  width: 54px;
+  height: 54px;
+  display: grid;
+  place-items: center;
+  position: relative;
+}
+.vx-trio__icon::before {
+  content: "";
+  position: absolute;
+  inset: 8px;
+  transform: rotate(45deg);
+  border: 1px solid rgba(243, 248, 222, 0.22);
+  background: rgba(243, 248, 222, 0.04);
+}
+.vx-trio__icon svg { position: relative; width: 26px; height: 26px; fill: var(--lime); }
+.vx-trio h3 {
+  font-family: var(--ff-display);
+  font-size: 1.15rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+.vx-trio p {
+  font-family: var(--ff-mono);
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--cream-dim);
+}
+
+/* ── buttons ──────────────────────────────────────────────────────────── */
+.vx-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 26px;
+  border-radius: 100px;
+  font-family: var(--ff-pixel);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), background 0.25s, color 0.25s;
+}
+.vx-btn svg { width: 15px; height: 15px; }
+.vx-btn-lime { background: var(--lime); color: #16281a; fill: #16281a; }
+.vx-btn-lime:hover { transform: translateY(-3px); box-shadow: 0 12px 40px rgba(197, 233, 74, 0.28); }
+.vx-btn-glass {
+  color: var(--cream);
+  fill: var(--cream);
+  background: linear-gradient(180deg, rgba(243, 248, 222, 0.14), rgba(243, 248, 222, 0.05));
+  border: 1px solid rgba(243, 248, 222, 0.18);
+  backdrop-filter: blur(8px);
+}
+.vx-btn-glass:hover { transform: translateY(-3px); background: rgba(243, 248, 222, 0.16); }
+.vx-cta-row { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; margin-top: 0.6em; }
+
+/* ── scroll cue on hero ───────────────────────────────────────────────── */
+.vx-cue {
+  position: absolute;
+  bottom: clamp(24px, 5vh, 54px);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--ff-pixel);
+  font-size: 8px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--cream-faint);
+}
+.vx-cue__line {
+  width: 1px;
+  height: 46px;
+  background: linear-gradient(to bottom, transparent, var(--cream-dim));
+  position: relative;
+  overflow: hidden;
+}
+.vx-cue__line::after {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: 0;
+  width: 100%;
+  height: 50%;
+  background: var(--lime);
+  animation: vx-cue 1.8s ease-in-out infinite;
+}
+@keyframes vx-cue {
+  0% { transform: translateY(-100%); }
+  60%, 100% { transform: translateY(300%); }
+}
+
+/* ── footer / join ────────────────────────────────────────────────────── */
+.vx-foot {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 1.2em;
+  padding: 0 clamp(20px, 6vw, 90px);
+  /* readability scrim so the arrival copy stays legible over the bright tail */
+  background: radial-gradient(120% 100% at 50% 45%, rgba(8, 15, 10, 0.55), rgba(8, 15, 10, 0.85));
+}
+.vx-foot__legal {
+  position: absolute;
+  bottom: clamp(18px, 4vh, 40px);
+  left: 0;
+  right: 0;
+  padding: 0 clamp(20px, 5vw, 60px);
+  font-family: var(--ff-mono);
+  font-size: 10.5px;
+  line-height: 1.7;
+  color: var(--cream-faint);
+  max-width: 780px;
+  margin: 0 auto;
+}
+.vx-foot__legal b { color: var(--cream-dim); font-family: var(--ff-pixel); font-size: 8px; letter-spacing: 0.15em; }
+
+/* ── preloader ────────────────────────────────────────────────────────── */
+.vx-preload {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: #16281a;
+  display: grid;
+  place-items: center;
+  transition: opacity 0.8s ease, visibility 0.8s;
+}
+.vx-preload.is-done {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+.vx-preload__mark {
+  width: clamp(90px, 16vw, 150px);
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  position: relative;
+}
+.vx-preload__mark svg { width: 60%; height: 60%; fill: var(--cream); }
+.vx-preload__pct {
+  position: absolute;
+  bottom: clamp(24px, 6vh, 54px);
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--ff-display);
+  font-size: clamp(28px, 5vw, 46px);
+  color: var(--cream);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── reveal animations ────────────────────────────────────────────────── */
+.vx-reveal {
+  opacity: 0;
+  filter: blur(0.28em);
+  transform: translateY(0.5em);
+  transition:
+    opacity 0.95s cubic-bezier(0.16, 1, 0.3, 1),
+    filter 0.95s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.95s cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: calc(var(--i, 0) * var(--step, 55ms));
+}
+.in.vx-reveal,
+.in .vx-reveal {
+  opacity: 1;
+  filter: blur(0);
+  transform: none;
+}
+.vx-line {
+  display: block;
+  overflow: hidden;
+}
+.vx-chars .vx-reveal {
+  display: inline-block;
+  white-space: pre;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vx-reveal { opacity: 1 !important; filter: none !important; transform: none !important; }
+  .vx-bg { animation: none; opacity: 1; }
+  .vx-cue__line::after { animation: none; }
+}
