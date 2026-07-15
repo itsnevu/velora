@@ -1,11 +1,20 @@
 import type { Metadata, Viewport } from "next";
-import { Archivo_Black, Press_Start_2P, Space_Mono } from "next/font/google";
+import { Archivo_Black, Press_Start_2P, Space_Mono, Cormorant_Garamond, Instrument_Sans } from "next/font/google";
 import { SmoothScroll } from "@/components/providers/smooth-scroll";
 import "./globals.css";
 
 const display = Archivo_Black({ weight: "400", subsets: ["latin"], variable: "--font-archivo", display: "swap" });
 const pixel = Press_Start_2P({ weight: "400", subsets: ["latin"], variable: "--font-press", display: "swap" });
 const mono = Space_Mono({ weight: ["400", "700"], subsets: ["latin"], variable: "--font-space", display: "swap" });
+// cinematic homepage type: thin high-contrast serif + clean sans
+const serif = Cormorant_Garamond({
+  weight: ["300", "400", "500"],
+  style: ["normal", "italic"],
+  subsets: ["latin"],
+  variable: "--font-serif",
+  display: "swap",
+});
+const sans = Instrument_Sans({ weight: ["400", "500", "600"], subsets: ["latin"], variable: "--font-sans", display: "swap" });
 
 const TITLE = "VELORA // Agentic Trading Desk";
 const DESC =
@@ -29,7 +38,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="id" className={`${display.variable} ${pixel.variable} ${mono.variable}`}>
+    <html lang="id" className={`${display.variable} ${pixel.variable} ${mono.variable} ${serif.variable} ${sans.variable}`}>
       <body>
         <noscript>
           {/* Progressive enhancement: without JS, reveal content and hide the JS-driven boot overlay. */}
