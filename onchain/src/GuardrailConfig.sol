@@ -24,8 +24,11 @@ contract GuardrailConfig {
     ///      the pool trades a few % under a heartbeat-lagged oracle in a gap-down, so a
     ///      guardrail never traps capital. Still blocks a catastrophic/attacker fill.
     uint16 internal constant DEFAULT_SELL_SLIPPAGE_BPS = 1500;
-    /// @dev Either tolerance can never be widened past 50% — it must stay a real bound.
+    /// @dev The BUY tolerance can never be widened past 50% — it must stay a real bound.
     uint16 internal constant MAX_EXEC_SLIPPAGE_BPS = 5000;
+    /// @dev The SELL tolerance has a TIGHTER ceiling (20%): it is only a fill-QUALITY bound,
+    ///      not an aggregate/sizing cap, so it must not be openable to a book-dumping 50%.
+    uint16 internal constant MAX_SELL_SLIPPAGE_BPS = 2000;
 
     address public owner;
     address public pendingOwner; // two-step handoff target (guards against fat-fingers)
@@ -97,8 +100,10 @@ contract GuardrailConfig {
     }
 
     /// @notice Owner-only SELL execution-slippage tolerance update (agent can never reach it).
+    ///         Capped tighter than buys (20%): the sell bound is a per-fill quality guard,
+    ///         NOT a sizing/aggregate cap, so it must never be openable to a book-dump.
     function setSellSlippageBps(uint16 bps) external onlyOwner {
-        if (bps == 0 || bps > MAX_EXEC_SLIPPAGE_BPS) revert InvalidCaps();
+        if (bps == 0 || bps > MAX_SELL_SLIPPAGE_BPS) revert InvalidCaps();
         _sellSlippageBps = bps;
         emit SellSlippageUpdated(bps);
     }

@@ -288,7 +288,10 @@ contract RWAVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
             address t = _allowed[i];
             if (costBasisUsdg[t] == 0) continue; // donation/dust — never bought
             if (IERC20(t).balanceOf(address(this)) == 0) continue;
-            try oracle.price(t) returns (uint256) { } catch { return true; }
+            try oracle.price(t) returns (uint256) { }
+                catch {
+                return true;
+            }
         }
         return false;
     }

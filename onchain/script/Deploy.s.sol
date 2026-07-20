@@ -39,6 +39,7 @@ contract Deploy is Script {
         RWAVault vault;
         SessionKeyExecutor exec;
         VeloraAutosave save;
+        address deployer; // attester of the seeded track record (self-namespace)
     }
 
     function run() external {
@@ -71,7 +72,7 @@ contract Deploy is Script {
         vm.serializeAddress(o, "stock", address(s.stk));
         vm.serializeAddress(o, "oracle", address(s.oracle));
         vm.serializeAddress(o, "swapAdapter", address(s.adapter));
-        string memory out = vm.serializeBytes32(o, "subject", _subject(address(s.vault)));
+        string memory out = vm.serializeBytes32(o, "subject", _subjectOf(s));
         vm.writeJson(out, "./deployments/latest.json");
     }
 
@@ -88,6 +89,7 @@ contract Deploy is Script {
     }
 
     function _deploy(address owner) internal returns (Stack memory s) {
+        s.deployer = owner;
         s.cfg = new GuardrailConfig(owner, _defaultCaps());
         s.registry = new DeskRegistry();
         s.perf = new PerfScore(s.registry);
@@ -146,18 +148,26 @@ contract Deploy is Script {
                 );
         }
 
-        // Two desk-run attestations so PerfScore has a series.
-        bytes32 subject = _subject(address(s.vault));
-        s.registry.attest(subject, 1, 10_000e18, int256(0), keccak256("run-1"), "");
-        s.registry.attest(subject, 2, 10_250e18, int256(250e18), keccak256("run-2"), "");
+        // Two desk-run attestations so PerfScore has a series. Seed via the SQUAT-PROOF
+        // self-namespace (attestSelf) — canonical reads (PerfScore) only see the self-log
+        // after M6, so a raw attest() here would be invisible to every consumer.
+        bytes32 label = _label(address(s.vault));
+        s.registry.attestSelf(label, 1, 10_000e18, int256(0), keccak256("run-1"), "");
+        s.registry.attestSelf(label, 2, 10_250e18, int256(250e18), keccak256("run-2"), "");
     }
 
-    function _subject(address vault) internal pure returns (bytes32) {
+    function _label(address vault) internal pure returns (bytes32) {
         return keccak256(abi.encodePacked("velora-vault:", vault));
     }
 
+    /// @dev The canonical, squat-proof subject the deployer seeded — derived from the
+    ///      attester address, matching what PerfScore/UI must query.
+    function _subjectOf(Stack memory s) internal view returns (bytes32) {
+        return s.registry.subjectFor(s.deployer, _label(address(s.vault)));
+    }
+
     function _report(Stack memory s) internal view {
-        (int256 tr, uint256 dd, uint256 n) = s.perf.headline(_subject(address(s.vault)));
+        (int256 tr, uint256 dd, uint256 n) = s.perf.headline(_subjectOf(s));
         console2.log("=============== Velora on-chain stack ===============");
         console2.log("GuardrailConfig  ", address(s.cfg));
         console2.log("DeskRegistry     ", address(s.registry));

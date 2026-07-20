@@ -179,6 +179,10 @@ contract HardeningTest is Test {
         vm.prank(HUMAN);
         cfg.setSellSlippageBps(2000);
         assertEq(cfg.maxSellSlippageBps(), 2000);
+        // ...but it has a TIGHTER ceiling than buys (can't be opened to a 50% book-dump).
+        vm.prank(HUMAN);
+        vm.expectRevert(GuardrailConfig.InvalidCaps.selector);
+        cfg.setSellSlippageBps(2001);
     }
 
     /// Owner can tighten the bound; agent (manager) cannot touch it.
@@ -249,6 +253,35 @@ contract HardeningTest is Test {
         vm.stopPrank();
     }
 
+    /// H2 (BROKEN→fixed): when a token the vault ACTUALLY holds (cost basis > 0) loses its
+    /// feed, the share-priced paths fail CLOSED — a depositor can't mint cheap shares
+    /// against an understated NAV and extract the gap via redeemInKind (the mint-side theft
+    /// the naive fail-open opened). The oracle-free in-kind exit stays open for everyone.
+    function test_materialDeadFeed_failsClosed_butRedeemInKindOpen() public {
+        _buy(15e18); // real stk position (cost basis > 0), within the 15% per-trade cap
+        oracle.setRevert(address(stk), true); // its feed dies
+
+        // Attacker deposit reverts — cannot mint against an understated NAV.
+        usdg.mint(BOB, 40e18);
+        vm.startPrank(BOB);
+        usdg.approve(address(vault), type(uint256).max);
+        vm.expectRevert(RWAVault.FeedDown.selector);
+        vault.deposit(40e18, BOB);
+        vm.stopPrank();
+
+        // Standard withdraw also fails closed (can't value the book).
+        vm.prank(ALICE);
+        vm.expectRevert(RWAVault.FeedDown.selector);
+        vault.withdraw(1e18, ALICE, ALICE);
+
+        // ...but the always-solvent in-kind exit still works (raw balances, no oracle).
+        uint256 shares = vault.balanceOf(ALICE);
+        vm.prank(ALICE);
+        vault.redeemInKind(shares, ALICE);
+        assertEq(vault.balanceOf(ALICE), 0);
+        assertGt(stk.balanceOf(ALICE), 0); // got the real Stock Token slice
+    }
+
     /// A token can't be allowlisted before it has a working price feed.
     function test_allowToken_requiresFeed() public {
         MockERC20 noFeed = new MockERC20("No Feed", "nFEED");
@@ -307,6 +340,9 @@ contract HardeningTest is Test {
         vm.prank(MANAGER);
         vm.expectRevert(Pausable.EnforcedPause.selector);
         vault.executeTrade(o);
+
+        // QW fix: preview agrees with execute on the paused state (no false "None").
+        assertEq(uint256(vault.previewTrade(o)), uint256(Guardrails.Violation.Paused));
     }
 
     // ─────────────────────── MEDIUM — daily halt counts overnight gaps (M1) ───────────────────────
