@@ -52,4 +52,12 @@ function deskTriggerPlugin() {
 export default defineConfig({
   plugins: [react(), deskTriggerPlugin()],
   server: { port: 5180, open: true },
+  build: {
+    rollupOptions: {
+      input: {
+        main: resolve(__dirname, 'index.html'),
+        vault: resolve(__dirname, 'vault.html'),
+      },
+    },
+  },
 })

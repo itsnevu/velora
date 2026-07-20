@@ -22,9 +22,15 @@ line_length = 100
 tab_width = 4
 bracket_spacing = true
 
+[invariant]
+runs = 64
+depth = 32
+fail_on_revert = false
+
 # Robinhood Chain — Velora on-chain module.
-# RPC/chain-id must be confirmed against https://docs.robinhood.com/chain (docs host
-# blocked automated fetch during research). Mainnet chain id ~4663, testnet ~46630.
+# Testnet chainId 46630 (0xB626) RPC https://rpc.testnet.chain.robinhood.com/rpc
+# Mainnet chainId 4663  (0x1237) RPC https://rpc.mainnet.chain.robinhood.com
+# (confirmed via research; re-verify addresses at https://docs.robinhood.com/chain — see DEPLOY.md)
 [rpc_endpoints]
 rh_testnet = "${RH_TESTNET_RPC}"
 rh_mainnet = "${RH_MAINNET_RPC}"

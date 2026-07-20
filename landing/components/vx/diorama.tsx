@@ -29,6 +29,7 @@ const TEX = {
   river2: BASE + "SC_02_P6_TEXTURE.webp",
   lake: BASE + "SC_03_LAKE_TEXTURE.webp",
   fog: BASE + "fog.webp",
+  fogFlow: BASE + "fog_flow.webp",
   bird: BASE + "BIRD_ALPHA.webp",
 };
 
@@ -47,31 +48,24 @@ const SKY_STOPS = [
   { s: 0.0,  top: [0.12, 0.13, 0.15],   bot: [0.26, 0.34, 0.12],  fog: [0.26, 0.34, 0.12],  dim: 0 },
   { s: 0.3,  top: [0.13, 0.14, 0.16],   bot: [0.30, 0.40, 0.14],  fog: [0.30, 0.40, 0.14],  dim: 0 },
   { s: 0.45, top: [0.11, 0.12, 0.14],   bot: [0.27, 0.36, 0.13],  fog: [0.27, 0.36, 0.13],  dim: 0.05 },
-  { s: 0.75, top: [0.09, 0.10, 0.12],   bot: [0.19, 0.26, 0.09],  fog: [0.21, 0.28, 0.10],  dim: 0.12 },
-  { s: 0.9,  top: [0.07, 0.075, 0.09],  bot: [0.13, 0.18, 0.06],  fog: [0.16, 0.21, 0.08],  dim: 0.24 },
-  { s: 1.0,  top: [0.055, 0.06, 0.075], bot: [0.09, 0.12, 0.045], fog: [0.12, 0.16, 0.06],  dim: 0.45 },
+  // mid/late horizon keeps a faint chartreuse band the whole way down — the
+  // distant world never goes to a dead charcoal void (top stays charcoal)
+  { s: 0.75, top: [0.09, 0.10, 0.12],   bot: [0.24, 0.32, 0.11],  fog: [0.25, 0.33, 0.12],  dim: 0.12 },
+  { s: 0.9,  top: [0.07, 0.075, 0.09],  bot: [0.19, 0.26, 0.09],  fog: [0.21, 0.28, 0.10],  dim: 0.10 },
+  { s: 1.0,  top: [0.055, 0.06, 0.075], bot: [0.15, 0.21, 0.075], fog: [0.17, 0.23, 0.085], dim: 0.16 },
 ];
 
 /** Hard cuts to black between chapters, timed to section seams so each new
  *  title emerges from the dark. */
 function blackoutAt(s: number): number {
-  // #1: mountains → river (Built-For seam, s ≈ 0.372)
-  const b1 = Math.min(
-    THREE.MathUtils.smoothstep(s, 0.335, 0.372),
-    1 - THREE.MathUtils.smoothstep(s, 0.4, 0.45),
-  );
-  // #2: river → lake — timed so the lake is already revealing while the
-  // You-Decide copy is pinned (pin window ≈ 0.650–0.708)
-  const b2 = Math.min(
-    THREE.MathUtils.smoothstep(s, 0.6, 0.64),
-    1 - THREE.MathUtils.smoothstep(s, 0.655, 0.695),
-  );
-  return Math.max(b1, b2);
+  // one continuous 3D world — no chapter cut-to-dark
+  void s;
+  return 0;
 }
 
 /** Chapter-A progress: the camera finishes its flight before blackout #1. */
 function chapterA(s: number): number {
-  return Math.min(1, Math.max(0, s / 0.34));
+  return Math.min(1, Math.max(0, s / 0.94));
 }
 
 function skyAt(s: number) {
@@ -100,21 +94,15 @@ type PeakCfg = {
    so every peak the camera passes keeps |x| ≥ r * 1.9 + 1. Peaks beyond the
    path's end (z < -34) are scenery only and may sit anywhere. */
 const PEAKS: PeakCfg[] = [
-  // hero centrepiece — sits just right of the camera line; the path bends
-  // left around it (fly-BY, not fly-through)
-  { x: 3.8, z: -13, h: 10.5, r: 3.2, squash: 0.82, rot: 0.3, seed: 11, tex: "mountain" },
-  { x: -12, z: -15, h: 7.8, r: 3.4, squash: 0.62, rot: 1.2, seed: 23, tex: "ridge" },
-  { x: 11.5, z: -14.5, h: 8.6, r: 3.6, squash: 0.72, rot: 2.1, seed: 37, tex: "mountain" },
-  // the camera passes z -22…-26 up close — these need reach (1.66×r) + ~6 clearance
-  { x: -14.5, z: -22, h: 9.4, r: 4.4, squash: 0.6, rot: 4.0, seed: 51, tex: "ridge" },
-  { x: 15, z: -23, h: 10.6, r: 4.8, squash: 0.66, rot: 5.2, seed: 67, tex: "mountain" },
-  { x: -12.5, z: -28, h: 9.0, r: 4.0, squash: 0.7, rot: 0.9, seed: 83, tex: "ridge" },
-  { x: 13.5, z: -32, h: 9.8, r: 4.2, squash: 0.76, rot: 3.3, seed: 97, tex: "mountain" },
-  // far scenery — fills the haze gaps behind the hero title band while
-  // staying out of the end-of-path sightline (camera ends at z -26.5
-  // looking toward z -42, so keep these wide of centre)
-  { x: -8.6, z: -37, h: 10.5, r: 2.4, squash: 0.8, rot: 2.6, seed: 113, tex: "mountain" },
-  { x: 9.2, z: -40, h: 11.5, r: 2.6, squash: 0.75, rot: 4.4, seed: 127, tex: "ridge" },
+  // central massif — the mountain the camera orbits
+  { x: 0,    z: -18,   h: 13.5, r: 3.8, squash: 0.85, rot: 0.3, seed: 11, tex: "mountain" },
+  { x: -5.5, z: -14,   h: 9.0,  r: 3.0, squash: 0.7,  rot: 1.2, seed: 23, tex: "ridge" },
+  { x: 5.5,  z: -14.5, h: 10.0, r: 3.2, squash: 0.75, rot: 2.1, seed: 37, tex: "mountain" },
+  { x: -6.5, z: -21,   h: 10.5, r: 3.2, squash: 0.7,  rot: 4.0, seed: 51, tex: "ridge" },
+  { x: 6.5,  z: -21.5, h: 11.5, r: 3.4, squash: 0.72, rot: 5.2, seed: 67, tex: "mountain" },
+  { x: -2.5, z: -24,   h: 9.0,  r: 2.8, squash: 0.7,  rot: 0.9, seed: 83, tex: "ridge" },
+  { x: 3.0,  z: -24.5, h: 10.0, r: 3.0, squash: 0.76, rot: 3.3, seed: 97, tex: "mountain" },
+  { x: 0,    z: -27,   h: 8.5,  r: 2.6, squash: 0.8,  rot: 2.6, seed: 113, tex: "ridge" },
 ];
 
 function buildPeak(cfg: PeakCfg): THREE.BufferGeometry {
@@ -155,11 +143,11 @@ function buildPeak(cfg: PeakCfg): THREE.BufferGeometry {
     const l = Math.max(0.38, Math.min(1.3, lit));
     // pale scree/snow toward the apex, like the reference peaks
     const snow = THREE.MathUtils.smoothstep(t, 0.72, 0.96) * (0.5 + 0.5 * Math.sin(ang * 1.7 + ph[3]));
-    const edge = Math.max(0, n) * 0.9 + snow * 0.8 + Math.pow(t, 2.2) * 0.55;
-    const gbase = 0.11;
-    colors[i * 3]     = gbase * 0.9 + edge * 0.80;   // chartreuse: red strong
-    colors[i * 3 + 1] = gbase * 1.0 + edge * 0.96;   // green max
-    colors[i * 3 + 2] = gbase * 0.5 + edge * 0.22;   // low blue
+    const edge = Math.max(0, n) * 0.9 + snow * 0.85 + Math.pow(t, 2.2) * 0.62;
+    const gbase = 0.13;
+    colors[i * 3]     = gbase * 0.82 + edge * 0.80;  // chartreuse #D7FE51 (R < G, not acid-yellow)
+    colors[i * 3 + 1] = gbase * 0.96 + edge * 0.94;  // green
+    colors[i * 3 + 2] = gbase * 0.36 + edge * 0.16;  // low blue
   }
   geo.setAttribute("color", new THREE.BufferAttribute(colors, 3));
   geo.computeVertexNormals();
@@ -207,7 +195,7 @@ function Effects() {
     const composer = new EffectComposer(gl);
     composer.addPass(new RenderPass(scene, camera));
     // gentle bloom — only the brightest chartreuse highlights glow (high threshold)
-    const bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), 0.55, 0.55, 0.72);
+    const bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), 0.3, 0.5, 0.85);
     composer.addPass(bloom);
     const tilt = new ShaderPass(TiltShiftShader);
     composer.addPass(tilt);
@@ -218,7 +206,8 @@ function Effects() {
     const pr = gl.getPixelRatio();
     bits.composer.setPixelRatio(pr);
     bits.composer.setSize(size.width, size.height);
-    bits.bloom.setSize(size.width, size.height);
+    // half-res bloom — much cheaper (keeps the scroll smooth), still glows fine
+    bits.bloom.setSize(Math.max(1, Math.round(size.width / 2)), Math.max(1, Math.round(size.height / 2)));
     (bits.tilt.uniforms.uTexel.value as THREE.Vector2).set(1 / (size.width * pr), 1 / (size.height * pr));
   }, [bits, gl, size]);
 
@@ -265,7 +254,7 @@ function SkyAndDim({ smooth }: { smooth: RefN }) {
           precision highp float;
           varying vec2 vUv;
           uniform float uOpacity;
-          void main() { gl_FragColor = vec4(vec3(0.03, 0.033, 0.04), uOpacity); }
+          void main() { gl_FragColor = vec4(vec3(0.08, 0.085, 0.095), uOpacity); }
         `,
         uniforms: { uOpacity: { value: 0 } },
         transparent: true,
@@ -297,40 +286,34 @@ function SkyAndDim({ smooth }: { smooth: RefN }) {
 }
 
 /* ── camera flight path, scrubbed by scroll, nudged by pointer ─────────── */
-const POS_CURVE = new THREE.CatmullRomCurve3([
-  new THREE.Vector3(0, 3.3, 4.5),
-  new THREE.Vector3(-0.4, 2.9, -0.5),
-  new THREE.Vector3(-1.4, 2.3, -7),
-  new THREE.Vector3(-2.2, 2.7, -13.5), // swings left around the hero peak
-  new THREE.Vector3(-0.6, 2.6, -20),
-  new THREE.Vector3(0, 2.2, -26.5),
-]);
-const LOOK_CURVE = new THREE.CatmullRomCurve3([
-  new THREE.Vector3(0.4, 5.2, -13),
-  new THREE.Vector3(0, 4.2, -15),
-  new THREE.Vector3(-0.4, 2.6, -19),
-  new THREE.Vector3(0.2, 2.6, -26),
-  new THREE.Vector3(0, 1.8, -34),
-  new THREE.Vector3(0, 1.4, -42),
-]);
+/* the massif we orbit — the camera circles it, never a corridor */
+const MASSIF = new THREE.Vector3(0, 3.2, -18);
 
 function Rig({ smooth, pointer }: { smooth: RefN; pointer: Ref2 }) {
   const { camera } = useThree();
-  const pos = useMemo(() => new THREE.Vector3(), []);
-  const look = useMemo(() => new THREE.Vector3(), []);
   const soft = useRef({ x: 0, y: 0 });
 
   useFrame(() => {
-    // the flight is chapter A only — it completes before the blackout
+    // ORBIT the massif — spiral inward + descend across the scroll, always
+    // looking AT the mountains so the frame is full the whole way (muterin gunung)
     const s = chapterA(smooth.current ?? 0);
-    POS_CURVE.getPoint(s, pos);
-    LOOK_CURVE.getPoint(s, look);
     const px = pointer.current?.x ?? 0;
     const py = pointer.current?.y ?? 0;
     soft.current.x += (px - soft.current.x) * 0.04;
     soft.current.y += (py - soft.current.y) * 0.04;
-    camera.position.set(pos.x + soft.current.x * 0.55, pos.y - soft.current.y * 0.3, pos.z);
-    camera.lookAt(look.x + soft.current.x * 1.2, look.y - soft.current.y * 0.8, look.z);
+    const angle = -0.35 + s * Math.PI * 1.75; // ~315deg sweep around the range
+    const radius = 31 - s * 13.5; // 31 -> 17.5, spiralling in
+    const height = 10 - s * 6.4; // 10 -> 3.6, descending toward the valley
+    camera.position.set(
+      MASSIF.x + Math.sin(angle) * radius + soft.current.x * 1.4,
+      Math.max(1.6, height - soft.current.y * 0.6),
+      MASSIF.z + Math.cos(angle) * radius,
+    );
+    camera.lookAt(
+      MASSIF.x + soft.current.x * 1.6,
+      MASSIF.y + (2.4 - s * 2.0) - soft.current.y * 0.8,
+      MASSIF.z,
+    );
   });
   return null;
 }
@@ -382,14 +365,14 @@ function World() {
     const groundMap = lake.clone();
     groundMap.needsUpdate = true;
     groundMap.wrapS = groundMap.wrapT = THREE.MirroredRepeatWrapping;
-    groundMap.repeat.set(5, 5);
+    groundMap.repeat.set(9, 9);
     const groundMat = new THREE.MeshBasicMaterial({ map: groundMap, color: new THREE.Color(0.5, 0.66, 0.26), fog: true });
 
     const ringMap = bg.clone();
     ringMap.needsUpdate = true;
-    ringMap.repeat.set(2.5, 0.45);
-    ringMap.offset.set(0, 0.28); // mid-band of the painting only
-    const ringMat = new THREE.MeshBasicMaterial({ map: ringMap, fog: true, side: THREE.BackSide });
+    ringMap.repeat.set(4, 0.5);
+    ringMap.offset.set(0, 0.26); // mid-band of the painting only
+    const ringMat = new THREE.MeshBasicMaterial({ map: ringMap, color: new THREE.Color(0.42, 0.52, 0.26), fog: false, side: THREE.BackSide });
 
     return { peakMeshes, groundMat, ringMat };
   }, [bg, mountain, ridge, lake]);
@@ -407,12 +390,12 @@ function World() {
         />
       ))}
       {/* valley floor — the aerial lake painting */}
-      <mesh material={groundMat} rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.02, -30]}>
-        <planeGeometry args={[110, 110]} />
+      <mesh material={groundMat} rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.02, -18]}>
+        <planeGeometry args={[240, 240]} />
       </mesh>
       {/* far horizon band */}
-      <mesh material={ringMat} position={[0, 7, -28]}>
-        <cylinderGeometry args={[72, 72, 34, 72, 1, true]} />
+      <mesh material={ringMat} position={[0, 9, -18]}>
+        <cylinderGeometry args={[68, 68, 48, 96, 1, true]} />
       </mesh>
     </>
   );
@@ -461,7 +444,7 @@ function Mist({ smooth, animate }: { smooth: RefN; animate: boolean }) {
             map: fogTex,
             transparent: true,
             depthWrite: false,
-            color: new THREE.Color(0.62, 0.85, 0.30),
+            color: new THREE.Color(0.75, 0.82, 0.28),
             opacity: 0,
           }),
       ),
@@ -471,7 +454,7 @@ function Mist({ smooth, animate }: { smooth: RefN; animate: boolean }) {
   useFrame((state) => {
     const t = animate ? state.clock.elapsedTime : 0;
     const s = smooth.current ?? 0;
-    const boost = (0.4 + 1.1 * band(s, 0.12, 0.28, 0.08)) * (1 - THREE.MathUtils.smoothstep(s, 0.3, 0.34)); // gone before blackout #1
+    const boost = 0.55 + 0.5 * band(s, 0.05, 0.85, 0.15); // drifting mist through the whole flight
     group.current.children.forEach((child, i) => {
       const p = puffs[i];
       const spr = child as THREE.Sprite;
@@ -496,12 +479,14 @@ function Particles({ animate }: { animate: boolean }) {
   const geo = useMemo(() => {
     let seed = 999;
     const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
-    const n = 70;
+    // a persistent ambient field — wider + taller volume so faint chartreuse
+    // motes drift across EVERY section, not just the mountain moment
+    const n = 140;
     const arr = new Float32Array(n * 3);
     for (let i = 0; i < n; i++) {
-      arr[i * 3] = (rnd() - 0.5) * 30;
-      arr[i * 3 + 1] = 0.5 + rnd() * 7;
-      arr[i * 3 + 2] = 2 - rnd() * 36;
+      arr[i * 3] = (rnd() - 0.5) * 42;
+      arr[i * 3 + 1] = 0.2 + rnd() * 11;
+      arr[i * 3 + 2] = 4 - rnd() * 46;
     }
     const g = new THREE.BufferGeometry();
     g.setAttribute("position", new THREE.BufferAttribute(arr, 3));
@@ -517,9 +502,9 @@ function Particles({ animate }: { animate: boolean }) {
   return (
     <points ref={ref} geometry={geo} renderOrder={400}>
       <pointsMaterial
-        size={0.055}
+        size={0.07}
         transparent
-        opacity={0.5}
+        opacity={0.62}
         color={new THREE.Color(0.78, 0.95, 0.4)}
         depthWrite={false}
         blending={THREE.AdditiveBlending}
@@ -589,7 +574,7 @@ function Birds({ smooth, animate }: { smooth: RefN; animate: boolean }) {
   useFrame((state) => {
     const t = animate ? state.clock.elapsedTime : 0;
     const s = smooth.current ?? 0;
-    const vis = band(s, 0.1, 0.28, 0.07) * 0.65; // chapter A only, clear of the hero
+    const vis = band(s, 0.08, 0.85, 0.12) * 0.5; // gliding through the flight
     group.current.children.forEach((child, i) => {
       const b = birds[i];
       const mesh = child as THREE.Mesh;
@@ -629,26 +614,7 @@ type PaintCfg = {
   prog: (s: number) => number;
 };
 
-const PAINT_CHAPTERS: PaintCfg[] = [
-  // chapter B — river flyover, panel 1 (single river)
-  {
-    url: TEX.river1, order: 940, zoomFrom: 1.4, zoomTo: 1.15, panY: 0.22,
-    opacity: (s) => band(s, 0.415, 0.545, 0.04),
-    prog: (s) => Math.min(1, Math.max(0, (s - 0.4) / 0.155)),
-  },
-  // chapter B — river flyover, panel 2 (braided rivers), zooms IN for contrast
-  {
-    url: TEX.river2, order: 941, zoomFrom: 1.15, zoomTo: 1.42, panY: 0.18,
-    opacity: (s) => band(s, 0.525, 0.645, 0.04),
-    prog: (s) => Math.min(1, Math.max(0, (s - 0.515) / 0.14)),
-  },
-  // chapter C — the lake finale (holds to the end; dusk dim grades it)
-  {
-    url: TEX.lake, order: 945, zoomFrom: 1.45, zoomTo: 1.12, panY: 0.2,
-    opacity: (s) => THREE.MathUtils.smoothstep(s, 0.655, 0.71),
-    prog: (s) => Math.min(1, Math.max(0, (s - 0.65) / 0.35)),
-  },
-];
+const PAINT_CHAPTERS: PaintCfg[] = [];
 
 function PaintingLayer({ cfg, smooth }: { cfg: PaintCfg; smooth: RefN }) {
   const tex = useLoader(THREE.TextureLoader, cfg.url);
@@ -678,9 +644,9 @@ function PaintingLayer({ cfg, smooth }: { cfg: PaintCfg; smooth: RefN }) {
           uv.x += sin(uTime * 0.02) * 0.008;            // barely-there idle drift
           vec4 c = texture2D(uMap, uv);
           float lum = dot(c.rgb, vec3(0.299, 0.587, 0.114));
-          vec3 g  = vec3(0.55, 0.72, 0.18);  // chartreuse mid
-          vec3 hi = vec3(0.84, 1.0, 0.40);   // chartreuse highlight (#D7FE51)
-          vec3 graded = mix(vec3(0.05, 0.055, 0.07), g, smoothstep(0.04, 0.6, lum));
+          vec3 g  = vec3(0.72, 0.80, 0.20);  // chartreuse mid (yellower)
+          vec3 hi = vec3(0.90, 1.0, 0.44);   // chartreuse highlight (#D7FE51)
+          vec3 graded = mix(vec3(0.07, 0.075, 0.09), g, smoothstep(0.04, 0.6, lum));
           graded = mix(graded, hi, smoothstep(0.6, 1.0, lum));
           gl_FragColor = vec4(graded, uOpacity);
         }
@@ -748,7 +714,7 @@ function GroundHaze({ smooth, animate }: { smooth: RefN; animate: boolean }) {
           transparent: true,
           depthWrite: false,
           blending: THREE.AdditiveBlending,
-          color: new THREE.Color(0.5, 0.7, 0.22),
+          color: new THREE.Color(0.64, 0.72, 0.2),
           opacity: 0,
         }),
     );
@@ -758,7 +724,7 @@ function GroundHaze({ smooth, animate }: { smooth: RefN; animate: boolean }) {
     const t = animate ? state.clock.elapsedTime : 0;
     const s = smooth.current ?? 0;
     // present through chapter A, gone before blackout #1
-    const boost = (0.55 + 0.85 * band(s, 0.02, 0.26, 0.1)) * (1 - THREE.MathUtils.smoothstep(s, 0.3, 0.35));
+    const boost = 0.5 + 0.6 * band(s, 0.02, 0.8, 0.12);
     group.current.children.forEach((child, i) => {
       const p = puffs[i];
       const spr = child as THREE.Sprite;
@@ -777,12 +743,63 @@ function GroundHaze({ smooth, animate }: { smooth: RefN; animate: boolean }) {
   );
 }
 
+/* ── drifting fog bands circling the massif (fog_flow.webp) — depth + never-empty ─ */
+function FogRing({ animate }: { animate: boolean }) {
+  const tex = useLoader(THREE.TextureLoader, TEX.fogFlow);
+  const group = useRef<THREE.Group>(null!);
+  const bands = useMemo(() => {
+    let seed = 3113;
+    const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+    return Array.from({ length: 16 }, (_, i) => ({
+      a: (i / 16) * Math.PI * 2,
+      rad: 9 + rnd() * 12,
+      y: 1.2 + rnd() * 6,
+      sc: 13 + rnd() * 12,
+      v: 0.015 + rnd() * 0.05,
+      ph: rnd() * Math.PI * 2,
+      base: 0.09 + rnd() * 0.12,
+    }));
+  }, []);
+  const materials = useMemo(() => {
+    tex.colorSpace = THREE.NoColorSpace;
+    return bands.map(
+      () =>
+        new THREE.SpriteMaterial({
+          map: tex,
+          transparent: true,
+          depthWrite: false,
+          blending: THREE.AdditiveBlending,
+          color: new THREE.Color(0.5, 0.62, 0.24),
+          opacity: 0,
+        }),
+    );
+  }, [bands, tex]);
+  useFrame((state) => {
+    const t = animate ? state.clock.elapsedTime : 0;
+    group.current.children.forEach((child, i) => {
+      const b = bands[i];
+      const spr = child as THREE.Sprite;
+      const a = b.a + t * b.v;
+      spr.position.set(MASSIF.x + Math.sin(a) * b.rad, b.y + Math.sin(t * 0.15 + b.ph) * 0.4, MASSIF.z + Math.cos(a) * b.rad);
+      spr.scale.set(b.sc, b.sc * 0.5, 1);
+      (spr.material as THREE.SpriteMaterial).opacity = b.base;
+    });
+  });
+  return (
+    <group ref={group}>
+      {bands.map((_, i) => (
+        <sprite key={i} material={materials[i]} renderOrder={450} />
+      ))}
+    </group>
+  );
+}
+
 /* ── scene root: fog grading + everything wired to the smoothed scroll ─── */
 function SceneRoot({ scroll, pointer, animate }: { scroll: RefN; pointer: Ref2; animate: boolean }) {
   const { scene } = useThree();
   const smooth = useRef(0);
 
-  const fog = useMemo(() => new THREE.Fog(new THREE.Color(0.20, 0.28, 0.10), 16, 54), []);
+  const fog = useMemo(() => new THREE.Fog(new THREE.Color(0.30, 0.34, 0.12), 16, 54), []);
   useEffect(() => {
     scene.fog = fog;
     return () => {
@@ -809,6 +826,7 @@ function SceneRoot({ scroll, pointer, animate }: { scroll: RefN; pointer: Ref2; 
       <World />
       <Mist smooth={smooth} animate={animate} />
       <GroundHaze smooth={smooth} animate={animate} />
+      <FogRing animate={animate} />
       <Particles animate={animate} />
       <Birds smooth={smooth} animate={animate} />
       {PAINT_CHAPTERS.map((cfg) => (
