@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { VeloraLogo } from "@/components/ui/velora-logo";
 import { ScrambleHover } from "@/components/ui/scramble-hover";
 import { NAV } from "@/lib/data";
-import { GITHUB_URL } from "@/lib/links";
+import { GITHUB_URL, VAULT_URL } from "@/lib/links";
 import { cn } from "@/lib/cn";
 
 function GitHubGlyph() {
@@ -94,6 +94,9 @@ export function SiteHeader() {
             <a href={GITHUB_URL} target="_blank" rel="noreferrer" aria-label="Velora on GitHub">
               <GitHubGlyph /> <ScrambleHover text="GitHub" />
             </a>
+            <a href={VAULT_URL} className="active" aria-label="Launch the app">
+              <span className="n">↗</span> <ScrambleHover text="Launch App" />
+            </a>
           </nav>
           <button className="burger" aria-label="Open menu" aria-expanded={drawer} onClick={() => setDrawer(true)}>
             <span />
@@ -120,6 +123,9 @@ export function SiteHeader() {
             <GitHubGlyph />
           </span>{" "}
           <ScrambleHover text="GitHub" />
+        </a>
+        <a href={VAULT_URL} onClick={() => setDrawer(false)}>
+          <span className="n">↗</span> <ScrambleHover text="Launch App" />
         </a>
       </div>
 

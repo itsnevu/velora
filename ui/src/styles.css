@@ -141,6 +141,15 @@ small { opacity: 0.65; font-size: 0.85em; }
 .asof-k { font-family: var(--font-mono); letter-spacing: 0.5px; text-transform: uppercase; font-size: 9px; }
 .asof-v { color: var(--text-dim); font-variant-numeric: tabular-nums; }
 
+/* cross-link to the investor dApp (vault.html) — same origin, keeps the flow one product */
+.vault-link {
+  flex: none; font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.5px; text-transform: uppercase;
+  color: var(--pos); border: 1px solid rgba(215, 254, 81, 0.32); border-radius: 999px; padding: 9px 15px;
+  white-space: nowrap; display: inline-flex; align-items: center; gap: 7px;
+  transition: background .2s var(--ease), box-shadow .2s var(--ease), transform .12s var(--ease);
+}
+.vault-link:hover { background: var(--pos-bg); box-shadow: 0 0 16px var(--pos-glow); transform: translateY(-1px); }
+
 /* ---------- layout ---------- */
 .layout { display: grid; grid-template-columns: 1fr 330px; gap: 20px; align-items: start; }
 .col-main, .col-side { display: flex; flex-direction: column; gap: 20px; }

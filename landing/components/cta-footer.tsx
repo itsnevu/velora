@@ -2,9 +2,10 @@ import { VeloraLogo } from "@/components/ui/velora-logo";
 import { SquaresBg } from "@/components/ui/squares-bg";
 import { Magnetic } from "@/components/ui/magnetic";
 import { ScrambleHover } from "@/components/ui/scramble-hover";
-import { GITHUB_URL } from "@/lib/links";
+import { GITHUB_URL, VAULT_URL } from "@/lib/links";
 
 const FOOT_LINKS: { label: string; href: string; external?: boolean }[] = [
+  { label: "LAUNCH APP", href: VAULT_URL, external: true },
   { label: "THE DESK", href: "#desk" },
   { label: "HOW IT WORKS", href: "#flow" },
   { label: "THE TEAM", href: "#team" },
@@ -26,8 +27,8 @@ export function CtaFooter() {
             you decide whether it ever becomes an order.
           </p>
           <Magnetic>
-            <a href="#top" className="btn btn-lime">
-              <ScrambleHover text="Request Access" /> ▸
+            <a href={VAULT_URL} className="btn btn-lime">
+              <ScrambleHover text="Launch the App" /> ▸
             </a>
           </Magnetic>
         </div>

@@ -27,10 +27,12 @@ const TEX = {
   ridge: BASE + "SC_01_RIDGE_TEXTURE.webp",
   river1: BASE + "SC_02_P1_TEXTURE.webp",
   river2: BASE + "SC_02_P6_TEXTURE.webp",
+  river3: BASE + "SC_02_P2_TEXTURE.webp", // confluence — the river widens
   lake: BASE + "SC_03_LAKE_TEXTURE.webp",
   fog: BASE + "fog.webp",
   fogFlow: BASE + "fog_flow.webp",
   bird: BASE + "BIRD_ALPHA.webp",
+  birdTex: BASE + "BIRD_TEXTURE_01.webp",
 };
 
 type RefN = React.RefObject<number>;
@@ -44,15 +46,13 @@ type Ref2 = React.RefObject<{ x: number; y: number }>;
    ⬛ blackout #2 at the You-Decide seam (s ≈ 0.650)
    C (s ~0.68 → 1)   — the lake aerial finale; `dim` grades it to dusk. */
 const SKY_STOPS = [
-  // charcoal (#22242A) sky with a chartreuse (#D7FE51) horizon glow that deepens
-  { s: 0.0,  top: [0.12, 0.13, 0.15],   bot: [0.26, 0.34, 0.12],  fog: [0.26, 0.34, 0.12],  dim: 0 },
-  { s: 0.3,  top: [0.13, 0.14, 0.16],   bot: [0.30, 0.40, 0.14],  fog: [0.30, 0.40, 0.14],  dim: 0 },
-  { s: 0.45, top: [0.11, 0.12, 0.14],   bot: [0.27, 0.36, 0.13],  fog: [0.27, 0.36, 0.13],  dim: 0.05 },
-  // mid/late horizon keeps a faint chartreuse band the whole way down — the
-  // distant world never goes to a dead charcoal void (top stays charcoal)
-  { s: 0.75, top: [0.09, 0.10, 0.12],   bot: [0.24, 0.32, 0.11],  fog: [0.25, 0.33, 0.12],  dim: 0.12 },
-  { s: 0.9,  top: [0.07, 0.075, 0.09],  bot: [0.19, 0.26, 0.09],  fog: [0.21, 0.28, 0.10],  dim: 0.10 },
-  { s: 1.0,  top: [0.055, 0.06, 0.075], bot: [0.15, 0.21, 0.075], fog: [0.17, 0.23, 0.085], dim: 0.16 },
+  // charcoal (#22242A) sky, horizon glow in true chartreuse ratio (#D7FE51)
+  { s: 0.0,  top: [0.12, 0.13, 0.15],  bot: [0.35, 0.42, 0.13],  fog: [0.35, 0.42, 0.13],  dim: 0 },
+  { s: 0.3,  top: [0.13, 0.14, 0.16],  bot: [0.40, 0.48, 0.15],  fog: [0.40, 0.48, 0.15],  dim: 0 },
+  { s: 0.45, top: [0.12, 0.13, 0.15],  bot: [0.38, 0.45, 0.14],  fog: [0.38, 0.45, 0.14],  dim: 0.03 },
+  { s: 0.75, top: [0.11, 0.12, 0.14],  bot: [0.35, 0.42, 0.13],  fog: [0.36, 0.43, 0.13],  dim: 0.06 },
+  { s: 0.9,  top: [0.10, 0.11, 0.13],  bot: [0.32, 0.38, 0.12],  fog: [0.33, 0.39, 0.12],  dim: 0.06 },
+  { s: 1.0,  top: [0.09, 0.10, 0.12],  bot: [0.29, 0.35, 0.11],  fog: [0.31, 0.37, 0.11],  dim: 0.10 },
 ];
 
 /** Hard cuts to black between chapters, timed to section seams so each new
@@ -65,7 +65,7 @@ function blackoutAt(s: number): number {
 
 /** Chapter-A progress: the camera finishes its flight before blackout #1. */
 function chapterA(s: number): number {
-  return Math.min(1, Math.max(0, s / 0.94));
+  return Math.min(1, Math.max(0, s / 0.40));
 }
 
 function skyAt(s: number) {
@@ -94,16 +94,76 @@ type PeakCfg = {
    so every peak the camera passes keeps |x| ≥ r * 1.9 + 1. Peaks beyond the
    path's end (z < -34) are scenery only and may sit anywhere. */
 const PEAKS: PeakCfg[] = [
-  // central massif — the mountain the camera orbits
-  { x: 0,    z: -18,   h: 13.5, r: 3.8, squash: 0.85, rot: 0.3, seed: 11, tex: "mountain" },
-  { x: -5.5, z: -14,   h: 9.0,  r: 3.0, squash: 0.7,  rot: 1.2, seed: 23, tex: "ridge" },
-  { x: 5.5,  z: -14.5, h: 10.0, r: 3.2, squash: 0.75, rot: 2.1, seed: 37, tex: "mountain" },
-  { x: -6.5, z: -21,   h: 10.5, r: 3.2, squash: 0.7,  rot: 4.0, seed: 51, tex: "ridge" },
-  { x: 6.5,  z: -21.5, h: 11.5, r: 3.4, squash: 0.72, rot: 5.2, seed: 67, tex: "mountain" },
-  { x: -2.5, z: -24,   h: 9.0,  r: 2.8, squash: 0.7,  rot: 0.9, seed: 83, tex: "ridge" },
-  { x: 3.0,  z: -24.5, h: 10.0, r: 3.0, squash: 0.76, rot: 3.3, seed: 97, tex: "mountain" },
-  { x: 0,    z: -27,   h: 8.5,  r: 2.6, squash: 0.8,  rot: 2.6, seed: 113, tex: "ridge" },
+  // THE hero peak — the camera sweeps ~300° around this one
+  { x: 2.5,  z: -16, h: 13.5, r: 3.6, squash: 0.85, rot: 0.3, seed: 11,  tex: "mountain" },
+  // outer ring — always something behind/beside the hero so frames stay full
+  { x: -12,  z: -2,  h: 8.5,  r: 3.0, squash: 0.75, rot: 0.6, seed: 7,   tex: "ridge" },
+  { x: 15,   z: -1,  h: 9.5,  r: 3.2, squash: 0.8,  rot: 1.9, seed: 19,  tex: "mountain" },
+  { x: -19,  z: -13, h: 11.0, r: 3.8, squash: 0.7,  rot: 4.0, seed: 51,  tex: "mountain" },
+  { x: -16,  z: -28, h: 10.0, r: 3.4, squash: 0.72, rot: 5.2, seed: 67,  tex: "ridge" },
+  { x: -2,   z: -38, h: 12.0, r: 4.0, squash: 0.7,  rot: 0.9, seed: 83,  tex: "mountain" },
+  { x: 9,    z: -32, h: 11.0, r: 3.6, squash: 0.74, rot: 3.3, seed: 97,  tex: "ridge" },
+  { x: 21,   z: -24, h: 10.5, r: 3.4, squash: 0.7,  rot: 2.6, seed: 113, tex: "mountain" },
+  { x: 20,   z: -6,  h: 9.0,  r: 3.0, squash: 0.76, rot: 4.4, seed: 127, tex: "ridge" },
+  // far scenery — depth beyond the ring
+  { x: -6,   z: -44, h: 12.0, r: 3.0, squash: 0.8,  rot: 2.2, seed: 163, tex: "mountain" },
+  { x: 6,    z: -47, h: 13.0, r: 3.2, squash: 0.75, rot: 0.4, seed: 179, tex: "ridge" },
+  { x: 18,   z: -38, h: 11.0, r: 2.8, squash: 0.8,  rot: 3.9, seed: 191, tex: "mountain" },
 ];
+
+/* remap any painted texture to the brand ramp: charcoal → #8FAE2E → #D7FE51
+   → #E9FF86. Kills every trace of forest-green — the world is literally
+   drawn in chartreuse. Runs once per texture on the client. */
+function chartreuseRamp(src: THREE.Texture): THREE.Texture {
+  const img = src.image as HTMLImageElement;
+  const w = img.width, h = img.height;
+  const c = document.createElement("canvas");
+  c.width = w; c.height = h;
+  const ctx = c.getContext("2d")!;
+  ctx.drawImage(img, 0, 0);
+  const d = ctx.getImageData(0, 0, w, h);
+  const px = d.data;
+  const stops: [number, number, number, number][] = [
+    [0.0, 13, 14, 17],
+    [0.45, 168, 200, 56],
+    [0.78, 215, 254, 81],
+    [1.0, 233, 255, 134],
+  ];
+  for (let i = 0; i < px.length; i += 4) {
+    const l = Math.min(1, (0.299 * px[i] + 0.587 * px[i + 1] + 0.114 * px[i + 2]) / 255);
+    for (let k = 0; k < stops.length - 1; k++) {
+      const A = stops[k], B = stops[k + 1];
+      if (l >= A[0] && l <= B[0]) {
+        const t = (l - A[0]) / (B[0] - A[0]);
+        px[i] = A[1] + (B[1] - A[1]) * t;
+        px[i + 1] = A[2] + (B[2] - A[2]) * t;
+        px[i + 2] = A[3] + (B[3] - A[3]) * t;
+        break;
+      }
+    }
+  }
+  ctx.putImageData(d, 0, 0);
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.NoColorSpace;
+  tex.wrapS = tex.wrapT = THREE.MirroredRepeatWrapping;
+  tex.anisotropy = 4;
+  return tex;
+}
+
+/* crop a clean sub-rect out of a canvas-backed texture (fractions of w/h) */
+function cropTex(src: THREE.Texture, fx: number, fy: number, fw: number, fh: number): THREE.Texture {
+  const img = src.image as HTMLCanvasElement;
+  const c = document.createElement("canvas");
+  c.width = Math.max(2, Math.round(img.width * fw));
+  c.height = Math.max(2, Math.round(img.height * fh));
+  const ctx = c.getContext("2d")!;
+  ctx.drawImage(img, img.width * fx, img.height * fy, c.width, c.height, 0, 0, c.width, c.height);
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.NoColorSpace;
+  tex.wrapS = tex.wrapT = THREE.MirroredRepeatWrapping;
+  tex.anisotropy = 4;
+  return tex;
+}
 
 function buildPeak(cfg: PeakCfg): THREE.BufferGeometry {
   const geo = new THREE.ConeGeometry(cfg.r, cfg.h, 140, 56, true);
@@ -144,10 +204,8 @@ function buildPeak(cfg: PeakCfg): THREE.BufferGeometry {
     // pale scree/snow toward the apex, like the reference peaks
     const snow = THREE.MathUtils.smoothstep(t, 0.72, 0.96) * (0.5 + 0.5 * Math.sin(ang * 1.7 + ph[3]));
     const edge = Math.max(0, n) * 0.9 + snow * 0.85 + Math.pow(t, 2.2) * 0.62;
-    const gbase = 0.13;
-    colors[i * 3]     = gbase * 0.82 + edge * 0.80;  // chartreuse #D7FE51 (R < G, not acid-yellow)
-    colors[i * 3 + 1] = gbase * 0.96 + edge * 0.94;  // green
-    colors[i * 3 + 2] = gbase * 0.36 + edge * 0.16;  // low blue
+    const lum = Math.min(1.25, 0.2 + edge); // grayscale — the ramped map carries the chartreuse
+    colors[i * 3] = colors[i * 3 + 1] = colors[i * 3 + 2] = lum;
   }
   geo.setAttribute("color", new THREE.BufferAttribute(colors, 3));
   geo.computeVertexNormals();
@@ -159,7 +217,7 @@ const TiltShiftShader = {
   uniforms: {
     tDiffuse: { value: null },
     uTexel: { value: new THREE.Vector2(1 / 1024, 1 / 1024) },
-    uAmount: { value: 1.0 },
+    uAmount: { value: 0.55 },
   },
   vertexShader: /* glsl */ `
     varying vec2 vUv;
@@ -286,34 +344,47 @@ function SkyAndDim({ smooth }: { smooth: RefN }) {
 }
 
 /* ── camera flight path, scrubbed by scroll, nudged by pointer ─────────── */
-/* the massif we orbit — the camera circles it, never a corridor */
-const MASSIF = new THREE.Vector3(0, 3.2, -18);
+/* the flight path — approach the hero peak, then sweep ~300° AROUND it
+   (vvvhound-style: directed, circling one mountain, not a slalom) */
+const POS_CURVE = new THREE.CatmullRomCurve3([
+  new THREE.Vector3(0, 4.0, 9),
+  new THREE.Vector3(-1.5, 3.6, 0),
+  new THREE.Vector3(-5, 3.3, -7),
+  new THREE.Vector3(-10.5, 3.0, -16),
+  new THREE.Vector3(-6, 2.8, -25.5),
+  new THREE.Vector3(2.5, 2.6, -29.5),
+  new THREE.Vector3(11, 2.5, -25),
+  new THREE.Vector3(15, 2.45, -16),
+  new THREE.Vector3(13.5, 2.4, -8),
+]);
+/* where the gaze locks during the sweep — the hero peak */
+const PEAK_LOOK = new THREE.Vector3(2.5, 4.4, -16);
 
 function Rig({ smooth, pointer }: { smooth: RefN; pointer: Ref2 }) {
   const { camera } = useThree();
+  const pos = useMemo(() => new THREE.Vector3(), []);
+  const ahead = useMemo(() => new THREE.Vector3(), []);
+  const look = useMemo(() => new THREE.Vector3(), []);
+  const peak = useMemo(() => new THREE.Vector3(), []);
   const soft = useRef({ x: 0, y: 0 });
 
   useFrame(() => {
-    // ORBIT the massif — spiral inward + descend across the scroll, always
-    // looking AT the mountains so the frame is full the whole way (muterin gunung)
-    const s = chapterA(smooth.current ?? 0);
+    const sA = chapterA(smooth.current ?? 0);
+    POS_CURVE.getPoint(sA, pos);
+    POS_CURVE.getPoint(Math.min(1, sA + 0.07), ahead);
+    ahead.y += 0.15;
+    // approach: look down the path; sweep: lock the gaze on the hero peak
+    const lockOn = THREE.MathUtils.smoothstep(sA, 0.14, 0.32);
+    peak.set(PEAK_LOOK.x, PEAK_LOOK.y - sA * 1.3, PEAK_LOOK.z);
+    look.lerpVectors(ahead, peak, lockOn);
     const px = pointer.current?.x ?? 0;
     const py = pointer.current?.y ?? 0;
     soft.current.x += (px - soft.current.x) * 0.04;
     soft.current.y += (py - soft.current.y) * 0.04;
-    const angle = -0.35 + s * Math.PI * 1.75; // ~315deg sweep around the range
-    const radius = 31 - s * 13.5; // 31 -> 17.5, spiralling in
-    const height = 10 - s * 6.4; // 10 -> 3.6, descending toward the valley
-    camera.position.set(
-      MASSIF.x + Math.sin(angle) * radius + soft.current.x * 1.4,
-      Math.max(1.6, height - soft.current.y * 0.6),
-      MASSIF.z + Math.cos(angle) * radius,
-    );
-    camera.lookAt(
-      MASSIF.x + soft.current.x * 1.6,
-      MASSIF.y + (2.4 - s * 2.0) - soft.current.y * 0.8,
-      MASSIF.z,
-    );
+    const bank = THREE.MathUtils.clamp((ahead.x - pos.x) * -0.12 - soft.current.x * 0.04, -0.2, 0.2);
+    camera.up.set(Math.sin(bank), Math.cos(bank), 0);
+    camera.position.set(pos.x + soft.current.x * 0.5, pos.y - soft.current.y * 0.25, pos.z);
+    camera.lookAt(look.x + soft.current.x * 1.1, look.y - soft.current.y * 0.7, look.z);
   });
   return null;
 }
@@ -347,9 +418,13 @@ function World() {
         [0.28, 0.2],
       ],
     };
+    const mountainC = chartreuseRamp(mountain);
+    const ridgeC = chartreuseRamp(ridge);
+    const bgC = chartreuseRamp(bg);
+    const lakeC = chartreuseRamp(lake);
     const peakMeshes = PEAKS.map((cfg, i) => {
       const geo = buildPeak(cfg);
-      const map = (cfg.tex === "mountain" ? mountain : ridge).clone();
+      const map = (cfg.tex === "mountain" ? mountainC : ridgeC).clone();
       map.needsUpdate = true;
       const win = WINDOWS[cfg.tex][i % WINDOWS[cfg.tex].length];
       map.offset.set(win[0], win[1]);
@@ -362,17 +437,19 @@ function World() {
     // dissolves instead of cutting
     // valley floor — the aerial lake painting, tiled + graded chartreuse so the
     // foreground reads as glowing terrain instead of empty black
-    const groundMap = lake.clone();
+    // tile only the clean water/shore region — the atlas junk never reaches the floor
+    const groundMap = cropTex(lakeC, 0.02, 0.3, 0.56, 0.62);
     groundMap.needsUpdate = true;
     groundMap.wrapS = groundMap.wrapT = THREE.MirroredRepeatWrapping;
     groundMap.repeat.set(9, 9);
-    const groundMat = new THREE.MeshBasicMaterial({ map: groundMap, color: new THREE.Color(0.5, 0.66, 0.26), fog: true });
+    const groundMat = new THREE.MeshBasicMaterial({ map: groundMap, color: new THREE.Color(0.9, 0.9, 0.9), fog: true });
 
-    const ringMap = bg.clone();
+    const ringMap = bgC.clone();
     ringMap.needsUpdate = true;
-    ringMap.repeat.set(4, 0.5);
-    ringMap.offset.set(0, 0.26); // mid-band of the painting only
-    const ringMat = new THREE.MeshBasicMaterial({ map: ringMap, color: new THREE.Color(0.42, 0.52, 0.26), fog: false, side: THREE.BackSide });
+    ringMap.repeat.set(4, 0.3);
+    ringMap.offset.set(0, 0.3); // mid-band of the painting only
+    // low, distant, fogged — a horizon ridge line, NOT a surrounding wall
+    const ringMat = new THREE.MeshBasicMaterial({ map: ringMap, color: new THREE.Color(0.85, 0.88, 0.75), fog: true, side: THREE.BackSide });
 
     return { peakMeshes, groundMat, ringMat };
   }, [bg, mountain, ridge, lake]);
@@ -394,8 +471,8 @@ function World() {
         <planeGeometry args={[240, 240]} />
       </mesh>
       {/* far horizon band */}
-      <mesh material={ringMat} position={[0, 9, -18]}>
-        <cylinderGeometry args={[68, 68, 48, 96, 1, true]} />
+      <mesh material={ringMat} position={[0, 2.5, -18]}>
+        <cylinderGeometry args={[88, 88, 16, 96, 1, true]} />
       </mesh>
     </>
   );
@@ -444,7 +521,7 @@ function Mist({ smooth, animate }: { smooth: RefN; animate: boolean }) {
             map: fogTex,
             transparent: true,
             depthWrite: false,
-            color: new THREE.Color(0.75, 0.82, 0.28),
+            color: new THREE.Color(0.78, 0.9, 0.3),
             opacity: 0,
           }),
       ),
@@ -514,89 +591,78 @@ function Particles({ animate }: { animate: boolean }) {
   );
 }
 
-/* ── birds gliding between the peaks ───────────────────────────────────── */
-const BIRD_FRAG = /* glsl */ `
-  precision highp float;
-  varying vec2 vUv;
-  uniform sampler2D uMap;
-  uniform vec3 uColor;
-  uniform float uOpacity;
-  void main() {
-    float a = 1.0 - texture2D(uMap, vUv).g;
-    gl_FragColor = vec4(uColor, a * uOpacity);
-  }
-`;
-const BIRD_VERT = /* glsl */ `
-  varying vec2 vUv;
-  void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }
-`;
-
+/* ── birds ────────────────────────────────────────────────────────────── */
 function band(s: number, a: number, b: number, fade: number): number {
   const inN = THREE.MathUtils.smoothstep(s, a - fade, a + fade);
   const outN = 1 - THREE.MathUtils.smoothstep(s, b - fade, b + fade);
   return Math.min(inN, outN);
 }
 
-function Birds({ smooth, animate }: { smooth: RefN; animate: boolean }) {
-  const tex = useLoader(THREE.TextureLoader, TEX.bird);
-  const group = useRef<THREE.Group>(null!);
-  const { camera } = useThree();
 
-  const birds = useMemo(
+
+/* ── distant flock — a loose V of tiny gull silhouettes gliding ahead of
+   the camera along the route. Small + far reads perfectly (no close-up
+   geometry to look wrong). Hidden on the hero; fades in with the journey. ── */
+function Flock({ smooth, animate }: { smooth: RefN; animate: boolean }) {
+  const group = useRef<THREE.Group>(null!);
+  const p = useMemo(() => new THREE.Vector3(), []);
+
+  // classic gull "M" chevron: two triangles with a baked dihedral —
+  // animating scale.y flaps the wing tips
+  const { geo, mat } = useMemo(() => {
+    const v = new Float32Array([
+      // left wing
+      -1, 0.3, -0.12, 0, 0, 0.14, 0, 0, -0.14,
+      // right wing
+      1, 0.3, -0.12, 0, 0, -0.14, 0, 0, 0.14,
+    ]);
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute("position", new THREE.BufferAttribute(v, 3));
+    const mat = new THREE.MeshBasicMaterial({
+      color: new THREE.Color(0.82, 0.85, 0.88),
+      transparent: true,
+      opacity: 0,
+      fog: false,
+      side: THREE.DoubleSide,
+    });
+    return { geo, mat };
+  }, []);
+
+  const BIRDS = useMemo(
     () => [
-      { dy: 2.6, s: 0.62, v: 0.55, ph: 0.0, flap: 7.5, dz: -9 },
-      { dy: 3.4, s: 0.4, v: 0.68, ph: 3.4, flap: 9, dz: -12 },
-      { dy: 1.9, s: 0.3, v: 0.8, ph: 6.1, flap: 10.5, dz: -7 },
+      { o: [0, 0, 0], ph: 0.0, sc: 0.34 },
+      { o: [-0.9, 0.18, -0.8], ph: 1.7, sc: 0.3 },
+      { o: [0.95, 0.12, -0.9], ph: 3.1, sc: 0.31 },
+      { o: [-1.8, 0.34, -1.7], ph: 4.4, sc: 0.27 },
+      { o: [1.9, 0.26, -1.8], ph: 5.6, sc: 0.28 },
     ],
     [],
-  );
-
-  const materials = useMemo(
-    () =>
-      birds.map(
-        () =>
-          new THREE.ShaderMaterial({
-            vertexShader: BIRD_VERT,
-            fragmentShader: BIRD_FRAG,
-            uniforms: {
-              uMap: { value: tex },
-              uColor: { value: new THREE.Color(0.20, 0.26, 0.08) },
-              uOpacity: { value: 0 },
-            },
-            transparent: true,
-            depthTest: false,
-            depthWrite: false,
-          }),
-      ),
-    [birds, tex],
   );
 
   useFrame((state) => {
     const t = animate ? state.clock.elapsedTime : 0;
     const s = smooth.current ?? 0;
-    const vis = band(s, 0.08, 0.85, 0.12) * 0.5; // gliding through the flight
+    const sA = chapterA(s);
+    POS_CURVE.getPoint(Math.min(1, sA + 0.13), p);
+    // in once the journey starts, out before the river chapter
+    mat.opacity =
+      THREE.MathUtils.smoothstep(s, 0.03, 0.08) * (1 - THREE.MathUtils.smoothstep(s, 0.34, 0.42));
     group.current.children.forEach((child, i) => {
-      const b = birds[i];
-      const mesh = child as THREE.Mesh;
-      const x = ((((t * b.v + b.ph) % 14) + 14) % 14) - 7;
-      mesh.position.set(
-        camera.position.x + x,
-        camera.position.y + b.dy + Math.sin(t * 1.4 + b.ph) * 0.25,
-        camera.position.z + b.dz,
+      const b = BIRDS[i];
+      child.position.set(
+        p.x + b.o[0] + Math.sin(t * 0.5 + b.ph) * 0.25,
+        p.y + 1.1 + b.o[1] + Math.sin(t * 1.1 + b.ph) * 0.16,
+        p.z + b.o[2],
       );
-      const flap = 0.7 + 0.3 * Math.sin(t * b.flap + b.ph);
-      mesh.scale.set(b.s, b.s * flap, 1);
-      mesh.quaternion.copy(camera.quaternion); // billboard
-      (mesh.material as THREE.ShaderMaterial).uniforms.uOpacity.value = vis;
+      const flap = 0.55 + 0.45 * Math.sin(t * 7 + b.ph);
+      child.scale.set(b.sc, b.sc * flap, b.sc);
     });
   });
 
   return (
     <group ref={group}>
-      {birds.map((_, i) => (
-        <mesh key={i} material={materials[i]} renderOrder={600}>
-          <planeGeometry args={[1, 1]} />
-        </mesh>
+      {BIRDS.map((_, i) => (
+        <mesh key={i} geometry={geo} material={mat} />
       ))}
     </group>
   );
@@ -609,12 +675,37 @@ type PaintCfg = {
   order: number;
   zoomFrom: number;
   zoomTo: number;
+  win?: [number, number, number, number]; // clean uv window (x, y, w, h) — skips atlas junk
   panY: number; // total v drift across the panel's life
   opacity: (s: number) => number;
   prog: (s: number) => number;
 };
 
-const PAINT_CHAPTERS: PaintCfg[] = [];
+const PAINT_CHAPTERS: PaintCfg[] = [
+  // full-1 windows tile continuously (next panel is FULL before the previous
+  // starts fading) — the 3D world never peeks through mid-river
+  {
+    url: TEX.river1, order: 940, zoomFrom: 1.42, zoomTo: 1.16, panY: 0.22,
+    opacity: (s) => band(s, 0.415, 0.60, 0.045),
+    prog: (s) => Math.min(1, Math.max(0, (s - 0.37) / 0.23)),
+  },
+  {
+    url: TEX.river3, order: 942, zoomFrom: 1.14, zoomTo: 1.38, panY: 0.18,
+    opacity: (s) => band(s, 0.505, 0.70, 0.045),
+    prog: (s) => Math.min(1, Math.max(0, (s - 0.46) / 0.24)),
+  },
+  {
+    url: TEX.river2, order: 944, zoomFrom: 1.4, zoomTo: 1.18, panY: 0.2,
+    opacity: (s) => band(s, 0.60, 0.795, 0.045),
+    prog: (s) => Math.min(1, Math.max(0, (s - 0.555) / 0.24)),
+  },
+  {
+    url: TEX.lake, order: 946, zoomFrom: 1.22, zoomTo: 1.05, panY: 0.06,
+    win: [0.02, 0.2, 0.58, 0.6], // centered on the WATER body — bright, no junk, no flat grass
+    opacity: (s) => THREE.MathUtils.smoothstep(s, 0.70, 0.745),
+    prog: (s) => Math.min(1, Math.max(0, (s - 0.70) / 0.30)),
+  },
+];
 
 function PaintingLayer({ cfg, smooth }: { cfg: PaintCfg; smooth: RefN }) {
   const tex = useLoader(THREE.TextureLoader, cfg.url);
@@ -632,6 +723,7 @@ function PaintingLayer({ cfg, smooth }: { cfg: PaintCfg; smooth: RefN }) {
         uniform float uOpacity, uProg, uTime;
         uniform float uZoomFrom, uZoomTo, uPanY;
         uniform float uImgAspect, uScreenAspect;
+        uniform vec4 uWin;
         void main() {
           // background-size: cover, with zoom headroom for the drift
           float zoom = mix(uZoomFrom, uZoomTo, uProg);
@@ -642,12 +734,16 @@ function PaintingLayer({ cfg, smooth }: { cfg: PaintCfg; smooth: RefN }) {
           uv = (uv - 0.5) * sc + 0.5;
           uv.y += (0.5 - uProg) * uPanY;                // fly "north" as you scroll
           uv.x += sin(uTime * 0.02) * 0.008;            // barely-there idle drift
+          uv = uWin.xy + clamp(uv, 0.0, 1.0) * uWin.zw; // stay inside the clean window
           vec4 c = texture2D(uMap, uv);
           float lum = dot(c.rgb, vec3(0.299, 0.587, 0.114));
-          vec3 g  = vec3(0.72, 0.80, 0.20);  // chartreuse mid (yellower)
-          vec3 hi = vec3(0.90, 1.0, 0.44);   // chartreuse highlight (#D7FE51)
-          vec3 graded = mix(vec3(0.07, 0.075, 0.09), g, smoothstep(0.04, 0.6, lum));
-          graded = mix(graded, hi, smoothstep(0.6, 1.0, lum));
+          vec3 dk   = vec3(0.051, 0.055, 0.067); // charcoal
+          vec3 mid  = vec3(0.659, 0.784, 0.220); // brighter chartreuse mid
+          vec3 top  = vec3(0.843, 0.996, 0.318); // #D7FE51 exact
+          vec3 neon = vec3(0.914, 1.0, 0.525);   // #E9FF86
+          vec3 graded = mix(dk, mid, smoothstep(0.0, 0.45, lum));
+          graded = mix(graded, top, smoothstep(0.45, 0.78, lum));
+          graded = mix(graded, neon, smoothstep(0.78, 1.0, lum));
           gl_FragColor = vec4(graded, uOpacity);
         }
       `,
@@ -661,6 +757,7 @@ function PaintingLayer({ cfg, smooth }: { cfg: PaintCfg; smooth: RefN }) {
         uPanY: { value: cfg.panY },
         uImgAspect: { value: 1 },
         uScreenAspect: { value: 1 },
+        uWin: { value: new THREE.Vector4(...(cfg.win ?? [0, 0, 1, 1])) },
       },
       transparent: true,
       depthTest: false,
@@ -676,7 +773,8 @@ function PaintingLayer({ cfg, smooth }: { cfg: PaintCfg; smooth: RefN }) {
     u.uTime.value = state.clock.elapsedTime;
     u.uScreenAspect.value = state.size.width / state.size.height;
     const img = tex.image as { width?: number; height?: number } | undefined;
-    if (img?.width && img?.height) u.uImgAspect.value = img.width / img.height;
+    const win = cfg.win ?? [0, 0, 1, 1];
+    if (img?.width && img?.height) u.uImgAspect.value = (img.width * win[2]) / (img.height * win[3]);
   });
 
   return (
@@ -714,7 +812,7 @@ function GroundHaze({ smooth, animate }: { smooth: RefN; animate: boolean }) {
           transparent: true,
           depthWrite: false,
           blending: THREE.AdditiveBlending,
-          color: new THREE.Color(0.64, 0.72, 0.2),
+          color: new THREE.Color(0.7, 0.82, 0.26),
           opacity: 0,
         }),
     );
@@ -752,7 +850,7 @@ function FogRing({ animate }: { animate: boolean }) {
     const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
     return Array.from({ length: 16 }, (_, i) => ({
       a: (i / 16) * Math.PI * 2,
-      rad: 9 + rnd() * 12,
+      rad: 13 + rnd() * 13,
       y: 1.2 + rnd() * 6,
       sc: 13 + rnd() * 12,
       v: 0.015 + rnd() * 0.05,
@@ -769,7 +867,7 @@ function FogRing({ animate }: { animate: boolean }) {
           transparent: true,
           depthWrite: false,
           blending: THREE.AdditiveBlending,
-          color: new THREE.Color(0.5, 0.62, 0.24),
+          color: new THREE.Color(0.62, 0.73, 0.24),
           opacity: 0,
         }),
     );
@@ -780,7 +878,7 @@ function FogRing({ animate }: { animate: boolean }) {
       const b = bands[i];
       const spr = child as THREE.Sprite;
       const a = b.a + t * b.v;
-      spr.position.set(MASSIF.x + Math.sin(a) * b.rad, b.y + Math.sin(t * 0.15 + b.ph) * 0.4, MASSIF.z + Math.cos(a) * b.rad);
+      spr.position.set(2.5 + Math.sin(a) * b.rad, b.y + Math.sin(t * 0.15 + b.ph) * 0.4, -16 + Math.cos(a) * b.rad);
       spr.scale.set(b.sc, b.sc * 0.5, 1);
       (spr.material as THREE.SpriteMaterial).opacity = b.base;
     });
@@ -828,7 +926,7 @@ function SceneRoot({ scroll, pointer, animate }: { scroll: RefN; pointer: Ref2; 
       <GroundHaze smooth={smooth} animate={animate} />
       <FogRing animate={animate} />
       <Particles animate={animate} />
-      <Birds smooth={smooth} animate={animate} />
+      <Flock smooth={smooth} animate={animate} />
       {PAINT_CHAPTERS.map((cfg) => (
         <PaintingLayer key={cfg.url + cfg.order} cfg={cfg} smooth={smooth} />
       ))}

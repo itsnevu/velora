@@ -7,10 +7,33 @@ in [`../CLAUDE.md`](../CLAUDE.md) and [`../strategies/README.md`](../strategies/
 are **enforced by the contract, not merely promised by a prompt** — and every desk
 run leaves a tamper-proof track record.
 
-> **Status: testnet / preview.** Built and tested end-to-end locally (76 passing
-> tests + a live anvil deploy). The periphery (USDG, Stock Token, price oracle, swap
-> adapter) is **mocked** for the demo; a production deploy points the vault at real
-> Robinhood Chain addresses. **Not audited. Do not use with real funds.**
+> **Status: testnet / preview.** 101 passing tests (unit + fuzz + invariant) and a
+> **live deployment on Robinhood Chain testnet** (chain 46630). The periphery (USDG,
+> Stock Token, price oracle, swap adapter) is **mocked** for this demo; a production
+> deploy points the vault at real Robinhood Chain addresses. **Not audited. Do not use
+> with real funds.**
+
+## Live on Robinhood Chain testnet (preview)
+
+Deployed & verified on chain **46630** — the guardrails were confirmed enforcing live
+(an over-cap buy reverts `PerTradeCap`, a stop-less buy reverts `MissingStop`, a
+compliant buy is allowed). Periphery is **mock** (demo USDG/oracle/swap), so this is a
+functional preview, **not** real RWA exposure.
+
+| Contract | Address |
+|---|---|
+| RWAVault (vVLRA) | [`0xFA69…E500`](https://explorer.testnet.chain.robinhood.com/address/0xFA698f14C8D7540d35E63c0AC3685AeEc957E500) |
+| GuardrailConfig | [`0x7Ab7…0E5b`](https://explorer.testnet.chain.robinhood.com/address/0x7Ab7a94200153C473Fc35F413407aedA60D30E5b) |
+| DeskRegistry | [`0x381F…2ac6`](https://explorer.testnet.chain.robinhood.com/address/0x381FE4f75E5e051C90D60ba3a7553D9Cb6062ac6) |
+| PerfScore | [`0xda51…8fD0`](https://explorer.testnet.chain.robinhood.com/address/0xda5114a29B6D1C865e204AbCd9Bd39dc8d718fD0) |
+| SessionKeyExecutor | [`0x4fe4…5DF4`](https://explorer.testnet.chain.robinhood.com/address/0x4fe433Ea2234ecFc69Ef7Ce817e844D6217c5DF4) |
+| VeloraAutosave | [`0x8e0A…44B0`](https://explorer.testnet.chain.robinhood.com/address/0x8e0AcAc14594346053809837C1432f522AE044B0) |
+
+Mainnet: **not deployed** — pending real periphery wiring + audit.
+
+Reference (Robinhood Chain **mainnet**, from docs): USDG `0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168`
+(6-dec), WETH `0x0Bd7D308f8E1639FAb988df18A8011f41EAcAD73`, Uniswap V2 Router02
+`0x89e5db8b5aa49aa85ac63f691524311aeb649eba`.
 
 ---
 

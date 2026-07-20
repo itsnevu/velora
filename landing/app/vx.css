@@ -591,7 +591,7 @@ body:has(.vx-root)::after {
 .vx-btn > span { position: relative; z-index: 1; }
 /* lime CTA: dark text, a moving sheen, greener + glowing on hover */
 .vx-btn-lime {
-  background: linear-gradient(180deg, #12dd18 0%, var(--leaf) 100%);
+  background: linear-gradient(180deg, var(--lime) 0%, var(--leaf) 100%); /* #E9FF86 → #D7FE51, zero green */
   color: var(--pine);
   fill: var(--pine);
   box-shadow: 0 6px 22px rgba(215, 254, 81, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.28);
@@ -677,7 +677,7 @@ body:has(.vx-root)::after {
   text-align: center;
   gap: 1.1em;
   padding: 0 clamp(20px, 6vw, 90px);
-  background: radial-gradient(120% 100% at 50% 45%, rgba(3, 5, 7, 0.35), rgba(3, 5, 7, 0.72));
+  background: radial-gradient(120% 100% at 50% 45%, rgba(34, 36, 42, 0.12), rgba(34, 36, 42, 0.42));
 }
 .vx-foot__legal {
   position: absolute;

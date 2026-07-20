@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { getLenis } from "@/lib/lenis-store";
 import { Reveal, RevealLines, RevealChars } from "@/components/vx/reveal-text";
+import { VAULT_URL } from "@/lib/links";
 import "./vx.css";
 
 const Diorama = dynamic(() => import("@/components/vx/diorama"), { ssr: false });
@@ -210,9 +211,10 @@ export default function HomePage() {
           <span>Velora</span>
         </a>
         <nav className="vx-nav">
+          <a className="vx-nav-link vx-nav-hide" href="/desk"><span>Desk</span></a>
           <a className="vx-nav-link vx-nav-hide" href="/docs"><span>Docs</span></a>
-          <a className="vx-nav-cta" href="/desk">
-            <span>Desk</span>
+          <a className="vx-nav-cta" href={VAULT_URL}>
+            <span>Launch app</span>
             <ArrowUpRight />
           </a>
         </nav>
@@ -387,12 +389,12 @@ export default function HomePage() {
             ]}
           />
           <Reveal className="vx-cta-row" i={2}>
-            <a className="vx-btn vx-btn-lime" href="/desk">
-              <span>Enter the desk</span>
+            <a className="vx-btn vx-btn-lime" href={VAULT_URL}>
+              <span>Launch the app</span>
               <ArrowUpRight />
             </a>
-            <a className="vx-btn vx-btn-glass" href="/docs">
-              <span>Read the docs</span>
+            <a className="vx-btn vx-btn-glass" href="/desk">
+              <span>Tour the desk</span>
             </a>
           </Reveal>
         </div>
@@ -402,7 +404,7 @@ export default function HomePage() {
         <Reveal className="vx-kicker" i={0}>Approved by you. Executed with care.</Reveal>
         <RevealChars text="Run with Velora" as="h2" className="vx-title" step={22} />
         <Reveal className="vx-cta-row" i={2}>
-          <a className="vx-btn vx-btn-lime" href="/desk"><span>Launch the desk</span><ArrowUpRight /></a>
+          <a className="vx-btn vx-btn-lime" href={VAULT_URL}><span>Launch the app</span><ArrowUpRight /></a>
           <a className="vx-btn vx-btn-glass" href="/docs"><span>Docs</span></a>
         </Reveal>
         <p className="vx-foot__legal">

@@ -103,6 +103,8 @@ export function AccountHeader({ account, generatedAt }) {
         <Stat label="Orders today" value={num(a.ordersToday)} mono />
       </div>
 
+      <a className="vault-link" href="/vault.html" title="Open the investor vault dApp">Open Vault ↗</a>
+
       <div className="asof" title={generatedAt || ''}>
         <span className="asof-k">as of</span>
         <span className="asof-v">{timeAgo(generatedAt)}</span>
