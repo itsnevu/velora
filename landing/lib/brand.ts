@@ -3,11 +3,11 @@
  * These mirror the tokens in app/globals.css. This module exists because SVG
  * fill/stroke and <canvas> cannot read CSS custom properties reliably.
  */
-export const LIME = "#c5e94a"; // the flood / canvas
-export const INK = "#16180d"; // near-black foreground
-export const RED = "#e23b3b"; // eyes / danger / accents
-export const GREEN = "#3fbf57"; // up candles
-export const GREEN_DEEP = "#2f9e44";
-export const MINT = "#61e7c3";
-export const WARN = "#ffc247";
-export const WHITE = "#fbfde9";
+export const LIME = "#D7FE51"; // Robinhood green accent (was lime flood)
+export const INK = "#ECF2F0"; // off-white foreground marks on dark (was near-black ink)
+export const RED = "#FF5B52"; // eyes / danger / accents
+export const GREEN = "#D7FE51"; // up candles
+export const GREEN_DEEP = "#D7FE51";
+export const MINT = "#E9FF86";
+export const WARN = "#FFC53D";
+export const WHITE = "#ECF2F0";

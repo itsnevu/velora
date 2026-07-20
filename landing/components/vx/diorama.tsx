@@ -6,6 +6,7 @@ import * as THREE from "three";
 import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
 import { ShaderPass } from "three/examples/jsm/postprocessing/ShaderPass.js";
+import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
 
 /**
  * Diorama v2 — a true 3D painterly mountain world, scrubbed by scroll.
@@ -42,13 +43,13 @@ type Ref2 = React.RefObject<{ x: number; y: number }>;
    ⬛ blackout #2 at the You-Decide seam (s ≈ 0.650)
    C (s ~0.68 → 1)   — the lake aerial finale; `dim` grades it to dusk. */
 const SKY_STOPS = [
-  // horizon stays MID-blue (not white): the thin serif needs the contrast
-  { s: 0.0, top: [0.3, 0.44, 0.83], bot: [0.52, 0.66, 0.9], fog: [0.52, 0.66, 0.9], dim: 0 },
-  { s: 0.3, top: [0.36, 0.51, 0.82], bot: [0.56, 0.7, 0.86], fog: [0.56, 0.7, 0.86], dim: 0 },
-  { s: 0.45, top: [0.3, 0.44, 0.66], bot: [0.6, 0.72, 0.78], fog: [0.6, 0.72, 0.78], dim: 0.06 },
-  { s: 0.75, top: [0.2, 0.32, 0.3], bot: [0.46, 0.58, 0.48], fog: [0.58, 0.68, 0.56], dim: 0.1 },
-  { s: 0.9, top: [0.12, 0.22, 0.18], bot: [0.3, 0.42, 0.32], fog: [0.44, 0.54, 0.44], dim: 0.24 },
-  { s: 1.0, top: [0.05, 0.11, 0.09], bot: [0.16, 0.26, 0.19], fog: [0.34, 0.44, 0.35], dim: 0.5 },
+  // charcoal (#22242A) sky with a chartreuse (#D7FE51) horizon glow that deepens
+  { s: 0.0,  top: [0.12, 0.13, 0.15],   bot: [0.26, 0.34, 0.12],  fog: [0.26, 0.34, 0.12],  dim: 0 },
+  { s: 0.3,  top: [0.13, 0.14, 0.16],   bot: [0.30, 0.40, 0.14],  fog: [0.30, 0.40, 0.14],  dim: 0 },
+  { s: 0.45, top: [0.11, 0.12, 0.14],   bot: [0.27, 0.36, 0.13],  fog: [0.27, 0.36, 0.13],  dim: 0.05 },
+  { s: 0.75, top: [0.09, 0.10, 0.12],   bot: [0.19, 0.26, 0.09],  fog: [0.21, 0.28, 0.10],  dim: 0.12 },
+  { s: 0.9,  top: [0.07, 0.075, 0.09],  bot: [0.13, 0.18, 0.06],  fog: [0.16, 0.21, 0.08],  dim: 0.24 },
+  { s: 1.0,  top: [0.055, 0.06, 0.075], bot: [0.09, 0.12, 0.045], fog: [0.12, 0.16, 0.06],  dim: 0.45 },
 ];
 
 /** Hard cuts to black between chapters, timed to section seams so each new
@@ -154,9 +155,11 @@ function buildPeak(cfg: PeakCfg): THREE.BufferGeometry {
     const l = Math.max(0.38, Math.min(1.3, lit));
     // pale scree/snow toward the apex, like the reference peaks
     const snow = THREE.MathUtils.smoothstep(t, 0.72, 0.96) * (0.5 + 0.5 * Math.sin(ang * 1.7 + ph[3]));
-    colors[i * 3] = l * (1 + snow * 0.28);
-    colors[i * 3 + 1] = l * 1.02 * (1 + snow * 0.26);
-    colors[i * 3 + 2] = l * 0.97 * (1 + snow * 0.34);
+    const edge = Math.max(0, n) * 0.9 + snow * 0.8 + Math.pow(t, 2.2) * 0.55;
+    const gbase = 0.11;
+    colors[i * 3]     = gbase * 0.9 + edge * 0.80;   // chartreuse: red strong
+    colors[i * 3 + 1] = gbase * 1.0 + edge * 0.96;   // green max
+    colors[i * 3 + 2] = gbase * 0.5 + edge * 0.22;   // low blue
   }
   geo.setAttribute("color", new THREE.BufferAttribute(colors, 3));
   geo.computeVertexNormals();
@@ -203,15 +206,19 @@ function Effects() {
   const bits = useMemo(() => {
     const composer = new EffectComposer(gl);
     composer.addPass(new RenderPass(scene, camera));
+    // gentle bloom — only the brightest chartreuse highlights glow (high threshold)
+    const bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), 0.55, 0.55, 0.72);
+    composer.addPass(bloom);
     const tilt = new ShaderPass(TiltShiftShader);
     composer.addPass(tilt);
-    return { composer, tilt };
+    return { composer, tilt, bloom };
   }, [gl, scene, camera]);
 
   useEffect(() => {
     const pr = gl.getPixelRatio();
     bits.composer.setPixelRatio(pr);
     bits.composer.setSize(size.width, size.height);
+    bits.bloom.setSize(size.width, size.height);
     (bits.tilt.uniforms.uTexel.value as THREE.Vector2).set(1 / (size.width * pr), 1 / (size.height * pr));
   }, [bits, gl, size]);
 
@@ -258,7 +265,7 @@ function SkyAndDim({ smooth }: { smooth: RefN }) {
           precision highp float;
           varying vec2 vUv;
           uniform float uOpacity;
-          void main() { gl_FragColor = vec4(vec3(0.01, 0.04, 0.02), uOpacity); }
+          void main() { gl_FragColor = vec4(vec3(0.03, 0.033, 0.04), uOpacity); }
         `,
         uniforms: { uOpacity: { value: 0 } },
         transparent: true,
@@ -370,7 +377,13 @@ function World() {
 
     // mossy valley floor — kept close to the fog tone so the horizon line
     // dissolves instead of cutting
-    const groundMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(0.3, 0.42, 0.31), fog: true });
+    // valley floor — the aerial lake painting, tiled + graded chartreuse so the
+    // foreground reads as glowing terrain instead of empty black
+    const groundMap = lake.clone();
+    groundMap.needsUpdate = true;
+    groundMap.wrapS = groundMap.wrapT = THREE.MirroredRepeatWrapping;
+    groundMap.repeat.set(5, 5);
+    const groundMat = new THREE.MeshBasicMaterial({ map: groundMap, color: new THREE.Color(0.5, 0.66, 0.26), fog: true });
 
     const ringMap = bg.clone();
     ringMap.needsUpdate = true;
@@ -448,7 +461,7 @@ function Mist({ smooth, animate }: { smooth: RefN; animate: boolean }) {
             map: fogTex,
             transparent: true,
             depthWrite: false,
-            color: new THREE.Color(0.93, 0.96, 1.0),
+            color: new THREE.Color(0.62, 0.85, 0.30),
             opacity: 0,
           }),
       ),
@@ -507,7 +520,7 @@ function Particles({ animate }: { animate: boolean }) {
         size={0.055}
         transparent
         opacity={0.5}
-        color={new THREE.Color(1, 1, 1)}
+        color={new THREE.Color(0.78, 0.95, 0.4)}
         depthWrite={false}
         blending={THREE.AdditiveBlending}
         sizeAttenuation
@@ -562,7 +575,7 @@ function Birds({ smooth, animate }: { smooth: RefN; animate: boolean }) {
             fragmentShader: BIRD_FRAG,
             uniforms: {
               uMap: { value: tex },
-              uColor: { value: new THREE.Color(0.16, 0.22, 0.26) },
+              uColor: { value: new THREE.Color(0.20, 0.26, 0.08) },
               uOpacity: { value: 0 },
             },
             transparent: true,
@@ -664,7 +677,12 @@ function PaintingLayer({ cfg, smooth }: { cfg: PaintCfg; smooth: RefN }) {
           uv.y += (0.5 - uProg) * uPanY;                // fly "north" as you scroll
           uv.x += sin(uTime * 0.02) * 0.008;            // barely-there idle drift
           vec4 c = texture2D(uMap, uv);
-          gl_FragColor = vec4(c.rgb, uOpacity);
+          float lum = dot(c.rgb, vec3(0.299, 0.587, 0.114));
+          vec3 g  = vec3(0.55, 0.72, 0.18);  // chartreuse mid
+          vec3 hi = vec3(0.84, 1.0, 0.40);   // chartreuse highlight (#D7FE51)
+          vec3 graded = mix(vec3(0.05, 0.055, 0.07), g, smoothstep(0.04, 0.6, lum));
+          graded = mix(graded, hi, smoothstep(0.6, 1.0, lum));
+          gl_FragColor = vec4(graded, uOpacity);
         }
       `,
       uniforms: {
@@ -702,12 +720,69 @@ function PaintingLayer({ cfg, smooth }: { cfg: PaintCfg; smooth: RefN }) {
   );
 }
 
+/* ── low foreground haze: fills the near floor with drifting chartreuse fog ─ */
+function GroundHaze({ smooth, animate }: { smooth: RefN; animate: boolean }) {
+  const tex = useLoader(THREE.TextureLoader, BASE + "SMOKE.webp");
+  const group = useRef<THREE.Group>(null!);
+
+  const puffs = useMemo(() => {
+    let seed = 7331;
+    const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+    return Array.from({ length: 11 }, () => ({
+      x: (rnd() - 0.5) * 32,
+      y: -0.4 + rnd() * 1.8,
+      z: 3 - rnd() * 28,
+      sc: 11 + rnd() * 13,
+      v: 0.05 + rnd() * 0.13,
+      ph: rnd() * Math.PI * 2,
+      base: 0.1 + rnd() * 0.16,
+    }));
+  }, []);
+
+  const materials = useMemo(() => {
+    tex.colorSpace = THREE.NoColorSpace;
+    return puffs.map(
+      () =>
+        new THREE.SpriteMaterial({
+          map: tex,
+          transparent: true,
+          depthWrite: false,
+          blending: THREE.AdditiveBlending,
+          color: new THREE.Color(0.5, 0.7, 0.22),
+          opacity: 0,
+        }),
+    );
+  }, [puffs, tex]);
+
+  useFrame((state) => {
+    const t = animate ? state.clock.elapsedTime : 0;
+    const s = smooth.current ?? 0;
+    // present through chapter A, gone before blackout #1
+    const boost = (0.55 + 0.85 * band(s, 0.02, 0.26, 0.1)) * (1 - THREE.MathUtils.smoothstep(s, 0.3, 0.35));
+    group.current.children.forEach((child, i) => {
+      const p = puffs[i];
+      const spr = child as THREE.Sprite;
+      spr.position.set(p.x + Math.sin(t * p.v + p.ph) * 2.4, p.y + Math.sin(t * 0.2 + p.ph) * 0.22, p.z);
+      spr.scale.set(p.sc, p.sc * 0.5, 1);
+      (spr.material as THREE.SpriteMaterial).opacity = p.base * boost;
+    });
+  });
+
+  return (
+    <group ref={group}>
+      {puffs.map((_, i) => (
+        <sprite key={i} material={materials[i]} renderOrder={470} />
+      ))}
+    </group>
+  );
+}
+
 /* ── scene root: fog grading + everything wired to the smoothed scroll ─── */
 function SceneRoot({ scroll, pointer, animate }: { scroll: RefN; pointer: Ref2; animate: boolean }) {
   const { scene } = useThree();
   const smooth = useRef(0);
 
-  const fog = useMemo(() => new THREE.Fog(new THREE.Color(0.85, 0.9, 0.97), 16, 54), []);
+  const fog = useMemo(() => new THREE.Fog(new THREE.Color(0.20, 0.28, 0.10), 16, 54), []);
   useEffect(() => {
     scene.fog = fog;
     return () => {
@@ -733,6 +808,7 @@ function SceneRoot({ scroll, pointer, animate }: { scroll: RefN; pointer: Ref2; 
       <SkyAndDim smooth={smooth} />
       <World />
       <Mist smooth={smooth} animate={animate} />
+      <GroundHaze smooth={smooth} animate={animate} />
       <Particles animate={animate} />
       <Birds smooth={smooth} animate={animate} />
       {PAINT_CHAPTERS.map((cfg) => (
@@ -795,7 +871,7 @@ export default function Diorama() {
         frameloop={animate ? "always" : "demand"}
         gl={{ antialias: true, alpha: false, powerPreference: "high-performance" }}
         camera={{ fov: 50, near: 0.1, far: 120, position: [0, 3.3, 4.5] }}
-        onCreated={({ gl }) => gl.setClearColor(new THREE.Color(0.74, 0.82, 0.96), 1)}
+        onCreated={({ gl }) => gl.setClearColor(new THREE.Color(0.12, 0.13, 0.15), 1)}
       >
         <Suspense fallback={null}>
           <SceneRoot scroll={scroll} pointer={pointer} animate={animate} />

@@ -14,7 +14,7 @@ import { useEffect, useRef } from "react";
  *   </div>
  */
 export function BorderScan({
-  color = "#e23b3b",
+  color = "#FF5B52",
   size = 10,
   /** full loops per minute-ish; higher = faster */
   speed = 90,

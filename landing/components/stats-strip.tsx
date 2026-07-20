@@ -111,7 +111,7 @@ export function StatsStrip() {
           </p>
         </div>
         <div className="stats" style={{ position: "relative" }}>
-          <BorderScan color="#e23b3b" size={10} speed={90} />
+          <BorderScan color="#FF5B52" size={10} speed={90} />
           {STATS.map((s) => (
             <div className="stat" key={s.label}>
               <CountUp to={s.value} suffix={s.suffix} />

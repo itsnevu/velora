@@ -8,7 +8,7 @@
 
 /* take over the body only while this route is mounted */
 body:has(.vx-root) {
-  background: #203727;
+  background: #22242A;
   overflow-x: hidden;
 }
 body:has(.vx-root)::before,
@@ -17,12 +17,16 @@ body:has(.vx-root)::after {
 }
 
 .vx-root {
-  --white: #fbfff4;
-  --white-dim: rgba(251, 255, 244, 0.78);
-  --white-faint: rgba(251, 255, 244, 0.45);
-  --leaf: #e0ffab; /* light-green CTA fill */
-  --pine: #203727; /* deep green ink */
-  --lime: #c5e94a; /* Velora accent */
+  --white: #ECF2F0;
+  --white-dim: rgba(236, 242, 240, 0.78);
+  --white-faint: rgba(236, 242, 240, 0.45);
+  --leaf: #D7FE51; /* Robinhood green — CTA fill / accent */
+  --pine: #22242A; /* near-black base (former deep-green ink) */
+  --lime: #E9FF86; /* neon green — bright accent */
+  --hair: rgba(233, 243, 238, 0.12); /* base hairline */
+  --hair-hi: rgba(233, 243, 238, 0.18); /* brighter hairline */
+  --mono: var(--font-space), ui-monospace, "SFMono-Regular", monospace;
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
   z-index: 1;
   color: var(--white);
@@ -53,17 +57,31 @@ body:has(.vx-root)::after {
   z-index: 0;
   pointer-events: none;
   background:
-    radial-gradient(130% 100% at 50% 35%, transparent 55%, rgba(20, 38, 30, 0.28) 100%),
-    linear-gradient(to bottom, rgba(20, 38, 30, 0.16) 0%, transparent 18%, transparent 80%, rgba(14, 28, 20, 0.3) 100%);
+    radial-gradient(130% 100% at 50% 35%, transparent 55%, rgba(4, 7, 9, 0.5) 100%),
+    linear-gradient(to bottom, rgba(4, 7, 9, 0.3) 0%, transparent 18%, transparent 80%, rgba(215, 254, 81, 0.06) 100%);
 }
 .vx-grain {
   position: fixed;
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  opacity: 0.035;
+  opacity: 0.03;
   mix-blend-mode: overlay;
   background-image: repeating-linear-gradient(0deg, transparent 0 2px, rgba(255, 255, 255, 0.5) 2px 3px);
+}
+/* whisper-thin fixed measurement grid — reads as terminal precision, not a
+   floodlight; stays under the veil so it never muddies the type */
+.vx-grain::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0.5;
+  background-image:
+    linear-gradient(to right, rgba(233, 243, 238, 0.5) 0 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(233, 243, 238, 0.5) 0 1px, transparent 1px);
+  background-size: clamp(64px, 9vw, 128px) clamp(64px, 9vw, 128px);
+  mask-image: radial-gradient(140% 120% at 50% 30%, rgba(0, 0, 0, 0.22), transparent 72%);
+  -webkit-mask-image: radial-gradient(140% 120% at 50% 30%, rgba(0, 0, 0, 0.22), transparent 72%);
 }
 
 /* ── header ───────────────────────────────────────────────────────────── */
@@ -77,6 +95,18 @@ body:has(.vx-root)::after {
   align-items: center;
   justify-content: space-between;
   padding: clamp(16px, 2.4vw, 30px) clamp(18px, 3.4vw, 54px);
+  border-bottom: 1px solid transparent;
+  transition: padding 0.5s var(--ease), background 0.5s var(--ease),
+    border-color 0.5s var(--ease), backdrop-filter 0.5s var(--ease);
+}
+/* condense + reveal a hairline once the hero scrolls away */
+.vx-header.is-scrolled {
+  padding-top: clamp(11px, 1.4vw, 16px);
+  padding-bottom: clamp(11px, 1.4vw, 16px);
+  background: rgba(10, 11, 13, 0.62);
+  border-bottom-color: var(--hair);
+  backdrop-filter: blur(14px) saturate(1.1);
+  -webkit-backdrop-filter: blur(14px) saturate(1.1);
 }
 .vx-logo {
   display: flex;
@@ -89,28 +119,77 @@ body:has(.vx-root)::after {
   text-transform: uppercase;
   color: var(--white);
   fill: var(--white);
-  text-shadow: 0 1px 18px rgba(20, 40, 60, 0.35);
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.5);
 }
 .vx-logo svg {
   width: 24px;
   height: 24px;
+  transition: fill 0.3s var(--ease), filter 0.3s var(--ease), transform 0.4s var(--ease);
+}
+.vx-logo:hover svg {
+  fill: var(--leaf);
+  filter: drop-shadow(0 0 12px rgba(215, 254, 81, 0.6));
+  transform: rotate(-6deg);
 }
 .vx-nav {
   display: flex;
   align-items: center;
-  gap: clamp(16px, 2.2vw, 34px);
+  gap: clamp(14px, 2vw, 30px);
 }
-.vx-nav a {
+/* text nav links: animated green underline grows from the left on hover */
+.vx-nav-link {
+  position: relative;
   font-family: var(--font-sans), system-ui, sans-serif;
   font-weight: 500;
   font-size: 14px;
   letter-spacing: 0.02em;
   color: var(--white);
-  opacity: 0.92;
-  text-shadow: 0 1px 14px rgba(20, 40, 60, 0.4);
+  opacity: 0.9;
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.5);
   transition: opacity 0.2s;
 }
-.vx-nav a:hover { opacity: 1; }
+.vx-nav-link::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -5px;
+  height: 1.5px;
+  width: 100%;
+  background: var(--leaf);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.4s var(--ease);
+  box-shadow: 0 0 8px rgba(215, 254, 81, 0.5);
+}
+.vx-nav-link:hover { opacity: 1; }
+.vx-nav-link:hover::after { transform: scaleX(1); }
+/* "Desk →" as a subtle bordered pill */
+.vx-nav-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 15px;
+  border-radius: 100px;
+  border: 1px solid var(--hair-hi);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 13.5px;
+  letter-spacing: 0.02em;
+  color: var(--white);
+  fill: var(--white);
+  background: rgba(233, 243, 238, 0.04);
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.5);
+  transition: border-color 0.3s var(--ease), background 0.3s var(--ease),
+    box-shadow 0.3s var(--ease), transform 0.3s var(--ease);
+}
+.vx-nav-cta svg { width: 13px; height: 13px; transition: transform 0.3s var(--ease); }
+.vx-nav-cta:hover {
+  border-color: rgba(215, 254, 81, 0.55);
+  background: rgba(215, 254, 81, 0.08);
+  box-shadow: 0 4px 18px rgba(215, 254, 81, 0.18);
+  transform: translateY(-1px);
+}
+.vx-nav-cta:hover svg { transform: translate(1px, -1px); }
 @media (max-width: 720px) {
   .vx-nav a.vx-nav-hide { display: none; }
 }
@@ -127,33 +206,60 @@ body:has(.vx-root)::after {
   gap: 15px;
 }
 .vx-navdots button {
-  width: 14px;
+  position: relative;
   height: 14px;
   padding: 0;
   border: none;
   background: none;
   cursor: pointer;
-  display: grid;
-  place-items: center;
+  display: flex;
+  align-items: center;
 }
-.vx-navdots button::before {
-  content: "";
+.vx-navdots__dot {
   width: 8px;
   height: 8px;
   transform: rotate(45deg);
-  border: 1px solid rgba(251, 255, 244, 0.75);
+  border: 1px solid rgba(233, 243, 238, 0.55);
   background: transparent;
-  transition: background 0.3s, transform 0.3s, box-shadow 0.3s, border-color 0.3s;
+  transition: background 0.4s var(--ease), transform 0.4s var(--ease),
+    box-shadow 0.4s var(--ease), border-color 0.4s var(--ease);
 }
-.vx-navdots button:hover::before {
-  background: rgba(251, 255, 244, 0.6);
+.vx-navdots button:hover .vx-navdots__dot {
+  border-color: rgba(233, 243, 238, 0.9);
+  background: rgba(233, 243, 238, 0.4);
 }
-.vx-navdots button.is-active::before {
+.vx-navdots button.is-active .vx-navdots__dot {
   background: var(--leaf);
   border-color: var(--leaf);
-  transform: rotate(45deg) scale(1.2);
-  box-shadow: 0 0 14px rgba(224, 255, 171, 0.8);
+  transform: rotate(45deg) scale(1.25);
+  box-shadow: 0 0 14px rgba(215, 254, 81, 0.8);
 }
+/* slide-in mono label on hover */
+.vx-navdots__label {
+  position: absolute;
+  left: 18px;
+  white-space: nowrap;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--white-dim);
+  background: rgba(10, 11, 13, 0.7);
+  padding: 3px 8px;
+  border: 1px solid var(--hair);
+  border-radius: 4px;
+  backdrop-filter: blur(6px);
+  opacity: 0;
+  transform: translateX(-6px);
+  pointer-events: none;
+  transition: opacity 0.32s var(--ease), transform 0.32s var(--ease);
+}
+.vx-navdots button:hover .vx-navdots__label,
+.vx-navdots button.is-active:hover .vx-navdots__label {
+  opacity: 1;
+  transform: translateX(0);
+}
+.vx-navdots button.is-active .vx-navdots__label { color: var(--white); }
 @media (max-width: 720px) {
   .vx-navdots { display: none; }
 }
@@ -164,7 +270,7 @@ body:has(.vx-root)::after {
   top: 0;
   left: 0;
   height: 2px;
-  background: linear-gradient(90deg, rgba(224, 255, 171, 0.4), var(--leaf));
+  background: linear-gradient(90deg, rgba(215, 254, 81, 0.4), var(--leaf));
   z-index: 25;
   width: 0;
   will-change: width;
@@ -200,7 +306,7 @@ body:has(.vx-root)::after {
   right: 6%;
   top: 26%;
   bottom: 30%;
-  background: radial-gradient(52% 46% at 50% 50%, rgba(20, 40, 56, 0.3), transparent 74%);
+  background: radial-gradient(52% 46% at 50% 50%, rgba(4, 7, 9, 0.5), transparent 74%);
   z-index: -1;
   pointer-events: none;
 }
@@ -216,9 +322,96 @@ body:has(.vx-root)::after {
   letter-spacing: 0.02em;
   color: var(--white);
   opacity: 0.95;
-  text-shadow: 0 1px 22px rgba(20, 40, 60, 0.45);
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.5);
 }
+/* ── mono explanatory spine: hero eyebrow + per-act micro-index ─────────── */
+.vx-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--mono);
+  font-weight: 400;
+  font-size: clamp(10px, 1.05vw, 12.5px);
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--white-dim);
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.5);
+}
+.vx-eyebrow__tick {
+  width: 7px;
+  height: 7px;
+  transform: rotate(45deg);
+  background: var(--leaf);
+  box-shadow: 0 0 10px rgba(215, 254, 81, 0.8);
+  flex: none;
+}
+/* per-act micro-index — "◗ 02 — EVERY ANGLE" style chapter marker */
+.vx-index {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 0.2em;
+  font-family: var(--mono);
+  font-weight: 400;
+  font-size: clamp(10px, 1vw, 12px);
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: var(--white-faint);
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.5);
+}
+.vx-index__tick {
+  width: 6px;
+  height: 6px;
+  transform: rotate(45deg);
+  background: var(--leaf);
+  box-shadow: 0 0 9px rgba(215, 254, 81, 0.75);
+  flex: none;
+}
+.vx-index__n {
+  color: var(--white);
+  font-variant-numeric: tabular-nums;
+}
+.vx-index__n::after {
+  content: "—";
+  margin-left: 10px;
+  color: var(--white-faint);
+}
+.vx-index__label { color: var(--white-dim); }
+
+/* corner HUD ticks on the hero — a whisper of terminal framing */
+.vx-hud {
+  position: absolute;
+  inset: clamp(16px, 3vw, 42px);
+  z-index: 1;
+  pointer-events: none;
+}
+.vx-hud__tick {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  opacity: 0.5;
+}
+.vx-hud__tick::before,
+.vx-hud__tick::after {
+  content: "";
+  position: absolute;
+  background: rgba(233, 243, 238, 0.4);
+}
+.vx-hud__tick::before { width: 14px; height: 1px; top: 0; }
+.vx-hud__tick::after { width: 1px; height: 14px; left: 0; }
+.vx-hud__tick--tl { top: 0; left: 0; }
+.vx-hud__tick--tr { top: 0; right: 0; }
+.vx-hud__tick--tr::before { right: 0; left: auto; }
+.vx-hud__tick--tr::after { right: 0; left: auto; }
+.vx-hud__tick--bl { bottom: 0; left: 0; }
+.vx-hud__tick--bl::before { bottom: 0; top: auto; }
+.vx-hud__tick--br { bottom: 0; right: 0; }
+.vx-hud__tick--br::before { bottom: 0; top: auto; right: 0; left: auto; }
+.vx-hud__tick--br::after { bottom: 0; top: auto; right: 0; left: auto; }
+@media (max-width: 720px) { .vx-hud { display: none; } }
+
 .vx-hero-title {
+  position: relative;
   font-family: var(--font-serif), Georgia, serif;
   font-weight: 300;
   font-size: clamp(4.2rem, 19vw, 16rem);
@@ -226,11 +419,18 @@ body:has(.vx-root)::after {
   letter-spacing: 0.015em;
   text-transform: uppercase;
   color: var(--white);
-  /* layered shadow keeps the thin serif legible over the pale haze band */
+}
+/* top-lit off-white gradient on the wordmark, with a soft green underglow.
+   Clip lives on the per-char spans so each revealed letter is lit; we glow
+   with text-shadow (not filter) so the reveal's blur-in stays untouched. */
+.vx-hero-title .vx-reveal {
+  background: linear-gradient(180deg, #ffffff 0%, var(--white) 44%, rgba(190, 210, 200, 0.82) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
   text-shadow:
-    0 2px 20px rgba(22, 45, 68, 0.65),
-    0 6px 64px rgba(18, 40, 64, 0.55),
-    0 0 5px rgba(26, 50, 74, 0.4);
+    0 0 46px rgba(215, 254, 81, 0.22),
+    0 2px 22px rgba(0, 0, 0, 0.5);
 }
 .vx-title {
   font-family: var(--font-serif), Georgia, serif;
@@ -239,9 +439,19 @@ body:has(.vx-root)::after {
   line-height: 0.98;
   letter-spacing: 0.01em;
   color: var(--white);
-  text-shadow: 0 2px 40px rgba(20, 45, 70, 0.45);
+  text-shadow:
+    0 0 34px rgba(215, 254, 81, 0.28),
+    0 2px 18px rgba(0, 0, 0, 0.6);
 }
 .vx-title .lime { color: var(--leaf); }
+.vx-title--sm { font-size: clamp(2.4rem, 6.5vw, 5rem); }
+.vx-sub--hero {
+  font-family: var(--font-sans), system-ui, sans-serif;
+  font-size: clamp(15px, 1.6vw, 19px);
+  letter-spacing: 0.01em;
+  line-height: 1.65;
+  max-width: 34ch;
+}
 .vx-sub {
   font-family: var(--font-serif), Georgia, serif;
   font-weight: 400;
@@ -250,7 +460,7 @@ body:has(.vx-root)::after {
   color: var(--white-dim);
   max-width: 30ch;
   line-height: 1.8;
-  text-shadow: 0 1px 20px rgba(20, 40, 60, 0.5);
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.5);
 }
 .vx-desc {
   font-family: var(--font-sans), system-ui, sans-serif;
@@ -259,7 +469,7 @@ body:has(.vx-root)::after {
   line-height: 1.9;
   color: var(--white-dim);
   max-width: 56ch;
-  text-shadow: 0 1px 18px rgba(20, 40, 60, 0.55);
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.5);
 }
 
 /* diamond logo-mark echo behind section marks */
@@ -277,16 +487,16 @@ body:has(.vx-root)::after {
   width: 62%;
   height: 62%;
   transform: rotate(45deg);
-  background: rgba(251, 255, 244, 0.08);
+  background: rgba(233, 243, 238, 0.06);
   backdrop-filter: blur(6px);
-  border: 1px solid rgba(251, 255, 244, 0.22);
+  border: 1px solid rgba(233, 243, 238, 0.18);
 }
 .vx-mark svg {
   position: relative;
   width: 46%;
   height: 46%;
   fill: var(--white);
-  filter: drop-shadow(0 0 22px rgba(224, 255, 171, 0.45));
+  filter: drop-shadow(0 0 22px rgba(215, 254, 81, 0.45));
 }
 
 /* ── "built for" trio ─────────────────────────────────────────────────── */
@@ -318,8 +528,8 @@ body:has(.vx-root)::after {
   position: absolute;
   inset: 8px;
   transform: rotate(45deg);
-  border: 1px solid rgba(251, 255, 244, 0.4);
-  background: rgba(251, 255, 244, 0.08);
+  border: 1px solid rgba(233, 243, 238, 0.18);
+  background: rgba(233, 243, 238, 0.06);
   backdrop-filter: blur(4px);
 }
 .vx-trio__icon svg { position: relative; width: 26px; height: 26px; fill: var(--leaf); color: var(--leaf); }
@@ -328,18 +538,19 @@ body:has(.vx-root)::after {
   font-weight: 400;
   font-size: 1.7rem;
   letter-spacing: 0.01em;
-  text-shadow: 0 1px 24px rgba(20, 40, 60, 0.5);
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.5);
 }
 .vx-trio p {
   font-family: var(--font-sans), system-ui, sans-serif;
   font-size: 13.5px;
   line-height: 1.75;
   color: var(--white-dim);
-  text-shadow: 0 1px 16px rgba(20, 40, 60, 0.55);
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.5);
 }
 
 /* ── buttons: pill CTAs like the reference (leaf fill / glass) ────────── */
 .vx-btn {
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 10px;
@@ -350,19 +561,51 @@ body:has(.vx-root)::after {
   font-size: 14px;
   letter-spacing: 0.01em;
   cursor: pointer;
-  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), background 0.25s, box-shadow 0.25s;
+  overflow: hidden;
+  isolation: isolate;
+  transition: transform 0.32s var(--ease), background 0.32s var(--ease),
+    box-shadow 0.32s var(--ease), border-color 0.32s var(--ease);
 }
-.vx-btn svg { width: 15px; height: 15px; }
-.vx-btn-lime { background: var(--leaf); color: var(--pine); fill: var(--pine); }
-.vx-btn-lime:hover { transform: translateY(-3px) scale(1.01); box-shadow: 0 14px 44px rgba(224, 255, 171, 0.35); }
+.vx-btn svg { width: 15px; height: 15px; transition: transform 0.32s var(--ease); }
+.vx-btn:hover svg { transform: translate(2px, -2px); }
+.vx-btn > span { position: relative; z-index: 1; }
+/* lime CTA: dark text, a moving sheen, greener + glowing on hover */
+.vx-btn-lime {
+  background: linear-gradient(180deg, #12dd18 0%, var(--leaf) 100%);
+  color: var(--pine);
+  fill: var(--pine);
+  box-shadow: 0 6px 22px rgba(215, 254, 81, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.28);
+}
+.vx-btn-lime::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: linear-gradient(115deg, transparent 30%, rgba(255, 255, 255, 0.42) 50%, transparent 70%);
+  transform: translateX(-120%);
+  transition: transform 0.7s var(--ease);
+}
+.vx-btn-lime:hover {
+  transform: translateY(-3px) scale(1.015);
+  box-shadow: 0 16px 46px rgba(215, 254, 81, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+.vx-btn-lime:hover::before { transform: translateX(120%); }
+.vx-btn-lime:active { transform: translateY(-1px) scale(0.99); filter: brightness(0.96); }
+/* glass CTA: crisper hairline, soft green wash on hover */
 .vx-btn-glass {
   color: var(--white);
   fill: var(--white);
-  background: linear-gradient(180deg, rgba(248, 247, 242, 0.2), rgba(248, 247, 242, 0.1));
-  box-shadow: inset 0 1px 1px rgba(248, 247, 242, 0.4);
+  background: linear-gradient(180deg, rgba(233, 243, 238, 0.1), rgba(233, 243, 238, 0.04));
+  border: 1px solid var(--hair-hi);
+  box-shadow: inset 0 1px 1px rgba(233, 243, 238, 0.18);
   backdrop-filter: blur(8px);
 }
-.vx-btn-glass:hover { transform: translateY(-3px); background: rgba(248, 247, 242, 0.24); }
+.vx-btn-glass:hover {
+  transform: translateY(-3px);
+  background: linear-gradient(180deg, rgba(233, 243, 238, 0.14), rgba(215, 254, 81, 0.06));
+  border-color: rgba(215, 254, 81, 0.35);
+  box-shadow: inset 0 1px 1px rgba(233, 243, 238, 0.22), 0 10px 30px rgba(0, 0, 0, 0.3);
+}
 .vx-cta-row { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; margin-top: 0.6em; }
 
 /* ── scroll cue on hero ───────────────────────────────────────────────── */
@@ -379,7 +622,7 @@ body:has(.vx-root)::after {
   font-size: 15px;
   letter-spacing: 0.05em;
   color: var(--white-dim);
-  text-shadow: 0 1px 16px rgba(20, 40, 60, 0.5);
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.5);
 }
 .vx-cue__line {
   width: 1px;
@@ -414,7 +657,7 @@ body:has(.vx-root)::after {
   text-align: center;
   gap: 1.1em;
   padding: 0 clamp(20px, 6vw, 90px);
-  background: radial-gradient(120% 100% at 50% 45%, rgba(10, 20, 14, 0.35), rgba(10, 20, 14, 0.72));
+  background: radial-gradient(120% 100% at 50% 45%, rgba(3, 5, 7, 0.35), rgba(3, 5, 7, 0.72));
 }
 .vx-foot__legal {
   position: absolute;
@@ -436,7 +679,7 @@ body:has(.vx-root)::after {
   position: fixed;
   inset: 0;
   z-index: 200;
-  background: var(--pine, #203727);
+  background: var(--pine, #22242A);
   display: grid;
   place-items: center;
   transition: opacity 0.8s ease, visibility 0.8s;
@@ -447,13 +690,36 @@ body:has(.vx-root)::after {
   pointer-events: none;
 }
 .vx-preload__mark {
-  width: clamp(90px, 16vw, 150px);
+  width: clamp(96px, 16vw, 156px);
   aspect-ratio: 1;
   display: grid;
   place-items: center;
   position: relative;
 }
-.vx-preload__mark svg { width: 60%; height: 60%; fill: #fbfff4; }
+.vx-preload__mark svg {
+  width: 46%;
+  height: 46%;
+  fill: #ECF2F0;
+  filter: drop-shadow(0 0 18px rgba(215, 254, 81, 0.35));
+  animation: vx-pre-pulse 2.4s var(--ease) infinite;
+}
+/* thin green progress ring driven by the live --pct from the counter */
+.vx-preload__ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(
+    var(--leaf) calc(var(--pct, 0) * 1%),
+    rgba(233, 243, 238, 0.08) 0
+  );
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #000 calc(100% - 2px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #000 calc(100% - 2px));
+  box-shadow: 0 0 24px rgba(215, 254, 81, 0.18);
+}
+@keyframes vx-pre-pulse {
+  0%, 100% { opacity: 0.85; filter: drop-shadow(0 0 14px rgba(215, 254, 81, 0.28)); }
+  50% { opacity: 1; filter: drop-shadow(0 0 26px rgba(215, 254, 81, 0.5)); }
+}
 .vx-preload__pct {
   position: absolute;
   bottom: clamp(24px, 6vh, 54px);
@@ -462,20 +728,50 @@ body:has(.vx-root)::after {
   font-family: var(--font-serif), Georgia, serif;
   font-weight: 300;
   font-size: clamp(30px, 5vw, 48px);
-  color: #fbfff4;
+  color: #ECF2F0;
   font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+}
+.vx-preload__sign {
+  font-family: var(--mono);
+  font-size: 0.4em;
+  letter-spacing: 0.1em;
+  color: var(--white-faint);
+  vertical-align: super;
+  margin-left: 0.15em;
+}
+
+/* ── responsive: keep the spine legible + tappable on a phone ──────────── */
+@media (max-width: 720px) {
+  .vx-sec__inner { gap: 0.85em; padding: 0 clamp(22px, 7vw, 40px); }
+  .vx-index { letter-spacing: 0.18em; gap: 8px; }
+  .vx-index__n::after { margin-left: 8px; }
+  .vx-eyebrow { letter-spacing: 0.2em; gap: 8px; }
+  .vx-sub--hero { max-width: 26ch; }
+  .vx-desc { line-height: 1.8; max-width: 40ch; }
+  .vx-title--sm { font-size: clamp(2rem, 10vw, 3rem); }
+  .vx-trio { gap: 30px; }
+  /* comfortable tap targets */
+  .vx-btn { padding: 15px 26px; }
+  .vx-nav-cta { padding: 10px 16px; }
+  .vx-cta-row { width: 100%; }
+  .vx-cta-row .vx-btn { flex: 1 1 auto; justify-content: center; }
+}
+@media (max-width: 400px) {
+  .vx-index { font-size: 10px; letter-spacing: 0.14em; }
 }
 
 /* ── reveal animations (blur-in on entry) ─────────────────────────────── */
 .vx-reveal {
   opacity: 0;
-  filter: blur(0.28em);
-  transform: translateY(0.5em);
+  filter: blur(0.24em);
+  transform: translateY(0.44em);
   transition:
-    opacity 0.95s cubic-bezier(0.16, 1, 0.3, 1),
-    filter 0.95s cubic-bezier(0.16, 1, 0.3, 1),
-    transform 0.95s cubic-bezier(0.16, 1, 0.3, 1);
+    opacity 1.05s cubic-bezier(0.16, 1, 0.3, 1),
+    filter 1.05s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 1.05s cubic-bezier(0.16, 1, 0.3, 1);
   transition-delay: calc(var(--i, 0) * var(--step, 55ms));
+  will-change: opacity, filter, transform;
 }
 .in.vx-reveal,
 .in .vx-reveal {
@@ -501,13 +797,19 @@ body:has(.vx-root)::after {
    sticky approach, and never behind the preloader) */
 .vx-sec__inner:not(.vx-live) .vx-reveal {
   opacity: 0;
-  filter: blur(0.28em);
-  transform: translateY(0.5em);
+  filter: blur(0.24em);
+  transform: translateY(0.44em);
   transition: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .vx-reveal { opacity: 1 !important; filter: none !important; transform: none !important; }
+  /* keep the gradient wordmark visible when reveals are forced on */
+  .vx-hero-title .vx-reveal { filter: none !important; }
   .vx-bg { animation: none; opacity: 1; }
   .vx-cue__line::after { animation: none; }
+  .vx-preload__mark svg { animation: none; }
+  .vx-btn-lime::before { display: none; }
+  .vx-header, .vx-btn, .vx-nav-cta, .vx-navdots__dot, .vx-navdots__label,
+  .vx-nav-link::after, .vx-logo svg { transition: none !important; }
 }

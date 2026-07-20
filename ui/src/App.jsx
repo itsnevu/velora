@@ -2,7 +2,8 @@ import { useEffect, useState, useCallback } from 'react'
 import {
   AccountHeader, RiskPanel, Positions, Candidates,
   ProposedTrade, ActivityLog, InjectionAlerts, RunControls,
-  Backtests, DecisionTimeline,
+  Backtests, DecisionTimeline, Eyebrow, PreviewBadge,
+  NetworkBadge, VaultPanel, GuardrailsOnChain, TrackRecord, ExecutorPanel, AutosavePanel,
 } from './components.jsx'
 
 const POLL_MS = 5000
@@ -53,11 +54,18 @@ export default function App() {
     )
   }
 
+  const onchain = state.onchain
+
   return (
     <div className="app">
       <AccountHeader account={state.account} generatedAt={state.generatedAt} />
 
       {error && <div className="stale">⚠ Live refresh failed ({error}); showing last good state.</div>}
+
+      <div className="section-lead">
+        <Eyebrow index="01">The desk · read-only mirror</Eyebrow>
+        <span className="section-lead-rule" aria-hidden="true" />
+      </div>
 
       <main className="layout">
         <div className="col-main">
@@ -66,10 +74,28 @@ export default function App() {
           {state.backtests && <Backtests backtests={state.backtests} />}
           <Candidates candidates={state.candidates} />
           <Positions positions={state.positions} />
+
+          {onchain && (
+            <div className="oc-band">
+              <div className="oc-band-head">
+                <Eyebrow index="02">On-chain · Robinhood Chain</Eyebrow>
+                <div className="oc-band-tail">
+                  <PreviewBadge />
+                  <NetworkBadge network={onchain.network} />
+                </div>
+              </div>
+              <VaultPanel vault={onchain.vault} network={onchain.network} />
+              <GuardrailsOnChain guardrails={onchain.guardrails} />
+              <TrackRecord trackRecord={onchain.trackRecord} />
+            </div>
+          )}
+
           <InjectionAlerts alerts={state.injectionAlerts} />
         </div>
         <aside className="col-side">
           <RiskPanel caps={state.riskCaps} account={state.account} positions={state.positions} />
+          {onchain && <ExecutorPanel executor={onchain.executor} />}
+          {onchain && <AutosavePanel autosave={onchain.autosave} />}
           <ActivityLog orders={state.recentOrders} />
           {state.decisionLog && <DecisionTimeline log={state.decisionLog} />}
         </aside>

@@ -43,7 +43,7 @@ export function HeroBackdrop() {
       for (let i = 0; i < candles.length; i++) {
         const cd = candles[i];
         const x = snap(i * STEP - off);
-        ctx!.fillStyle = cd.c >= cd.o ? "#8ba626" : "#b8752f";
+        ctx!.fillStyle = cd.c >= cd.o ? "#D7FE51" : "#FF5B52";
         ctx!.fillRect(snap(x + CW / 2) - 1, y(cd.hi, h), 2, Math.max(2, y(cd.lo, h) - y(cd.hi, h)));
         const yo = y(cd.o, h), yc = y(cd.c, h);
         ctx!.fillRect(x, Math.min(yo, yc), CW, Math.max(3, Math.abs(yc - yo)));

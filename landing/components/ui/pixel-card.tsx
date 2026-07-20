@@ -17,7 +17,7 @@ import { cn } from "@/lib/cn";
 export function PixelCard({
   children,
   className,
-  colors = ["#16180d", "#e23b3b", "#aacf2f"],
+  colors = ["#ECF2F0", "#FF5B52", "#D7FE51"],
   gap = 12,
   size = 6,
 }: {

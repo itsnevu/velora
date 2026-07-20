@@ -76,7 +76,7 @@ export function RevealLines({
   lines,
   className = "",
   as: Tag = "p",
-  step = 90,
+  step = 110,
 }: {
   lines: string[];
   className?: string;

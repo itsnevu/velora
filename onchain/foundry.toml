@@ -1,0 +1,30 @@
+[profile.default]
+src = "src"
+out = "out"
+libs = ["lib"]
+test = "test"
+solc = "0.8.28"
+optimizer = true
+optimizer_runs = 200
+via_ir = false
+fs_permissions = [
+  { access = "read-write", path = "./" },
+  { access = "read-write", path = "../ui/public" },
+]
+remappings = [
+  "forge-std/=lib/forge-std/src/",
+  "@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/",
+  "solady/=lib/solady/src/",
+]
+
+[fmt]
+line_length = 100
+tab_width = 4
+bracket_spacing = true
+
+# Robinhood Chain — Velora on-chain module.
+# RPC/chain-id must be confirmed against https://docs.robinhood.com/chain (docs host
+# blocked automated fetch during research). Mainnet chain id ~4663, testnet ~46630.
+[rpc_endpoints]
+rh_testnet = "${RH_TESTNET_RPC}"
+rh_mainnet = "${RH_MAINNET_RPC}"

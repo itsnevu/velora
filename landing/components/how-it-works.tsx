@@ -25,7 +25,7 @@ export function HowItWorks() {
             const isYou = "you" in s && s.you;
             return (
               <Reveal key={s.num} delay={i * 60} className={"step" + (isYou ? " you" : "")}>
-                {isYou && <BorderScan color="#e23b3b" size={10} speed={90} />}
+                {isYou && <BorderScan color="#FF5B52" size={10} speed={90} />}
                 <div className="num">{s.num}</div>
                 <h3>{s.title}</h3>
                 <p>{s.body}</p>

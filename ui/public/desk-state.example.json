@@ -93,5 +93,23 @@
     { "ts": "2026-01-15T10:04:48-05:00", "event": "approval", "symbol": "AAPL", "tone": "pos", "summary": "You approved BUY 10 AAPL in session." },
     { "ts": "2026-01-14T13:41:02-05:00", "event": "order_filled", "symbol": "KO", "tone": "pos", "summary": "BUY 30 KO filled @ $79.00 (left-side-accumulation)." },
     { "ts": "2026-01-14T09:32:20-05:00", "event": "desk_run", "symbol": null, "tone": "flat", "summary": "Watchlist screen: 5 names reviewed; KO surfaced as a left-side value entry into weakness." }
-  ]
+  ],
+  "onchain": {
+    "network": { "name": "Robinhood Chain Testnet", "chainId": 46630, "deployed": false, "explorer": "https://blockscout.testnet.robinhood.com" },
+    "contracts": { "guardrails": null, "vault": null, "attestor": null, "executor": null, "autosave": null },
+    "vault": { "symbol": "vVLRA", "nav": 10250.00, "totalAssets": 10250.00, "totalShares": 10000, "sharePrice": 1.025, "yourShares": 0, "yourValue": 0, "utilizationPct": 62, "apyPct": null },
+    "guardrails": [
+      { "key": "perTradePct", "label": "Per-trade cap", "value": "15%", "enforced": true },
+      { "key": "maxConcentrationPct", "label": "Max concentration", "value": "25%", "enforced": true },
+      { "key": "maxOpenPositions", "label": "Max open positions", "value": "6", "enforced": true },
+      { "key": "maxDailyOrders", "label": "Max daily orders", "value": "4", "enforced": true },
+      { "key": "stopLossPct", "label": "Stop-loss", "value": "-8%", "enforced": true },
+      { "key": "dailyLossHaltPct", "label": "Daily-loss halt", "value": "-5%", "enforced": true },
+      { "key": "cashBufferPct", "label": "Cash buffer", "value": ">=10%", "enforced": true },
+      { "key": "noAveraging", "label": "No averaging into losers", "value": "enforced", "enforced": true }
+    ],
+    "trackRecord": { "perfScore": 72, "attestations": 3, "verifiedPnlPct": null, "lastAttestation": { "ts": "2026-01-15T14:32:00-05:00", "txHash": null, "summary": "desk run attested (preview)" } },
+    "executor": { "type": "ERC-4337 session key", "status": "preview", "scope": "guardrail-bounded swaps · approval-gated", "sessionKey": null, "dailyCapPct": 15, "lastAction": null },
+    "autosave": { "enabled": false, "cadence": "weekly", "amount": 100, "asset": "USDC", "nextRun": null }
+  }
 }

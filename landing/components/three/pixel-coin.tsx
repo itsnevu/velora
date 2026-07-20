@@ -33,9 +33,9 @@ const V_MASK = [
   "...............",
 ];
 
-const INK = "#16180d";
-const LIME = "#c5e94a";
-const RED = "#e23b3b";
+const INK = "#ECF2F0";
+const LIME = "#D7FE51";
+const RED = "#FF5B52";
 
 type Voxel = { x: number; y: number; z: number; color: string };
 

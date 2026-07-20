@@ -15,7 +15,11 @@ export const MARQUEE = [
   "NO ORDER WITHOUT YOUR APPROVAL",
   "4 SPECIALIST AGENTS",
   "RISK VETO ARMED",
-  "EQUITIES ONLY",
+  "GUARDRAILS AS CODE",
+  "ON-CHAIN VAULT · TESTNET",
+  "VERIFIABLE TRACK RECORD",
+  "ON ROBINHOOD CHAIN",
+  "TESTNET PREVIEW · NOT YET LIVE",
   "BETA · NOT INVESTMENT ADVICE",
 ] as const;
 
@@ -47,14 +51,16 @@ export const GUARDS = [
   { title: "Prompt-injection defense", body: "The news agent treats fetched web content as untrusted data. Instruction-like text (“buy X now”) is quoted and flagged, never obeyed." },
   { title: "Independent risk veto", body: "The Risk Manager evaluates against written rules and can block a trade the analysts liked. If caps are unset, it vetoes." },
   { title: "Equities · Agentic account only", body: "The desk can only trade the isolated Agentic account, never your main balance. Disconnect the MCP anytime — that’s the kill switch." },
+  { title: "Guardrails-as-code · verifiable record", body: "The written caps are being compiled into an on-chain Guardrails library the vault and executor enforce, with decisions and outcomes attested for a verifiable track record. Testnet-first, not yet deployed — approval and the caps still apply." },
 ] as const;
 
 export const ROADMAP = [
   { phase: "FASE 0 · SETUP", title: "Guardrails & contract", body: "Private repo, OAuth to the Agentic account, operating contract, and the permission gate that puts every order behind a manual prompt." },
   { phase: "FASE 1 · CORE", title: "The four agents + logging", body: "Fundamental, Technical, Macro/News, Risk Manager as isolated sub-agents. JSONL reasoning logs for audit." },
   { phase: "FASE 2 · DASHBOARD", title: "Desk mirror + paper trading", body: "Read-only dashboard mirrors desk-state live. Robinhood integration starts in paper mode." },
-  { phase: "FASE 3 · WEB3", title: "$VLRA token experiment", body: "Optional utility-token experiment on Robinhood Chain, testnet-first. Subject to legal review — not an investment product.", experimental: true },
-  { phase: "FASE 4 · SCALE", title: "Backtesting & optimization", body: "Strategy backtests, prompt-cost optimization, and broader coverage." },
+  { phase: "FASE 3 · ON-CHAIN", title: "Guardrails, vault & proof", body: "The desk's written caps compiled into an on-chain Guardrails library, an RWA Vault (ERC-4626, share token vVLRA) wired to it, and Proof-of-Track-Record attestations so decisions and outcomes are verifiable. Robinhood Chain, testnet-first, pending review — nothing deployed, not an investment product.", experimental: true },
+  { phase: "FASE 4 · EXECUTOR", title: "Guardrail-bounded executor", body: "An ERC-4337 agent executor with a scoped session key that cannot exceed the Guardrails and stays approval-gated — plus optional Autosave / DCA on top of the vault. Robinhood Chain, testnet-first, pending review; not an investment product.", experimental: true },
+  { phase: "FASE 5 · SCALE", title: "Backtesting & optimization", body: "Strategy backtests, prompt-cost optimization, and broader coverage." },
 ] as const;
 
 export const MARQUEE2 = [
@@ -77,6 +83,8 @@ export const COMPARE = {
       "No independent risk check",
       "Acts on hype it reads online",
       "Can reach your whole balance",
+      "Limits live in a config it can edit",
+      "“Trust me” performance screenshots",
     ],
   },
   good: {
@@ -87,6 +95,8 @@ export const COMPARE = {
       "Independent risk manager with veto",
       "Quotes suspicious “instructions”, ignores them",
       "Isolated Agentic budget only",
+      "Guardrails enforced on-chain (testnet-first)",
+      "Verifiable, attested record — not claimed",
     ],
   },
 } as const;
@@ -104,8 +114,12 @@ export const FAQ = [
     a: "US equities only, inside an isolated Robinhood Agentic account (beta). Options, futures and crypto are out of scope of the underlying beta.",
   },
   {
-    q: "What about crypto and the $VLRA token?",
-    a: "Crypto trading isn’t supported by the underlying beta. $VLRA is an experimental, testnet-first roadmap item — a Web3 experiment, not an investment product, and pending legal review.",
+    q: "What about the on-chain vault and verifiable track record?",
+    a: "That’s the on-chain direction, and it’s testnet-first. The plan: an RWA Vault (ERC-4626, share token vVLRA) wired to a Guardrails library that compiles the desk’s written caps on-chain, plus a Proof-of-Track-Record attestation registry so decisions and outcomes are verifiable rather than claimed. Nothing is deployed yet — every on-chain surface is a testnet preview showing illustrative values, there is no live track record, and human approval and the guardrails still apply. Not an investment product and not investment advice.",
+  },
+  {
+    q: "Who executes on-chain — does the agent trade by itself?",
+    a: "No. The planned ERC-4337 agent executor uses a scoped session key that cannot exceed the Guardrails and stays approval-gated — guardrail-bounded and human-in-the-loop, never autonomous. The desk proposes; you approve. This is testnet-preview and not yet live.",
   },
   {
     q: "How does it defend against prompt injection?",

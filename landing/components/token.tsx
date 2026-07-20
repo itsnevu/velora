@@ -25,7 +25,7 @@ export function Token() {
           <div style={{ display: "grid", gap: "20px" }}>
             <TokenCoin />
             <div className="warn-note" style={{ position: "relative" }}>
-              <BorderScan color="#e23b3b" size={10} speed={90} />
+              <BorderScan color="#FF5B52" size={10} speed={90} />
               ⚠ NOT A SECURITY OFFERING.
               <br />
               NOT INVESTMENT ADVICE.

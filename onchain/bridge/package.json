@@ -1,0 +1,9 @@
+{
+  "name": "velora-bridge",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Reads live Velora contract state and writes the onchain block into ui/public/desk-state.json",
+  "bin": { "velora-bridge": "index.mjs" },
+  "dependencies": { "ethers": "^6.13.0" }
+}

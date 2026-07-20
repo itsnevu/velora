@@ -52,6 +52,18 @@ const Diamond = () => (
   </svg>
 );
 
+/* mono micro-index eyebrow — the explanatory spine that lets a first-time
+   visitor follow the story act by act. Tick · number · section name. */
+function IndexLabel({ n, children, i = 0 }: { n: string; children: string; i?: number }) {
+  return (
+    <Reveal className="vx-index" i={i}>
+      <span className="vx-index__tick" aria-hidden="true" />
+      <span className="vx-index__n">{n}</span>
+      <span className="vx-index__label">{children}</span>
+    </Reveal>
+  );
+}
+
 /**
  * Scroll-linked choreography — the vvvhound trick. Every RAF we compute each
  * section's progress through its runway (0 pinned-in → 1 about to unpin) and
@@ -124,6 +136,7 @@ export default function HomePage() {
   const [ready, setReady] = useState(false);
   const [active, setActive] = useState(0);
   const barRef = useRef<HTMLDivElement>(null);
+  const headerRef = useRef<HTMLElement>(null);
 
   useCinematicLenis();
   useScrollChoreography(ready);
@@ -150,6 +163,8 @@ export default function HomePage() {
       const max = document.documentElement.scrollHeight - window.innerHeight;
       const frac = max > 0 ? window.scrollY / max : 0;
       if (barRef.current) barRef.current.style.width = `${frac * 100}%`;
+      // condense the header + reveal its hairline once we leave the hero top
+      if (headerRef.current) headerRef.current.classList.toggle("is-scrolled", window.scrollY > 24);
       const mid = window.scrollY + window.innerHeight * 0.5;
       let idx = 0;
       for (let i = 0; i < SECTIONS.length; i++) {
@@ -169,12 +184,15 @@ export default function HomePage() {
 
   return (
     <div className="vx-root">
-      {/* preloader */}
+      {/* preloader — V mark inside a green progress ring, serif % counter */}
       <div className={`vx-preload ${ready ? "is-done" : ""}`}>
         <div className="vx-preload__mark">
+          <div className="vx-preload__ring" style={{ "--pct": pct }} aria-hidden="true" />
           <VMark />
         </div>
-        <div className="vx-preload__pct">{pct}%</div>
+        <div className="vx-preload__pct">
+          {pct}<span className="vx-preload__sign">%</span>
+        </div>
       </div>
 
       {/* WebGL scene + veils */}
@@ -186,14 +204,17 @@ export default function HomePage() {
       <div className="vx-progress" ref={barRef} aria-hidden="true" />
 
       {/* header */}
-      <header className="vx-header">
+      <header className="vx-header" ref={headerRef}>
         <a className="vx-logo" href="/" aria-label="Velora home">
           <VMark />
           <span>Velora</span>
         </a>
         <nav className="vx-nav">
-          <a className="vx-nav-hide" href="/docs">Docs</a>
-          <a href="/desk">Desk →</a>
+          <a className="vx-nav-link vx-nav-hide" href="/docs"><span>Docs</span></a>
+          <a className="vx-nav-cta" href="/desk">
+            <span>Desk</span>
+            <ArrowUpRight />
+          </a>
         </nav>
       </header>
 
@@ -206,21 +227,33 @@ export default function HomePage() {
             aria-label={s.label}
             aria-current={i === active}
             onClick={() => scrollToId(s.id)}
-          />
+          >
+            <span className="vx-navdots__dot" aria-hidden="true" />
+            <span className="vx-navdots__label" aria-hidden="true">{s.label}</span>
+          </button>
         ))}
       </div>
 
       {/* ── HERO ── */}
       <section className="vx-sec vx-h-hero" id="vx-hero">
         <div className="vx-sec__inner">
-          <Reveal className="vx-kicker" i={0}>Agentic research desk</Reveal>
+          <div className="vx-hud" aria-hidden="true">
+            <span className="vx-hud__tick vx-hud__tick--tl" />
+            <span className="vx-hud__tick vx-hud__tick--tr" />
+            <span className="vx-hud__tick vx-hud__tick--bl" />
+            <span className="vx-hud__tick vx-hud__tick--br" />
+          </div>
+          <Reveal className="vx-eyebrow" i={0}>
+            <span className="vx-eyebrow__tick" aria-hidden="true" />
+            On-chain agentic desk · testnet
+          </Reveal>
           <RevealChars text="VELORA" as="h1" className="vx-hero-title" step={70} />
-          <Reveal className="vx-sub" i={4} style={{ marginTop: "0.4em" }}>
-            Scroll to enter
+          <Reveal className="vx-sub vx-sub--hero" i={4} style={{ marginTop: "0.4em" }}>
+            An AI trading desk that researches around the clock — and never trades without your yes.
           </Reveal>
         </div>
         <div className="vx-cue" aria-hidden="true">
-          <span>Scroll</span>
+          <span>Scroll to enter</span>
           <span className="vx-cue__line" />
         </div>
       </section>
@@ -228,6 +261,7 @@ export default function HomePage() {
       {/* ── ONE DESK ── */}
       <section className="vx-sec vx-h-tall" id="vx-desk">
         <div className="vx-sec__inner">
+          <IndexLabel n="01">One Desk</IndexLabel>
           <div className="vx-mark">
             <VMark />
           </div>
@@ -240,8 +274,9 @@ export default function HomePage() {
             className="vx-desc"
             step={70}
             lines={[
-              "A desk of AI analysts researching your watchlist around the",
-              "clock — and never placing an order without your explicit yes.",
+              "A desk of AI analysts researching your watchlist around the clock —",
+              "an on-chain agentic layer where the rules and the record are verifiable,",
+              "and no order is ever placed without your explicit yes.",
             ]}
           />
         </div>
@@ -250,14 +285,14 @@ export default function HomePage() {
       {/* ── EVERY ANGLE ── */}
       <section className="vx-sec vx-h-mid" id="vx-angles">
         <div className="vx-sec__inner">
-          <Reveal className="vx-kicker" i={0}>Every angle</Reveal>
+          <IndexLabel n="02">Every Angle</IndexLabel>
           <RevealChars text="Nothing Slips" as="h2" className="vx-title" />
           <RevealLines
             className="vx-desc"
             step={70}
             lines={[
-              "Fundamental, technical and macro analysts debate each name.",
-              "A Risk Manager holds veto power over them all.",
+              "Fundamental, technical and macro analysts each argue their read of a name,",
+              "then a Risk Manager weighs the case — holding veto power over them all.",
             ]}
           />
         </div>
@@ -266,7 +301,8 @@ export default function HomePage() {
       {/* ── BUILT FOR ── */}
       <section className="vx-sec vx-h-tall" id="vx-built">
         <div className="vx-sec__inner">
-          <Reveal className="vx-kicker" i={0}>Built for the deliberate</Reveal>
+          <IndexLabel n="03">Built For</IndexLabel>
+          <RevealChars text="The Deliberate" as="h2" className="vx-title vx-title--sm" />
           <div className="vx-trio">
             <Reveal className="vx-trio__item" i={1}>
               <span className="vx-trio__icon"><Diamond /></span>
@@ -290,14 +326,14 @@ export default function HomePage() {
       {/* ── SIGNALS (river chapter) ── */}
       <section className="vx-sec vx-h-mid" id="vx-signals">
         <div className="vx-sec__inner">
-          <Reveal className="vx-kicker" i={0}>Through the noise</Reveal>
+          <IndexLabel n="04">Signals</IndexLabel>
           <RevealChars text="Signals, Not Noise" as="h2" className="vx-title" />
           <RevealLines
             className="vx-desc"
             step={70}
             lines={[
-              "Headlines, filings, price action — distilled into what",
-              "actually moves your names. Quoted, sourced, never blind.",
+              "Headlines, filings and price action — distilled into what actually",
+              "moves your names. Every read is quoted, sourced and shown, never blind.",
             ]}
           />
         </div>
@@ -306,14 +342,15 @@ export default function HomePage() {
       {/* ── YOU DECIDE ── */}
       <section className="vx-sec vx-h-mid" id="vx-decide">
         <div className="vx-sec__inner">
-          <Reveal className="vx-kicker" i={0}>Approved by you</Reveal>
+          <IndexLabel n="05">You Decide</IndexLabel>
           <RevealChars text="You Decide" as="h2" className="vx-title" />
           <RevealLines
             className="vx-desc"
             step={70}
             lines={[
-              "The desk proposes; you dispose. Position caps, stop rules and",
-              "no averaging into losers — enforced in code, not vibes.",
+              "The desk proposes; you dispose. Position caps, stop rules and no",
+              "averaging into losers become guardrails-as-code — the same written",
+              "limits compiled on-chain, so they are enforced, not just promised.",
             ]}
           />
         </div>
@@ -322,14 +359,15 @@ export default function HomePage() {
       {/* ── EVERYTHING IN VIEW (lake chapter) ── */}
       <section className="vx-sec vx-h-view" id="vx-view">
         <div className="vx-sec__inner">
-          <Reveal className="vx-kicker" i={0}>From above</Reveal>
-          <RevealChars text="Everything In View" as="h2" className="vx-title" />
+          <IndexLabel n="06">On View</IndexLabel>
+          <RevealChars text="Everything On View" as="h2" className="vx-title" />
           <RevealLines
             className="vx-desc"
             step={70}
             lines={[
-              "Positions, buying power, risk caps — one calm picture",
-              "of the whole book. Nothing hidden, nothing assumed.",
+              "An ERC-4626 vault holds the book; every decision and outcome is",
+              "attested on-chain for a track record you can verify, not take on trust.",
+              "One calm picture — nothing hidden, nothing assumed. Testnet preview.",
             ]}
           />
         </div>
@@ -338,11 +376,15 @@ export default function HomePage() {
       {/* ── RUN / CTA ── */}
       <section className="vx-sec vx-h-last" id="vx-run">
         <div className="vx-sec__inner">
+          <IndexLabel n="07">Run</IndexLabel>
           <RevealChars text="One Desk. Every Angle." as="h2" className="vx-title" step={26} />
           <RevealLines
             className="vx-desc"
             step={70}
-            lines={["The calm layer over your watchlist — one reviewed decision at a time."]}
+            lines={[
+              "The calm layer over your watchlist — one reviewed decision at a time,",
+              "on Robinhood Chain. Testnet-first · preview · not yet live.",
+            ]}
           />
           <Reveal className="vx-cta-row" i={2}>
             <a className="vx-btn vx-btn-lime" href="/desk">
@@ -365,8 +407,12 @@ export default function HomePage() {
         </Reveal>
         <p className="vx-foot__legal">
           <b>Not investment advice.</b> Velora is an agentic research tool for Robinhood
-          Agentic (beta), equities only. Every order requires explicit human approval in
-          session. Nothing here is a recommendation to buy or sell any security.
+          Agentic (beta). The desk researches and proposes; every order requires explicit
+          human approval in session. On-chain features — the Guardrails library, ERC-4626
+          vault, on-chain attestations and agent executor — are testnet-first and not yet
+          live: nothing is deployed, all on-chain values shown are illustrative previews,
+          and this is not an investment product. There is no track record. Nothing here is
+          a recommendation to buy or sell any security. Use only risk capital.
         </p>
       </footer>
     </div>

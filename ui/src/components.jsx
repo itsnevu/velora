@@ -69,42 +69,98 @@ function ScoreChip({ value, label }) {
   )
 }
 
-/* ---------- account header ---------- */
+/* ---------- account header (command bar) ---------- */
 
 export function AccountHeader({ account, generatedAt }) {
   const a = account || {}
+  const connected = !!a.connected
   return (
     <header className="topbar">
+      <span className="topbar-glow" aria-hidden="true" />
+
       <div className="brand">
-        <span className="logo">▰▰</span>
-        <div>
-          <div className="brand-title">RH Agentic Desk</div>
-          <div className="brand-sub">
-            <span className={`dot ${a.connected ? 'on' : 'off'}`} />
-            {a.name || 'Agentic account'} · {a.connected ? 'connected' : 'disconnected'}
+        <span className="logo" aria-hidden="true">V</span>
+        <div className="brand-meta">
+          <div className="brand-title">Velora</div>
+          <div className="brand-sub" title={connected ? 'Live connection to the Agentic account' : 'Not connected'}>
+            <span className={`dot ${connected ? 'on' : 'off'}`} />
+            <span className="brand-acct">{a.name || 'Agentic account'}</span>
+            <span className="brand-conn">{connected ? 'connected' : 'disconnected'}</span>
           </div>
         </div>
       </div>
 
       <div className="topstats">
-        <Stat label="Equity" value={usd(a.equity)} />
-        <Stat label="Day P&L" value={`${usd(a.dayPnl)} (${pct(a.dayPnlPct)})`} cls={signClass(a.dayPnl)} />
-        <Stat label="Buying power" value={usd(a.buyingPower)} />
-        <Stat label="Cash" value={usd(a.cash)} />
-        <Stat label="Positions" value={`${num(a.openPositions)}`} />
-        <Stat label="Orders today" value={`${num(a.ordersToday)}`} />
+        <div className="stat stat-hero" title="Total account equity">
+          <div className="stat-label">Equity</div>
+          <div className="stat-value hero mono">{usd(a.equity)}</div>
+        </div>
+        <span className="stat-div" aria-hidden="true" />
+        <Stat label="Day P&L" value={`${usd(a.dayPnl)} (${pct(a.dayPnlPct)})`} cls={signClass(a.dayPnl)} mono />
+        <Stat label="Buying power" value={usd(a.buyingPower)} mono />
+        <Stat label="Cash" value={usd(a.cash)} mono />
+        <Stat label="Positions" value={num(a.openPositions)} mono />
+        <Stat label="Orders today" value={num(a.ordersToday)} mono />
       </div>
 
-      <div className="asof">as of {timeAgo(generatedAt)}</div>
+      <div className="asof" title={generatedAt || ''}>
+        <span className="asof-k">as of</span>
+        <span className="asof-v">{timeAgo(generatedAt)}</span>
+      </div>
     </header>
   )
 }
 
-function Stat({ label, value, cls = '' }) {
+function Stat({ label, value, cls = '', mono = false }) {
   return (
     <div className="stat">
       <div className="stat-label">{label}</div>
-      <div className={`stat-value ${cls}`}>{value}</div>
+      <div className={`stat-value ${mono ? 'mono' : ''} ${cls}`}>{value}</div>
+    </div>
+  )
+}
+
+/* ---------- mono micro-index eyebrow (explanatory spine) ---------- */
+
+export function Eyebrow({ index, children }) {
+  return (
+    <span className="eyebrow">
+      {index != null && <span className="eyebrow-idx">{index}</span>}
+      {index != null && <span className="eyebrow-dash">—</span>}
+      <span className="eyebrow-label">{children}</span>
+    </span>
+  )
+}
+
+/* ---------- inline-SVG ring gauge (0–100, green arc) ---------- */
+
+export function RingGauge({ value, max = 100, size = 92, stroke = 8, label }) {
+  const v = value == null || Number.isNaN(value) ? null : Math.max(0, Math.min(max, value))
+  const r = (size - stroke) / 2
+  const c = 2 * Math.PI * r
+  const frac = v == null ? 0 : v / max
+  const cx = size / 2
+  return (
+    <div className="ring" style={{ width: size, height: size }}>
+      <svg viewBox={`0 0 ${size} ${size}`} width={size} height={size} role="img" aria-label={label ? `${label}: ${v ?? '—'} of ${max}` : undefined}>
+        <circle className="ring-track" cx={cx} cy={cx} r={r} fill="none" strokeWidth={stroke} />
+        <circle
+          className="ring-arc"
+          cx={cx}
+          cy={cx}
+          r={r}
+          fill="none"
+          strokeWidth={stroke}
+          strokeLinecap="round"
+          strokeDasharray={c}
+          strokeDashoffset={c * (1 - frac)}
+          transform={`rotate(-90 ${cx} ${cx})`}
+        />
+      </svg>
+      <div className="ring-center">
+        <span className="ring-num">{v ?? '—'}</span>
+        {label && <span className="ring-label">{label}</span>}
+      </div>
     </div>
   )
 }
@@ -170,6 +226,7 @@ export function Positions({ positions }) {
   return (
     <section className="panel">
       <h2>Positions <span className="count">{positions?.length || 0}</span></h2>
+      <div className="grid-wrap">
       <table className="grid">
         <thead>
           <tr>
@@ -196,6 +253,7 @@ export function Positions({ positions }) {
           )}
         </tbody>
       </table>
+      </div>
     </section>
   )
 }
@@ -311,6 +369,15 @@ function Cell({ k, v }) {
     <div className="cell">
       <div className="cell-k">{k}</div>
       <div className="cell-v">{v}</div>
+    </div>
+  )
+}
+
+function MiniStat({ k, v }) {
+  return (
+    <div className="mini-stat">
+      <span className="mini-stat-k">{k}</span>
+      <span className="mini-stat-v mono">{v}</span>
     </div>
   )
 }
@@ -467,6 +534,187 @@ export function DecisionTimeline({ log }) {
           )
         })}
       </ul>
+    </section>
+  )
+}
+
+/* ---------- on-chain layer (Robinhood Chain · testnet preview) ---------- */
+
+// Muted, dashed "preview / not-yet-deployed" marker reused across on-chain panels.
+export function PreviewBadge({ label = 'TESTNET · PREVIEW' }) {
+  return <span className="preview-badge" title="Not yet deployed — illustrative preview">{label}</span>
+}
+
+export function NetworkBadge({ network }) {
+  if (!network) return null
+  const n = network
+  return (
+    <span className="net-badge" title={`chain-id ${n.chainId ?? '—'}`}>
+      <span className={`net-dot ${n.deployed ? 'on' : 'off'}`} />
+      <span className="net-name">{n.name || 'Robinhood Chain'}</span>
+      <span className="net-state">{n.deployed ? 'TESTNET' : 'TESTNET · PREVIEW'}</span>
+      {!n.deployed && <span className="net-sub dim">not yet deployed</span>}
+    </span>
+  )
+}
+
+export function VaultPanel({ vault, network }) {
+  if (!vault) return null
+  const v = vault
+  const util = Math.max(0, Math.min(100, v.utilizationPct ?? 0))
+  return (
+    <section className="panel">
+      <h2>
+        RWA Vault <span className="tag">{v.symbol || 'vVLRA'}</span>
+        <PreviewBadge />
+      </h2>
+
+      <div className="vault-hero">
+        <div className="vault-nav">
+          <div className="vault-nav-k">Net asset value</div>
+          <div className="vault-nav-v mono">{usd(v.nav)}</div>
+          <div className="vault-nav-sub mono dim">
+            {usd(v.sharePrice, 4)}<span className="dim"> / share</span>
+          </div>
+        </div>
+        <div className="vault-mini">
+          <MiniStat k="Total assets" v={usd(v.totalAssets)} />
+          <MiniStat k="Total shares" v={num(v.totalShares)} />
+          <MiniStat k="Your shares" v={num(v.yourShares)} />
+          <MiniStat k="Your value" v={usd(v.yourValue)} />
+        </div>
+      </div>
+
+      <div className="oc-meter-row">
+        <span className="oc-meter-label dim">Utilization</span>
+        <div className="meter" title={`Vault utilization ${util}%`}>
+          <div className={`meter-fill ${util >= 80 ? 'warn' : 'ok'}`} style={{ width: `${Math.max(4, util)}%` }} />
+        </div>
+        <span className="risk-num">{util}%</span>
+      </div>
+      <div className="oc-cap">
+        ERC-4626 vault wired to the on-chain Guardrails · APY {v.apyPct == null ? '— pending' : pct(v.apyPct)} ·
+        preview / illustrative — not a live balance.
+      </div>
+      {network && !network.deployed && (
+        <div className="oc-cap dim">Contract address: — pending deploy</div>
+      )}
+    </section>
+  )
+}
+
+export function GuardrailsOnChain({ guardrails }) {
+  if (!guardrails || guardrails.length === 0) return null
+  return (
+    <section className="panel">
+      <h2>Guardrails-as-Code <span className="count">{guardrails.length}</span><PreviewBadge /></h2>
+      <div className="oc-rails">
+        {guardrails.map((g) => (
+          <div className="oc-rail" key={g.key}>
+            <span className="oc-rail-name">
+              <span className={`rail-tick ${g.enforced ? 'on' : 'off'}`} aria-hidden="true">
+                {g.enforced ? '✓' : '·'}
+              </span>
+              {g.label}
+            </span>
+            <span className="oc-rail-val mono">{g.value}</span>
+            <span className={`oc-enforced ${g.enforced ? 'on' : 'off'}`}>
+              {g.enforced ? 'enforced on-chain' : 'off-chain'}
+            </span>
+          </div>
+        ))}
+      </div>
+      <div className="oc-cap">Compiled from strategies/ into the on-chain Guardrails library (testnet).</div>
+    </section>
+  )
+}
+
+export function TrackRecord({ trackRecord }) {
+  if (!trackRecord) return null
+  const t = trackRecord
+  const la = t.lastAttestation || {}
+  return (
+    <section className="panel">
+      <h2>Proof-of-Track-Record <PreviewBadge /></h2>
+      <div className="oc-perf">
+        <RingGauge value={t.perfScore} max={100} label="PerfScore" />
+        <div className="oc-perf-stats">
+          <Cell k="Attestations" v={num(t.attestations)} />
+          <Cell k="Verified P&L" v={t.verifiedPnlPct == null ? '— pending' : pct(t.verifiedPnlPct)} />
+        </div>
+      </div>
+      <div className="oc-attest">
+        <span className="dim">Last attestation</span>
+        <span className="oc-attest-sum">{la.summary || '—'}</span>
+        <span className="oc-attest-meta dim">
+          {timeAgo(la.ts)} · tx {la.txHash ? <span className="mono">{la.txHash}</span> : '— pending'}
+        </span>
+      </div>
+      <div className="oc-cap">Verifiable attestations — illustrative until deployed. Not a track record.</div>
+    </section>
+  )
+}
+
+export function ExecutorPanel({ executor }) {
+  if (!executor) return null
+  const e = executor
+  return (
+    <section className="panel">
+      <h2>Agent Executor <PreviewBadge /></h2>
+      <div className="oc-exec-head">
+        <span className="chip flat">{e.type || 'ERC-4337 session key'}</span>
+        <span className={`badge ${e.status === 'active' ? 'approve' : 'pending'}`}>{e.status || 'preview'}</span>
+      </div>
+      <div className="oc-rows">
+        <div className="oc-row">
+          <span className="dim">Scope</span>
+          <span className="oc-row-v">{e.scope || 'guardrail-bounded swaps · approval-gated'}</span>
+        </div>
+        <div className="oc-row">
+          <span className="dim">Daily cap</span>
+          <span className="oc-row-v mono">{e.dailyCapPct != null ? `${e.dailyCapPct}%` : '—'}</span>
+        </div>
+        <div className="oc-row">
+          <span className="dim">Session key</span>
+          <span className="oc-row-v mono">{e.sessionKey || 'no active session key'}</span>
+        </div>
+        <div className="oc-row">
+          <span className="dim">Last action</span>
+          <span className="oc-row-v">{e.lastAction || '—'}</span>
+        </div>
+      </div>
+      <div className="oc-cap warn-cap">
+        ⏸ Guardrail-bounded + approval-gated — the desk proposes, the session key cannot exceed the
+        Guardrails, and every order is still approved by you in-session. Never autonomous.
+      </div>
+    </section>
+  )
+}
+
+export function AutosavePanel({ autosave }) {
+  if (!autosave) return null
+  const a = autosave
+  return (
+    <section className="panel">
+      <h2>Autosave / DCA <PreviewBadge /></h2>
+      <div className="oc-exec-head">
+        <span className={`badge ${a.enabled ? 'approve' : 'pending'}`}>{a.enabled ? 'enabled' : 'off'}</span>
+      </div>
+      <div className="oc-rows">
+        <div className="oc-row">
+          <span className="dim">Cadence</span>
+          <span className="oc-row-v">{a.cadence || '—'}</span>
+        </div>
+        <div className="oc-row">
+          <span className="dim">Amount</span>
+          <span className="oc-row-v mono">{a.amount != null ? `${usd(a.amount)} ${a.asset || ''}`.trim() : '—'}</span>
+        </div>
+        <div className="oc-row">
+          <span className="dim">Next run</span>
+          <span className="oc-row-v">{a.enabled && a.nextRun ? timeAgo(a.nextRun) : '—'}</span>
+        </div>
+      </div>
+      <div className="oc-cap">Optional recurring deposits / dollar-cost-averaging on the vault — preview.</div>
     </section>
   )
 }

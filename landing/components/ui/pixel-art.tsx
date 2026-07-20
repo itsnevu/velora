@@ -16,11 +16,11 @@ export function BrandMark({ className }: { className?: string }) {
 export function PixelHill({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 560 220" width="100%" className={className} shapeRendering="crispEdges" aria-hidden="true">
-      <path d="M0 220 L120 120 L200 96 L300 88 L400 104 L480 140 L560 200 L560 220 Z" fill="#8fae2a" />
-      <path d="M0 220 L120 132 L200 108 L300 100 L400 116 L480 152 L560 210 L560 220 Z" fill="#7d9a24" />
-      <rect x="150" y="150" width="6" height="14" fill="#5f7a18" />
-      <rect x="340" y="132" width="6" height="14" fill="#5f7a18" />
-      <rect x="430" y="150" width="6" height="14" fill="#5f7a18" />
+      <path d="M0 220 L120 120 L200 96 L300 88 L400 104 L480 140 L560 200 L560 220 Z" fill="#D7FE51" />
+      <path d="M0 220 L120 132 L200 108 L300 100 L400 116 L480 152 L560 210 L560 220 Z" fill="#8FAE2E" />
+      <rect x="150" y="150" width="6" height="14" fill="#8FAE2E" />
+      <rect x="340" y="132" width="6" height="14" fill="#8FAE2E" />
+      <rect x="430" y="150" width="6" height="14" fill="#8FAE2E" />
     </svg>
   );
 }
@@ -31,7 +31,7 @@ export function PixelBot({ className }: { className?: string }) {
       <rect x="52" y="0" width="16" height="8" fill={RED} />
       <rect x="56" y="8" width="8" height="16" fill={INK} />
       <rect x="16" y="24" width="88" height="72" fill={INK} />
-      <rect x="24" y="32" width="72" height="48" fill="#33380f" />
+      <rect x="24" y="32" width="72" height="48" fill="#22242A" />
       <rect x="36" y="48" width="12" height="16" fill={RED} />
       <rect x="36" y="48" width="4" height="4" fill={WHITE} />
       <rect x="72" y="48" width="12" height="16" fill={RED} />

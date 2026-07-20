@@ -17,9 +17,9 @@ import * as THREE from "three";
  */
 
 const COUNT = 84;
-const INK = "#16180d";
-const OLIVE = "#7d9422";
-const RED = "#e23b3b";
+const INK = "#ECF2F0";
+const OLIVE = "#D7FE51";
+const RED = "#FF5B52";
 
 function CandleRing({ animate, pointer }: { animate: boolean; pointer: React.RefObject<{ x: number; y: number }> }) {
   const mesh = useRef<THREE.InstancedMesh>(null!);

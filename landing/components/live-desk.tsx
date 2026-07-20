@@ -124,7 +124,7 @@ export function LiveDesk() {
         <div className="livedesk">
           {/* terminal */}
           <div className="term" style={{ position: "relative" }}>
-            <BorderScan color="#e23b3b" size={10} speed={90} />
+            <BorderScan color="#FF5B52" size={10} speed={90} />
             <div className="term-bar">
               <span className="term-dot" />
               <span className="term-dot" style={{ background: "var(--warn)" }} />
