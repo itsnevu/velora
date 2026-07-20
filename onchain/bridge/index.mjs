@@ -151,7 +151,7 @@ async function main() {
       lastAttestation: null,
     },
     executor: {
-      type: "ERC-4337 session key",
+      type: "Scoped session key (EOA)",
       status: managerIsExecutor ? "live" : "preview",
       scope: "guardrail-bounded swaps · approval-gated",
       sessionKey: null,

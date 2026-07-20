@@ -4,6 +4,7 @@ import { DocBlocks, headingsOf } from "./doc-renderer";
 import { OnThisPage } from "./on-this-page";
 import { GITHUB_URL, docHref, prevNext } from "../_content/site";
 import { Chevron } from "./icons";
+import { JsonLd, docJsonLd } from "./structured-data";
 
 /**
  * Renders one documentation page: header, body blocks, an "On this page" rail
@@ -16,6 +17,7 @@ export function DocPage({ slug, content }: { slug: string; content: DocContent }
 
   return (
     <div className="docs-layout">
+      <JsonLd data={docJsonLd(slug, content)} />
       <article className="doc-main">
         <header className="doc-header">
           {content.eyebrow ? <span className="doc-eyebrow">{content.eyebrow}</span> : null}

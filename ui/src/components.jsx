@@ -664,7 +664,7 @@ export function ExecutorPanel({ executor }) {
     <section className="panel">
       <h2>Agent Executor <PreviewBadge /></h2>
       <div className="oc-exec-head">
-        <span className="chip flat">{e.type || 'ERC-4337 session key'}</span>
+        <span className="chip flat">{e.type || 'Scoped session key (EOA)'}</span>
         <span className={`badge ${e.status === 'active' ? 'approve' : 'pending'}`}>{e.status || 'preview'}</span>
       </div>
       <div className="oc-rows">

@@ -7,7 +7,7 @@ in [`../CLAUDE.md`](../CLAUDE.md) and [`../strategies/README.md`](../strategies/
 are **enforced by the contract, not merely promised by a prompt** — and every desk
 run leaves a tamper-proof track record.
 
-> **Status: testnet / preview.** 101 passing tests (unit + fuzz + invariant) and a
+> **Status: testnet / preview.** 110 passing tests (unit + fuzz + invariant) and a
 > **live deployment on Robinhood Chain testnet** (chain 46630). The periphery (USDG,
 > Stock Token, price oracle, swap adapter) is **mocked** for this demo; a production
 > deploy points the vault at real Robinhood Chain addresses. **Not audited. Do not use
@@ -114,7 +114,7 @@ CLAUDE.md's "present a preview, then get approval".
 
 ```bash
 cd onchain
-forge test            # 76 tests across 6 suites
+forge test            # 110 tests across 11 suites
 forge test --gas-report
 ```
 
@@ -139,9 +139,10 @@ guardrail-checked trade, two attestations), and writes addresses to
 
 **Going to production:** replace the demo periphery in `script/Deploy.s.sol` with real
 Robinhood Chain addresses — USDG (Paxos), a Chainlink-backed oracle adapter, a
-Uniswap/Pleiades swap adapter, and real Stock Tokens. In production the agent key
-should be an **ERC-4337 session key** on the desk's smart account (Robinhood Chain has
-first-class ERC-4337 support), with `SessionKeyExecutor` as the vault manager.
+Uniswap/Pleiades swap adapter, and real Stock Tokens. Today the agent key is a **scoped
+EOA session** enforced by `SessionKeyExecutor` (the vault manager); migrating it to a
+**native ERC-4337 session key** on the desk's smart account is on the roadmap below —
+the current executor is *not* an ERC-4337 account.
 
 ## Bridge — light up the dashboard
 

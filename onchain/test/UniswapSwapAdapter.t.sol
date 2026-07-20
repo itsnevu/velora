@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
-import {Test} from "forge-std/Test.sol";
-import {UniswapSwapAdapter} from "../src/UniswapSwapAdapter.sol";
-import {MockERC20, MockV2Router} from "../src/mocks/Mocks.sol";
+import { Test } from "forge-std/Test.sol";
+import { UniswapSwapAdapter } from "../src/UniswapSwapAdapter.sol";
+import { MockERC20, MockV2Router } from "../src/mocks/Mocks.sol";
 
 contract UniswapSwapAdapterTest is Test {
     MockERC20 usdg;

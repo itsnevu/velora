@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import {RWAVault} from "./RWAVault.sol";
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
+import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import { RWAVault } from "./RWAVault.sol";
 
 /// @title SessionKeyExecutor
 /// @author Velora
@@ -43,7 +43,11 @@ contract SessionKeyExecutor is Ownable, ReentrancyGuard {
     event SessionRevoked(address indexed agent);
     event TokenScopeSet(address indexed agent, address indexed token, bool allowed);
     event AgentTraded(
-        address indexed agent, address indexed token, bool isBuy, uint256 notional, uint256 amountOut
+        address indexed agent,
+        address indexed token,
+        bool isBuy,
+        uint256 notional,
+        uint256 amountOut
     );
 
     error NoActiveSession();

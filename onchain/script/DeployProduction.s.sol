@@ -1,19 +1,19 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
-import {Script, console2} from "forge-std/Script.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import { Script, console2 } from "forge-std/Script.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
-import {Guardrails} from "../src/libraries/Guardrails.sol";
-import {GuardrailConfig} from "../src/GuardrailConfig.sol";
-import {DeskRegistry} from "../src/DeskRegistry.sol";
-import {PerfScore} from "../src/PerfScore.sol";
-import {RWAVault} from "../src/RWAVault.sol";
-import {SessionKeyExecutor} from "../src/SessionKeyExecutor.sol";
-import {VeloraAutosave} from "../src/VeloraAutosave.sol";
-import {ChainlinkOracleAdapter} from "../src/ChainlinkOracleAdapter.sol";
-import {UniswapSwapAdapter} from "../src/UniswapSwapAdapter.sol";
+import { Guardrails } from "../src/libraries/Guardrails.sol";
+import { GuardrailConfig } from "../src/GuardrailConfig.sol";
+import { DeskRegistry } from "../src/DeskRegistry.sol";
+import { PerfScore } from "../src/PerfScore.sol";
+import { RWAVault } from "../src/RWAVault.sol";
+import { SessionKeyExecutor } from "../src/SessionKeyExecutor.sol";
+import { VeloraAutosave } from "../src/VeloraAutosave.sol";
+import { ChainlinkOracleAdapter } from "../src/ChainlinkOracleAdapter.sol";
+import { UniswapSwapAdapter } from "../src/UniswapSwapAdapter.sol";
 
 /// @title DeployProduction — real Robinhood Chain deploy (no mocks, no seeding)
 /// @notice Deploys the full Velora stack against REAL periphery addresses supplied
@@ -98,11 +98,17 @@ contract DeployProduction is Script {
         s.cfg = new GuardrailConfig(c.owner, _caps());
         s.registry = new DeskRegistry();
         s.perf = new PerfScore(s.registry);
-        s.oracle =
-            new ChainlinkOracleAdapter(c.usdgDecimals, c.sequencerFeed, c.grace, c.owner);
+        s.oracle = new ChainlinkOracleAdapter(c.usdgDecimals, c.sequencerFeed, c.grace, c.owner);
         s.swap = new UniswapSwapAdapter(c.router, c.hop, c.owner);
         s.vault = new RWAVault(
-            IERC20(c.usdg), "Velora RWA Vault", "vVLRA", c.owner, s.cfg, s.oracle, s.swap, address(0)
+            IERC20(c.usdg),
+            "Velora RWA Vault",
+            "vVLRA",
+            c.owner,
+            s.cfg,
+            s.oracle,
+            s.swap,
+            address(0)
         );
         s.exec = new SessionKeyExecutor(s.vault, c.owner);
         s.save = new VeloraAutosave(s.vault);
@@ -115,9 +121,10 @@ contract DeployProduction is Script {
             s.vault.allowToken(c.stocks[i]);
         }
         if (c.stocks.length > 0) {
-            s.exec.grantSession(
-                c.agent, uint64(block.timestamp + 30 days), 0, 0, 0, false, false, c.stocks
-            );
+            s.exec
+                .grantSession(
+                    c.agent, uint64(block.timestamp + 30 days), 0, 0, 0, false, false, c.stocks
+                );
             // NOTE: granted with zero caps/permissions as a placeholder — set real
             // per-agent limits with a follow-up grantSession once funded.
         }

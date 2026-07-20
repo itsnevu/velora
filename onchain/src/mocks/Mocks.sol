@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
-import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {IPriceOracle, ISwapAdapter} from "../../src/interfaces/IVaultPeriphery.sol";
-import {IAggregatorV3} from "../../src/interfaces/IAggregatorV3.sol";
+import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { IPriceOracle, ISwapAdapter } from "../../src/interfaces/IVaultPeriphery.sol";
+import { IAggregatorV3 } from "../../src/interfaces/IAggregatorV3.sol";
 
 /// @dev Mintable 18-decimal ERC20 for tests.
 contract MockERC20 is ERC20 {
-    constructor(string memory n, string memory s) ERC20(n, s) {}
+    constructor(string memory n, string memory s) ERC20(n, s) { }
 
     function mint(address to, uint256 amt) external {
         _mint(to, amt);
@@ -33,14 +33,24 @@ contract MockERC20D is ERC20 {
 }
 
 /// @dev Settable price oracle. `price` = USDG value of one whole token, 1e18-scaled.
+///      Can be toggled to revert per-token to simulate a stale/missing feed (fail-closed
+///      production oracles revert; this lets tests exercise the vault's NAV resilience).
 contract MockOracle is IPriceOracle {
     mapping(address => uint256) public priceOf;
+    mapping(address => bool) public willRevert;
+
+    error FeedDown();
 
     function setPrice(address token, uint256 p) external {
         priceOf[token] = p;
     }
 
+    function setRevert(address token, bool r) external {
+        willRevert[token] = r;
+    }
+
     function price(address token) external view returns (uint256) {
+        if (willRevert[token]) revert FeedDown();
         return priceOf[token];
     }
 }
@@ -71,11 +81,7 @@ contract MockAggregator is IAggregatorV3 {
         answeredInRound = answeredIn;
     }
 
-    function latestRoundData()
-        external
-        view
-        returns (uint80, int256, uint256, uint256, uint80)
-    {
+    function latestRoundData() external view returns (uint80, int256, uint256, uint256, uint80) {
         return (roundId, answer, startedAt, updatedAt, answeredInRound);
     }
 }
@@ -99,11 +105,7 @@ contract MockSequencer is IAggregatorV3 {
         return 0;
     }
 
-    function latestRoundData()
-        external
-        view
-        returns (uint80, int256, uint256, uint256, uint80)
-    {
+    function latestRoundData() external view returns (uint80, int256, uint256, uint256, uint80) {
         return (1, answer, startedAt, startedAt, 1);
     }
 }

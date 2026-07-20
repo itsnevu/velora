@@ -506,3 +506,21 @@ small { opacity: 0.65; font-size: 0.85em; }
   .bt-metrics { grid-template-columns: repeat(2, 1fr); }
   .vault-hero { grid-template-columns: 1fr; }
 }
+
+/* ══ FLOATING NEO HEADER — detached glass slab, soft depth ══ */
+.topbar {
+  top: 12px;
+  margin: 14px 0 28px;
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  background: linear-gradient(180deg, rgba(43, 46, 54, 0.85), rgba(28, 30, 36, 0.9));
+  box-shadow:
+    0 22px 48px rgba(0, 0, 0, 0.5),
+    0 3px 10px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.4);
+  overflow: hidden; /* the glow hugs the rounded corners */
+}
+/* the stray grey strip was this row's scrollbar — gone */
+.topstats { scrollbar-width: none; }
+.topstats::-webkit-scrollbar { display: none; height: 0; }

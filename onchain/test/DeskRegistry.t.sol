@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
-import {Test} from "forge-std/Test.sol";
-import {DeskRegistry} from "../src/DeskRegistry.sol";
-import {PerfScore} from "../src/PerfScore.sol";
+import { Test } from "forge-std/Test.sol";
+import { DeskRegistry } from "../src/DeskRegistry.sol";
+import { PerfScore } from "../src/PerfScore.sol";
 
 contract DeskRegistryTest is Test {
     DeskRegistry reg;

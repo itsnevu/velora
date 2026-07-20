@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
-import {Test} from "forge-std/Test.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { Test } from "forge-std/Test.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import {Guardrails} from "../src/libraries/Guardrails.sol";
-import {GuardrailConfig} from "../src/GuardrailConfig.sol";
-import {DeskRegistry} from "../src/DeskRegistry.sol";
-import {PerfScore} from "../src/PerfScore.sol";
-import {RWAVault} from "../src/RWAVault.sol";
-import {SessionKeyExecutor} from "../src/SessionKeyExecutor.sol";
-import {VeloraAutosave} from "../src/VeloraAutosave.sol";
-import {IPriceOracle, ISwapAdapter} from "../src/interfaces/IVaultPeriphery.sol";
-import {MockERC20, MockOracle, MockSwapAdapter} from "../src/mocks/Mocks.sol";
+import { Guardrails } from "../src/libraries/Guardrails.sol";
+import { GuardrailConfig } from "../src/GuardrailConfig.sol";
+import { DeskRegistry } from "../src/DeskRegistry.sol";
+import { PerfScore } from "../src/PerfScore.sol";
+import { RWAVault } from "../src/RWAVault.sol";
+import { SessionKeyExecutor } from "../src/SessionKeyExecutor.sol";
+import { VeloraAutosave } from "../src/VeloraAutosave.sol";
+import { IPriceOracle, ISwapAdapter } from "../src/interfaces/IVaultPeriphery.sol";
+import { MockERC20, MockOracle, MockSwapAdapter } from "../src/mocks/Mocks.sol";
 
 /// @notice End-to-end: all six contracts working together the way a live desk run
 ///         would drive them — deposit, DCA, guardrail-checked agent trading, and a
@@ -75,7 +75,9 @@ contract IntegrationTest is Test {
         vault.setManager(address(exec));
         address[] memory toks = new address[](1);
         toks[0] = address(stk);
-        exec.grantSession(AGENT, uint64(block.timestamp + 30 days), 2000e18, 100, 50_000e18, true, true, toks);
+        exec.grantSession(
+            AGENT, uint64(block.timestamp + 30 days), 2000e18, 100, 50_000e18, true, true, toks
+        );
         vm.stopPrank();
 
         usdg.mint(address(adapter), 1_000_000e18);

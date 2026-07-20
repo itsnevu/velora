@@ -109,7 +109,7 @@
       { "key": "noAveraging", "label": "No averaging into losers", "value": "enforced", "enforced": true }
     ],
     "trackRecord": { "perfScore": 72, "attestations": 3, "verifiedPnlPct": null, "lastAttestation": { "ts": "2026-01-15T14:32:00-05:00", "txHash": null, "summary": "desk run attested (preview)" } },
-    "executor": { "type": "ERC-4337 session key", "status": "preview", "scope": "guardrail-bounded swaps · approval-gated", "sessionKey": null, "dailyCapPct": 15, "lastAction": null },
+    "executor": { "type": "Scoped session key (EOA)", "status": "preview", "scope": "guardrail-bounded swaps · approval-gated", "sessionKey": null, "dailyCapPct": 15, "lastAction": null },
     "autosave": { "enabled": false, "cadence": "weekly", "amount": 100, "asset": "USDC", "nextRun": null }
   }
 }

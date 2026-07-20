@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
-import {Test} from "forge-std/Test.sol";
-import {ChainlinkOracleAdapter} from "../src/ChainlinkOracleAdapter.sol";
-import {MockAggregator, MockSequencer} from "../src/mocks/Mocks.sol";
+import { Test } from "forge-std/Test.sol";
+import { ChainlinkOracleAdapter } from "../src/ChainlinkOracleAdapter.sol";
+import { MockAggregator, MockSequencer } from "../src/mocks/Mocks.sol";
 
 contract ChainlinkOracleAdapterTest is Test {
     address HUMAN = address(0xB00D);

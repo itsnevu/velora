@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
-import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import {ERC4626} from "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import { ERC4626 } from "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
+import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
-import {Guardrails} from "./libraries/Guardrails.sol";
-import {GuardrailConfig} from "./GuardrailConfig.sol";
-import {IPriceOracle, ISwapAdapter} from "./interfaces/IVaultPeriphery.sol";
+import { Guardrails } from "./libraries/Guardrails.sol";
+import { GuardrailConfig } from "./GuardrailConfig.sol";
+import { IPriceOracle, ISwapAdapter } from "./interfaces/IVaultPeriphery.sol";
 
 /// @title RWAVault
 /// @author Velora
@@ -29,10 +29,16 @@ import {IPriceOracle, ISwapAdapter} from "./interfaces/IVaultPeriphery.sol";
 ///         - Standard ERC-4626 withdrawals are served from USDG cash; `maxWithdraw`
 ///           / `maxRedeem` are capped to that liquidity so the invariants hold. The
 ///           always-solvent escape hatch is {redeemInKind}: pro-rata USDG + tokens.
-///         - v1 assumes 18-decimal USDG and Stock Tokens; production must normalize
-///           token decimals in the oracle adapter.
+///         - Valuation is decimal-robust: `positionValue` divides by 10**decimals and
+///           relies on the oracle returning USDG-native units, so non-18-decimal USDG
+///           (e.g. 6-dec Paxos USDG) and Stock Tokens are valued correctly.
+///         - Every trade's realized fill is bounded to the oracle price
+///           ({GuardrailConfig.maxExecSlippageBps}) so a compromised manager cannot
+///           route the book into a ruinous swap, regardless of the order's `minAmountOut`.
 contract RWAVault is ERC4626, Ownable, ReentrancyGuard {
     using SafeERC20 for IERC20;
+
+    uint256 private constant BPS = 10_000;
 
     /// @dev One rebalance instruction from the desk.
     struct TradeOrder {
@@ -78,6 +84,7 @@ contract RWAVault is ERC4626, Ownable, ReentrancyGuard {
     error InsufficientCash();
     error InsufficientPosition();
     error Slippage();
+    error ExecSlippage();
     error StillHeld();
     error GuardrailViolation(Guardrails.Violation violation);
 
@@ -126,6 +133,9 @@ contract RWAVault is ERC4626, Ownable, ReentrancyGuard {
 
     function allowToken(address token) external onlyOwner {
         if (!isAllowed[token]) {
+            // Require a working price feed up front (real oracle reverts on a missing/
+            // stale feed) so a token can never be listed before it can be valued.
+            oracle.price(token);
             isAllowed[token] = true;
             tokenDecimals[token] = IERC20Metadata(token).decimals();
             _allowed.push(token);
@@ -160,9 +170,14 @@ contract RWAVault is ERC4626, Ownable, ReentrancyGuard {
     }
 
     /// @dev `_price` returns the USDG-native value of ONE WHOLE token, so we divide
-    ///      by 10**tokenDecimals to value an arbitrary balance (decimal-robust).
+    ///      by 10**tokenDecimals to value an arbitrary balance (decimal-robust). An
+    ///      empty leg is skipped WITHOUT touching the oracle, so a single stale/missing
+    ///      feed on a zero-balance (or dust-listed) token can never brick NAV — and
+    ///      thus can never brick deposits/withdrawals across the whole vault.
     function positionValue(address token) public view returns (uint256) {
-        return (IERC20(token).balanceOf(address(this)) * _price(token)) / (10 ** tokenDecimals[token]);
+        uint256 bal = IERC20(token).balanceOf(address(this));
+        if (bal == 0) return 0;
+        return (bal * _price(token)) / (10 ** tokenDecimals[token]);
     }
 
     /// @notice Full portfolio value in USDG: cash + every Stock Token holding.
@@ -237,7 +252,9 @@ contract RWAVault is ERC4626, Ownable, ReentrancyGuard {
     ///         approval": the desk/UI can show exactly which rule an order would
     ///         hit (or `None`) before anyone signs.
     function previewTrade(TradeOrder calldata o) external view returns (Guardrails.Violation) {
-        if (!isAllowed[o.stockToken]) return Guardrails.Violation.None; // caller checks allowlist
+        // Distinct sentinel so a UI never reads "None" (allowed) for an unlisted token;
+        // {executeTrade} would revert `TokenNotAllowed` for the same order.
+        if (!isAllowed[o.stockToken]) return Guardrails.Violation.NotAllowed;
         return Guardrails.evaluate(guardrailConfig.caps(), _context(o));
     }
 
@@ -249,6 +266,23 @@ contract RWAVault is ERC4626, Ownable, ReentrancyGuard {
     }
 
     // =============================================================== manager trading
+
+    /// @dev Bound a realized fill to the oracle price. Independent of the caller's
+    ///      `minAmountOut` (which the agent controls), so a compromised manager cannot
+    ///      route the vault into a ruinous swap via a thin/attacker pool. Tolerance is
+    ///      owner-set in {GuardrailConfig}; the agent can never widen it. Applied to
+    ///      buys AND sells — closing the "unguarded sell drain" during a halt.
+    function _enforceExecBound(address token, uint256 amountIn, uint256 amountOut, bool isBuy)
+        internal
+        view
+    {
+        uint256 slip = guardrailConfig.maxExecSlippageBps();
+        uint256 price = _price(token); // USDG-native value of one whole token
+        uint256 expected = isBuy
+            ? (amountIn * (10 ** tokenDecimals[token])) / price  // stock units for amountIn USDG
+            : (amountIn * price) / (10 ** tokenDecimals[token]); // USDG for amountIn stock
+        if (amountOut < (expected * (BPS - slip)) / BPS) revert ExecSlippage();
+    }
 
     function _refreshDay() internal {
         uint256 today = block.timestamp / 1 days;
@@ -283,9 +317,11 @@ contract RWAVault is ERC4626, Ownable, ReentrancyGuard {
             IERC20 usdg = IERC20(asset());
             if (usdg.balanceOf(address(this)) < o.amountIn) revert InsufficientCash();
             usdg.forceApprove(address(swapAdapter), o.amountIn);
-            amountOut =
-                swapAdapter.swap(address(usdg), o.stockToken, o.amountIn, o.minAmountOut, address(this));
+            amountOut = swapAdapter.swap(
+                address(usdg), o.stockToken, o.amountIn, o.minAmountOut, address(this)
+            );
             if (amountOut < o.minAmountOut) revert Slippage();
+            _enforceExecBound(o.stockToken, o.amountIn, amountOut, true);
             costBasisUsdg[o.stockToken] += o.amountIn;
             stopPriceE18[o.stockToken] = o.stopPriceE18;
         } else {
@@ -293,9 +329,11 @@ contract RWAVault is ERC4626, Ownable, ReentrancyGuard {
             uint256 qtyBefore = token.balanceOf(address(this));
             if (qtyBefore < o.amountIn) revert InsufficientPosition();
             token.forceApprove(address(swapAdapter), o.amountIn);
-            amountOut =
-                swapAdapter.swap(o.stockToken, address(asset()), o.amountIn, o.minAmountOut, address(this));
+            amountOut = swapAdapter.swap(
+                o.stockToken, address(asset()), o.amountIn, o.minAmountOut, address(this)
+            );
             if (amountOut < o.minAmountOut) revert Slippage();
+            _enforceExecBound(o.stockToken, o.amountIn, amountOut, false);
             uint256 cb = costBasisUsdg[o.stockToken];
             costBasisUsdg[o.stockToken] = cb - (cb * o.amountIn) / qtyBefore;
         }

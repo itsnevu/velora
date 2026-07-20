@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
-import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
-import {DeskRegistry} from "./DeskRegistry.sol";
+import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
+import { DeskRegistry } from "./DeskRegistry.sol";
 
 /// @title PerfScore
 /// @author Velora

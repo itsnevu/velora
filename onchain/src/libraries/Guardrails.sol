@@ -62,7 +62,8 @@ library Guardrails {
         MaxPositions,
         CashBuffer,
         NoAveragingIntoLoser,
-        MissingStop
+        MissingStop,
+        NotAllowed // token is not on the vault allowlist (preview-only sentinel)
     }
 
     /// @notice Judge a single order against the caps. Pure — no state, no side effects.
@@ -127,11 +128,7 @@ library Guardrails {
     }
 
     /// @notice Convenience boolean wrapper around {evaluate}.
-    function isAllowed(RiskCaps memory caps, TradeContext memory c)
-        internal
-        pure
-        returns (bool)
-    {
+    function isAllowed(RiskCaps memory caps, TradeContext memory c) internal pure returns (bool) {
         return evaluate(caps, c) == Violation.None;
     }
 }

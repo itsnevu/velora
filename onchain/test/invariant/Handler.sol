@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
-import {Test} from "forge-std/Test.sol";
-import {RWAVault} from "../../src/RWAVault.sol";
-import {MockERC20, MockOracle, MockSwapAdapter} from "../../src/mocks/Mocks.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { Test } from "forge-std/Test.sol";
+import { RWAVault } from "../../src/RWAVault.sol";
+import { MockERC20, MockOracle, MockSwapAdapter } from "../../src/mocks/Mocks.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /// @notice Drives the vault with bounded random actions for invariant testing. It IS
 ///         the vault manager, so it can trade; deposits/withdrawals go through a small
@@ -18,13 +18,7 @@ contract Handler is Test {
 
     address[3] public actors = [address(0xA1), address(0xA2), address(0xA3)];
 
-    constructor(
-        RWAVault v,
-        MockERC20 u,
-        MockERC20 s,
-        MockOracle o,
-        MockSwapAdapter a
-    ) {
+    constructor(RWAVault v, MockERC20 u, MockERC20 s, MockOracle o, MockSwapAdapter a) {
         vault = v;
         usdg = u;
         stk = s;
@@ -69,7 +63,7 @@ contract Handler is Test {
             stopPriceE18: (price * 90) / 100, // valid stop below market
             leftSideException: false
         });
-        try vault.executeTrade(o) {} catch {}
+        try vault.executeTrade(o) { } catch { }
     }
 
     function sell(uint256 amt) public {
@@ -84,7 +78,7 @@ contract Handler is Test {
             stopPriceE18: 0,
             leftSideException: false
         });
-        try vault.executeTrade(o) {} catch {}
+        try vault.executeTrade(o) { } catch { }
     }
 
     function newDay(uint256 jump) public {

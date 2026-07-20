@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import {RWAVault} from "./RWAVault.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import { RWAVault } from "./RWAVault.sol";
 
 /// @title VeloraAutosave
 /// @author Velora
@@ -33,7 +33,9 @@ contract VeloraAutosave is ReentrancyGuard {
 
     mapping(address => Plan) public plans;
 
-    event PlanCreated(address indexed user, uint256 amountPerPeriod, uint64 period, uint32 totalPeriods);
+    event PlanCreated(
+        address indexed user, uint256 amountPerPeriod, uint64 period, uint32 totalPeriods
+    );
     event PlanCancelled(address indexed user);
     event Contributed(address indexed user, uint256 amount, uint256 shares, uint32 periodsDone);
 

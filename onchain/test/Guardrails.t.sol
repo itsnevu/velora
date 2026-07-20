@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
-import {Test} from "forge-std/Test.sol";
-import {Guardrails} from "../src/libraries/Guardrails.sol";
-import {GuardrailConfig} from "../src/GuardrailConfig.sol";
+import { Test } from "forge-std/Test.sol";
+import { Guardrails } from "../src/libraries/Guardrails.sol";
+import { GuardrailConfig } from "../src/GuardrailConfig.sol";
 
 contract GuardrailsTest is Test {
     using Guardrails for Guardrails.RiskCaps;

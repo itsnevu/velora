@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
-import {Script, console2} from "forge-std/Script.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { Script, console2 } from "forge-std/Script.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import {Guardrails} from "../src/libraries/Guardrails.sol";
-import {GuardrailConfig} from "../src/GuardrailConfig.sol";
-import {DeskRegistry} from "../src/DeskRegistry.sol";
-import {PerfScore} from "../src/PerfScore.sol";
-import {RWAVault} from "../src/RWAVault.sol";
-import {SessionKeyExecutor} from "../src/SessionKeyExecutor.sol";
-import {VeloraAutosave} from "../src/VeloraAutosave.sol";
-import {IPriceOracle, ISwapAdapter} from "../src/interfaces/IVaultPeriphery.sol";
-import {MockERC20, MockOracle, MockSwapAdapter} from "../src/mocks/Mocks.sol";
+import { Guardrails } from "../src/libraries/Guardrails.sol";
+import { GuardrailConfig } from "../src/GuardrailConfig.sol";
+import { DeskRegistry } from "../src/DeskRegistry.sol";
+import { PerfScore } from "../src/PerfScore.sol";
+import { RWAVault } from "../src/RWAVault.sol";
+import { SessionKeyExecutor } from "../src/SessionKeyExecutor.sol";
+import { VeloraAutosave } from "../src/VeloraAutosave.sol";
+import { IPriceOracle, ISwapAdapter } from "../src/interfaces/IVaultPeriphery.sol";
+import { MockERC20, MockOracle, MockSwapAdapter } from "../src/mocks/Mocks.sol";
 
 /// @title Deploy — full Velora on-chain stack for Robinhood Chain (testnet demo)
 /// @notice Deploys and fully wires all six contracts, then seeds a live demo:
@@ -119,9 +119,10 @@ contract Deploy is Script {
 
         address[] memory toks = new address[](1);
         toks[0] = address(s.stk);
-        s.exec.grantSession(
-            agent, uint64(block.timestamp + 30 days), 1500e18, 100, 50_000e18, true, true, toks
-        );
+        s.exec
+            .grantSession(
+                agent, uint64(block.timestamp + 30 days), 1500e18, 100, 50_000e18, true, true, toks
+            );
 
         // Deep demo liquidity + a funded depositor.
         s.usdg.mint(address(s.adapter), 1_000_000e18);
@@ -132,16 +133,17 @@ contract Deploy is Script {
 
         // One guardrail-checked buy via the session key (~10% of NAV).
         if (agent == deployer) {
-            s.exec.trade(
-                RWAVault.TradeOrder({
-                    stockToken: address(s.stk),
-                    isBuy: true,
-                    amountIn: 1000e18,
-                    minAmountOut: 0,
-                    stopPriceE18: 46e18,
-                    leftSideException: false
-                })
-            );
+            s.exec
+                .trade(
+                    RWAVault.TradeOrder({
+                        stockToken: address(s.stk),
+                        isBuy: true,
+                        amountIn: 1000e18,
+                        minAmountOut: 0,
+                        stopPriceE18: 46e18,
+                        leftSideException: false
+                    })
+                );
         }
 
         // Two desk-run attestations so PerfScore has a series.

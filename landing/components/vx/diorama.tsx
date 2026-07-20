@@ -892,6 +892,46 @@ function FogRing({ animate }: { animate: boolean }) {
   );
 }
 
+/* ── starfield in the charcoal sky ─────────────────────────────────────── */
+function Stars({ animate }: { animate: boolean }) {
+  const ref = useRef<THREE.Points>(null!);
+  const geo = useMemo(() => {
+    let seed = 777;
+    const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+    const n = 460;
+    const arr = new Float32Array(n * 3);
+    for (let i = 0; i < n; i++) {
+      arr[i * 3] = (rnd() - 0.5) * 190;
+      arr[i * 3 + 1] = 15 + rnd() * 52; // high band — above the peaks, in the dark sky
+      arr[i * 3 + 2] = 24 - rnd() * 130;
+    }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute("position", new THREE.BufferAttribute(arr, 3));
+    return g;
+  }, []);
+
+  useFrame((state) => {
+    if (!animate) return;
+    const m = ref.current.material as THREE.PointsMaterial;
+    m.opacity = 0.72 + Math.sin(state.clock.elapsedTime * 0.6) * 0.16; // slow twinkle
+  });
+
+  return (
+    <points ref={ref} geometry={geo} renderOrder={-5}>
+      <pointsMaterial
+        size={0.34}
+        transparent
+        opacity={0.8}
+        color={new THREE.Color(0.92, 0.95, 0.86)}
+        depthWrite={false}
+        blending={THREE.AdditiveBlending}
+        sizeAttenuation
+        fog={false}
+      />
+    </points>
+  );
+}
+
 /* ── scene root: fog grading + everything wired to the smoothed scroll ─── */
 function SceneRoot({ scroll, pointer, animate }: { scroll: RefN; pointer: Ref2; animate: boolean }) {
   const { scene } = useThree();
@@ -921,6 +961,7 @@ function SceneRoot({ scroll, pointer, animate }: { scroll: RefN; pointer: Ref2; 
   return (
     <>
       <SkyAndDim smooth={smooth} />
+      <Stars animate={animate} />
       <World />
       <Mist smooth={smooth} animate={animate} />
       <GroundHaze smooth={smooth} animate={animate} />

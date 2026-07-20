@@ -3,8 +3,13 @@
 import { GITHUB_URL } from "@/lib/links";
 
 export { GITHUB_URL };
-export const DOCS_URL = "https://www.projectvex.ai/docs";
-export const SITE_URL = "https://www.projectvex.ai";
+/**
+ * Canonical origin for sitemap.xml, robots.txt, canonicals, OG and JSON-LD.
+ * projectvex.ai is where the site is deployed (velora.ai is owned by an
+ * unrelated company); to move domains later, set NEXT_PUBLIC_SITE_URL.
+ */
+export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.projectvex.ai").replace(/\/$/, "");
+export const DOCS_URL = `${SITE_URL}/docs`;
 
 export interface NavItem {
   /** Route slug under /docs. "" is the /docs index (Overview). */

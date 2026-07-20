@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-import {IPriceOracle} from "./interfaces/IVaultPeriphery.sol";
-import {IAggregatorV3} from "./interfaces/IAggregatorV3.sol";
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
+import { IPriceOracle } from "./interfaces/IVaultPeriphery.sol";
+import { IAggregatorV3 } from "./interfaces/IAggregatorV3.sol";
 
 /// @title ChainlinkOracleAdapter
 /// @author Velora
@@ -54,9 +54,7 @@ contract ChainlinkOracleAdapter is IPriceOracle, Ownable {
     function setFeed(address token, address aggregator, uint32 maxStaleness) external onlyOwner {
         uint8 fd = IAggregatorV3(aggregator).decimals();
         feeds[token] = Feed({
-            aggregator: IAggregatorV3(aggregator),
-            feedDecimals: fd,
-            maxStaleness: maxStaleness
+            aggregator: IAggregatorV3(aggregator), feedDecimals: fd, maxStaleness: maxStaleness
         });
         emit FeedSet(token, aggregator, maxStaleness);
     }
@@ -85,7 +83,9 @@ contract ChainlinkOracleAdapter is IPriceOracle, Ownable {
         if (updatedAt == 0) revert StalePrice();
         // maxStaleness == 0 disables the age check (e.g. local/testnet feeds).
         // forge-lint: disable-next-line(block-timestamp) — heartbeat freshness check
-        if (f.maxStaleness != 0 && block.timestamp - updatedAt > f.maxStaleness) revert StalePrice();
+        if (f.maxStaleness != 0 && block.timestamp - updatedAt > f.maxStaleness) {
+            revert StalePrice();
+        }
 
         // USDG-native value of ONE WHOLE token = answer * 10^usdgDecimals / 10^feedDecimals.
         // forge-lint: disable-next-line(unsafe-typecast) — answer > 0 checked above
