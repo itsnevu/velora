@@ -24,10 +24,14 @@ contract DeskRegistry {
         string uri; //            optional pointer (ipfs/https) to the snapshot
     }
 
-    /// @notice The desk that owns (may append to) a subject. Set on first attestation.
+    /// @notice The desk that owns (may append to) a raw subject. Set on first attestation.
     mapping(bytes32 => address) public attesterOf;
+    /// @notice Owner of a caller-bound {attestSelf} subject. A separate namespace that a
+    ///         raw {attest} physically cannot write into, so self-subjects can't be squatted.
+    mapping(bytes32 => address) public selfAttesterOf;
 
     mapping(bytes32 => Attestation[]) private _log;
+    mapping(bytes32 => Attestation[]) private _selfLog;
 
     event SubjectRegistered(bytes32 indexed subject, address indexed attester);
     event Attested(
@@ -45,14 +49,49 @@ contract DeskRegistry {
     error EpochNotIncreasing();
     error NoData();
 
-    /// @notice Append one attestation for `subject`. The first caller claims the
-    ///         subject; only that address may append afterwards.
-    /// @param subject       Stable id for the account/vault (e.g. keccak of its address/label).
-    /// @param epoch         Monotonic period id; must be strictly greater than the last.
-    /// @param nav           NAV at snapshot; must be > 0.
-    /// @param realizedPnl   Cumulative realized P&L (signed).
-    /// @param snapshotHash  keccak256 of the full off-chain snapshot for verification.
-    /// @param uri           Optional off-chain pointer to the snapshot.
+    /// @notice Squat-proof attestation: the subject is derived from YOUR address, so no
+    ///         one can front-run or claim your track-record id. Verifiers recompute it via
+    ///         {subjectFor}(attester, label). Prefer this over raw {attest}.
+    function attestSelf(
+        bytes32 label,
+        uint64 epoch,
+        uint256 nav,
+        int256 realizedPnl,
+        bytes32 snapshotHash,
+        string calldata uri
+    ) external returns (uint256 index) {
+        if (label == bytes32(0)) revert EmptySubject();
+        if (nav == 0) revert ZeroNav();
+        bytes32 subject = subjectFor(msg.sender, label);
+        if (selfAttesterOf[subject] == address(0)) {
+            selfAttesterOf[subject] = msg.sender;
+            emit SubjectRegistered(subject, msg.sender);
+        }
+        Attestation[] storage log = _selfLog[subject];
+        if (log.length != 0 && epoch <= log[log.length - 1].epoch) revert EpochNotIncreasing();
+        index = log.length;
+        log.push(
+            Attestation({
+                epoch: epoch,
+                timestamp: uint64(block.timestamp),
+                nav: nav,
+                realizedPnl: realizedPnl,
+                snapshotHash: snapshotHash,
+                uri: uri
+            })
+        );
+        emit Attested(subject, index, epoch, nav, realizedPnl, snapshotHash);
+    }
+
+    /// @notice Deterministic, caller-bound subject id. A third party cannot produce the
+    ///         same id for a different attester, so canonical ids can't be squatted.
+    function subjectFor(address attester, bytes32 label) public pure returns (bytes32) {
+        return keccak256(abi.encodePacked(attester, label));
+    }
+
+    /// @notice Raw attestation under an arbitrary `subject` (first caller claims it).
+    ///         A predictable raw subject can be front-run — use {attestSelf} for a
+    ///         squat-proof id you control.
     function attest(
         bytes32 subject,
         uint64 epoch,
@@ -61,6 +100,17 @@ contract DeskRegistry {
         bytes32 snapshotHash,
         string calldata uri
     ) external returns (uint256 index) {
+        return _attest(subject, epoch, nav, realizedPnl, snapshotHash, uri);
+    }
+
+    function _attest(
+        bytes32 subject,
+        uint64 epoch,
+        uint256 nav,
+        int256 realizedPnl,
+        bytes32 snapshotHash,
+        string calldata uri
+    ) internal returns (uint256 index) {
         if (subject == bytes32(0)) revert EmptySubject();
         if (nav == 0) revert ZeroNav();
 
@@ -93,16 +143,23 @@ contract DeskRegistry {
 
     // ------------------------------------------------------------------ reads
 
+    /// @dev Reads prefer the squat-proof self-namespace when present, else the raw log,
+    ///      so {attestSelf} and {attest} records are both visible through one API.
+    function _read(bytes32 subject) internal view returns (Attestation[] storage) {
+        Attestation[] storage sl = _selfLog[subject];
+        return sl.length > 0 ? sl : _log[subject];
+    }
+
     function count(bytes32 subject) external view returns (uint256) {
-        return _log[subject].length;
+        return _read(subject).length;
     }
 
     function at(bytes32 subject, uint256 i) external view returns (Attestation memory) {
-        return _log[subject][i];
+        return _read(subject)[i];
     }
 
     function latest(bytes32 subject) external view returns (Attestation memory) {
-        Attestation[] storage l = _log[subject];
+        Attestation[] storage l = _read(subject);
         if (l.length == 0) revert NoData();
         return l[l.length - 1];
     }
@@ -113,7 +170,7 @@ contract DeskRegistry {
         view
         returns (uint256[] memory navs, uint64[] memory ts)
     {
-        Attestation[] storage l = _log[subject];
+        Attestation[] storage l = _read(subject);
         uint256 n = l.length;
         navs = new uint256[](n);
         ts = new uint64[](n);

@@ -296,8 +296,15 @@ contract GuardrailsTest is Test {
 
     function test_config_transferOwnership() public {
         GuardrailConfig cfg = _deployConfig();
+        // Two-step: transfer only stages a pending owner...
         vm.prank(HUMAN);
         cfg.transferOwnership(AGENT);
+        assertEq(cfg.owner(), HUMAN); // unchanged until accepted
+        assertEq(cfg.pendingOwner(), AGENT);
+        // ...and takes effect only when the target accepts.
+        vm.prank(AGENT);
+        cfg.acceptOwnership();
         assertEq(cfg.owner(), AGENT);
+        assertEq(cfg.pendingOwner(), address(0));
     }
 }

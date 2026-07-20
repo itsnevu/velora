@@ -2,6 +2,7 @@
 pragma solidity ^0.8.28;
 
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
+import { Ownable2Step } from "@openzeppelin/contracts/access/Ownable2Step.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { ISwapAdapter } from "./interfaces/IVaultPeriphery.sol";
@@ -29,7 +30,7 @@ interface IUniswapV2Router {
 ///         that calls `exactInputSingle`/`exactInput`; the vault interface is
 ///         unchanged. `hopToken` routes through an intermediary (e.g. WETH/USDG)
 ///         when there is no direct pool for the pair.
-contract UniswapSwapAdapter is ISwapAdapter, Ownable {
+contract UniswapSwapAdapter is ISwapAdapter, Ownable2Step {
     using SafeERC20 for IERC20;
 
     IUniswapV2Router public router;

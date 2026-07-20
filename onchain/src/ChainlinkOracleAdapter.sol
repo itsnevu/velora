@@ -2,6 +2,7 @@
 pragma solidity ^0.8.28;
 
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
+import { Ownable2Step } from "@openzeppelin/contracts/access/Ownable2Step.sol";
 import { IPriceOracle } from "./interfaces/IVaultPeriphery.sol";
 import { IAggregatorV3 } from "./interfaces/IAggregatorV3.sol";
 
@@ -16,7 +17,7 @@ import { IAggregatorV3 } from "./interfaces/IAggregatorV3.sol";
 ///
 /// @dev    Assumes USDG ≈ 1 USD (Paxos USDG). If a USDG/USD feed is desired later,
 ///         multiply through it; for v1 the 1:1 peg is the documented assumption.
-contract ChainlinkOracleAdapter is IPriceOracle, Ownable {
+contract ChainlinkOracleAdapter is IPriceOracle, Ownable2Step {
     struct Feed {
         IAggregatorV3 aggregator;
         uint8 feedDecimals;

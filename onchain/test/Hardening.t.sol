@@ -8,6 +8,9 @@ import { Guardrails } from "../src/libraries/Guardrails.sol";
 import { IPriceOracle, ISwapAdapter } from "../src/interfaces/IVaultPeriphery.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { MockERC20, MockOracle, MockSwapAdapter } from "../src/mocks/Mocks.sol";
+import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
+import { SessionKeyExecutor } from "../src/SessionKeyExecutor.sol";
+import { DeskRegistry } from "../src/DeskRegistry.sol";
 
 /// @notice Regression tests for the audit HIGH findings:
 ///   H1 — a trade's realized fill is bounded to the ORACLE price, independent of the
@@ -226,5 +229,141 @@ contract HardeningTest is Test {
         vault.redeemInKind(shares, ALICE);
         assertEq(vault.balanceOf(ALICE), 0);
         assertEq(usdg.balanceOf(ALICE), 100e18); // got all cash back (no stock held yet)
+    }
+
+    // ───────────────────────── MEDIUM — Pausable circuit breaker ─────────────────────────
+
+    function test_pause_blocksDeposit_butNotWithdraw() public {
+        vm.prank(HUMAN);
+        vault.pause();
+        assertEq(vault.maxDeposit(ALICE), 0);
+
+        usdg.mint(ALICE, 10e18);
+        vm.startPrank(ALICE);
+        vm.expectRevert(Pausable.EnforcedPause.selector);
+        vault.deposit(10e18, ALICE);
+        vault.withdraw(5e18, ALICE, ALICE); // exit stays open while paused
+        vm.stopPrank();
+
+        vm.prank(HUMAN);
+        vault.unpause();
+        vm.prank(ALICE);
+        vault.deposit(10e18, ALICE); // works again once unpaused
+    }
+
+    function test_pause_blocksTrading_ownerOnly() public {
+        vm.prank(MANAGER);
+        vm.expectRevert(); // Ownable: not owner
+        vault.pause();
+
+        vm.prank(HUMAN);
+        vault.pause();
+        RWAVault.TradeOrder memory o = RWAVault.TradeOrder({
+            stockToken: address(stk),
+            isBuy: true,
+            amountIn: 10e18,
+            minAmountOut: 0,
+            stopPriceE18: PRICE * 90 / 100,
+            leftSideException: false
+        });
+        vm.prank(MANAGER);
+        vm.expectRevert(Pausable.EnforcedPause.selector);
+        vault.executeTrade(o);
+    }
+
+    // ─────────────────────── MEDIUM — daily halt counts overnight gaps (M1) ───────────────────────
+
+    function test_halt_countsOvernightGap() public {
+        _buy(10e18); // day 1: position on; lastNav ~100 recorded
+        vm.warp(block.timestamp + 1 days); // next day
+        oracle.setPrice(address(stk), PRICE * 40 / 100); // book gaps down overnight (~-6%)
+
+        // Baseline carries yesterday's NAV (not the post-gap value), so the halt latches...
+        vault.latchHalt();
+        assertEq(vault.haltedDay(), block.timestamp / 1 days);
+
+        // ...and a fresh buy today is blocked. (Old code re-based to the gapped NAV → no halt.)
+        RWAVault.TradeOrder memory o = RWAVault.TradeOrder({
+            stockToken: address(stk),
+            isBuy: true,
+            amountIn: 1e18,
+            minAmountOut: 0,
+            stopPriceE18: 18e18,
+            leftSideException: false
+        });
+        assertEq(uint256(vault.previewTrade(o)), uint256(Guardrails.Violation.DailyLossHalt));
+    }
+
+    function test_vault_ownership_isTwoStep() public {
+        address NEW = address(0xBEEF);
+        vm.prank(HUMAN);
+        vault.transferOwnership(NEW);
+        assertEq(vault.owner(), HUMAN); // not transferred yet
+        assertEq(vault.pendingOwner(), NEW);
+        vm.prank(NEW);
+        vault.acceptOwnership();
+        assertEq(vault.owner(), NEW);
+    }
+
+    // ─────────────────────── MEDIUM — session re-grant clears stale scope (M3) ───────────────────────
+
+    function test_session_regrant_clearsStaleTokenScope() public {
+        SessionKeyExecutor exec = new SessionKeyExecutor(vault, HUMAN);
+        address AGENT = address(0xA9E7);
+        address[] memory two = new address[](2);
+        two[0] = address(stk);
+        two[1] = address(other);
+        address[] memory one = new address[](1);
+        one[0] = address(stk);
+
+        vm.startPrank(HUMAN);
+        vault.setManager(address(exec));
+        exec.grantSession(
+            AGENT, uint64(block.timestamp + 7 days), 1000e18, 10, 100_000e18, true, true, two
+        );
+        vm.stopPrank();
+        assertTrue(exec.tokenAllowed(AGENT, address(other)));
+
+        // Re-grant a NARROWER scope; `other` must no longer be in scope.
+        vm.prank(HUMAN);
+        exec.grantSession(
+            AGENT, uint64(block.timestamp + 7 days), 1000e18, 10, 100_000e18, true, true, one
+        );
+        assertFalse(exec.tokenAllowed(AGENT, address(other)));
+        assertTrue(exec.tokenAllowed(AGENT, address(stk)));
+
+        // A real trade on the stale token is rejected by the executor.
+        RWAVault.TradeOrder memory o = RWAVault.TradeOrder({
+            stockToken: address(other),
+            isBuy: true,
+            amountIn: 1e18,
+            minAmountOut: 0,
+            stopPriceE18: PRICE * 90 / 100,
+            leftSideException: false
+        });
+        vm.prank(AGENT);
+        vm.expectRevert(SessionKeyExecutor.TokenNotInSession.selector);
+        exec.trade(o);
+    }
+
+    // ─────────────────────── MEDIUM — attestSelf can't be squatted (M6) ───────────────────────
+
+    function test_attestSelf_cannotBeSquatted() public {
+        DeskRegistry reg = new DeskRegistry();
+        bytes32 label = keccak256("velora-vault:0xVAULT");
+        address VICTIM = address(0x1111);
+        address ATTACKER = address(0x2222);
+        bytes32 subj = reg.subjectFor(VICTIM, label);
+
+        // Attacker front-runs, claiming the victim's derived subject via RAW attest.
+        vm.prank(ATTACKER);
+        reg.attest(subj, 1, 999e18, 0, bytes32(0), ""); // lands in the raw namespace only
+
+        // Victim still owns its squat-proof self-subject, and its record wins on read.
+        vm.prank(VICTIM);
+        reg.attestSelf(label, 1, 100e18, 0, bytes32(0), "");
+        assertEq(reg.selfAttesterOf(subj), VICTIM);
+        assertEq(reg.count(subj), 1);
+        assertEq(reg.latest(subj).nav, 100e18); // victim's, not the attacker's 999e18
     }
 }

@@ -2,6 +2,7 @@
 pragma solidity ^0.8.28;
 
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
+import { Ownable2Step } from "@openzeppelin/contracts/access/Ownable2Step.sol";
 import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import { RWAVault } from "./RWAVault.sol";
 
@@ -20,7 +21,7 @@ import { RWAVault } from "./RWAVault.sol";
 ///           2. {RWAVault}: the hard, non-bypassable CLAUDE.md risk caps.
 ///         A trade the vault rejects reverts the whole call, so a rejected order
 ///         consumes NONE of the session budget.
-contract SessionKeyExecutor is Ownable, ReentrancyGuard {
+contract SessionKeyExecutor is Ownable2Step, ReentrancyGuard {
     struct Session {
         bool active;
         uint64 expiry; //               unix ts after which the key is dead
@@ -35,7 +36,10 @@ contract SessionKeyExecutor is Ownable, ReentrancyGuard {
 
     RWAVault public immutable vault;
     mapping(address => Session) public sessions;
-    mapping(address => mapping(address => bool)) public tokenAllowed;
+    // M3: token scope is keyed by a per-agent grant nonce. Re-granting bumps the nonce,
+    // so a previous grant's token allowlist auto-expires instead of lingering.
+    mapping(address => uint256) public sessionNonce;
+    mapping(address => mapping(uint256 => mapping(address => bool))) private _tokenAllowed;
 
     event SessionGranted(
         address indexed agent, uint64 expiry, uint256 maxPerTrade, uint32 maxTrades, uint256 maxCum
@@ -74,6 +78,7 @@ contract SessionKeyExecutor is Ownable, ReentrancyGuard {
         bool sellsAllowed,
         address[] calldata tokens
     ) external onlyOwner {
+        uint256 nonce = ++sessionNonce[agent]; // invalidates any prior grant's token scope
         sessions[agent] = Session({
             active: true,
             expiry: expiry,
@@ -86,7 +91,7 @@ contract SessionKeyExecutor is Ownable, ReentrancyGuard {
             sellsAllowed: sellsAllowed
         });
         for (uint256 i; i < tokens.length; ++i) {
-            tokenAllowed[agent][tokens[i]] = true;
+            _tokenAllowed[agent][nonce][tokens[i]] = true;
             emit TokenScopeSet(agent, tokens[i], true);
         }
         emit SessionGranted(agent, expiry, maxNotionalPerTrade, maxTrades, maxCumNotional);
@@ -98,8 +103,13 @@ contract SessionKeyExecutor is Ownable, ReentrancyGuard {
     }
 
     function setTokenAllowed(address agent, address token, bool allowed) external onlyOwner {
-        tokenAllowed[agent][token] = allowed;
+        _tokenAllowed[agent][sessionNonce[agent]][token] = allowed;
         emit TokenScopeSet(agent, token, allowed);
+    }
+
+    /// @notice Whether `token` is in `agent`'s CURRENT session scope (latest grant only).
+    function tokenAllowed(address agent, address token) public view returns (bool) {
+        return _tokenAllowed[agent][sessionNonce[agent]][token];
     }
 
     // =============================================================== agent trading
@@ -118,7 +128,9 @@ contract SessionKeyExecutor is Ownable, ReentrancyGuard {
         if (s.tradesUsed >= s.maxTrades) revert MaxTradesReached();
         if (o.isBuy && !s.buysAllowed) revert SideNotAllowed();
         if (!o.isBuy && !s.sellsAllowed) revert SideNotAllowed();
-        if (!tokenAllowed[msg.sender][o.stockToken]) revert TokenNotInSession();
+        if (!_tokenAllowed[msg.sender][sessionNonce[msg.sender]][o.stockToken]) {
+            revert TokenNotInSession();
+        }
 
         uint256 notional = vault.tradeNotionalUsdg(o);
         if (notional > s.maxNotionalPerTrade) revert PerTradeExceeded();

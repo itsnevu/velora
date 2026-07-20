@@ -8,7 +8,9 @@ import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/I
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
+import { Ownable2Step } from "@openzeppelin/contracts/access/Ownable2Step.sol";
 import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
 
 import { Guardrails } from "./libraries/Guardrails.sol";
 import { GuardrailConfig } from "./GuardrailConfig.sol";
@@ -35,7 +37,7 @@ import { IPriceOracle, ISwapAdapter } from "./interfaces/IVaultPeriphery.sol";
 ///         - Every trade's realized fill is bounded to the oracle price
 ///           ({GuardrailConfig.maxExecSlippageBps}) so a compromised manager cannot
 ///           route the book into a ruinous swap, regardless of the order's `minAmountOut`.
-contract RWAVault is ERC4626, Ownable, ReentrancyGuard {
+contract RWAVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
     using SafeERC20 for IERC20;
 
     uint256 private constant BPS = 10_000;
@@ -64,6 +66,7 @@ contract RWAVault is ERC4626, Ownable, ReentrancyGuard {
     uint8 public ordersToday;
     uint256 public currentDay;
     uint256 public dayStartNav;
+    uint256 public lastNav; // last observed NAV; carried into the next day's halt baseline
     uint256 public haltedDay; // day index for which trading is latched-halted
 
     event ManagerSet(address indexed manager);
@@ -129,6 +132,45 @@ contract RWAVault is ERC4626, Ownable, ReentrancyGuard {
     function setGuardrailConfig(GuardrailConfig c) external onlyOwner {
         guardrailConfig = c;
         emit GuardrailConfigSet(address(c));
+    }
+
+    /// @notice Emergency circuit breaker: freezes new deposits/mints and trading. The
+    ///         exit side (`withdraw` / `redeem` / `redeemInKind`) stays OPEN, so a pause
+    ///         can never trap capital. Owner-only (put behind a multisig/timelock in prod).
+    function pause() external onlyOwner {
+        _pause();
+    }
+
+    function unpause() external onlyOwner {
+        _unpause();
+    }
+
+    // ---- deposit side is pausable; the exit side deliberately is not ----
+
+    function deposit(uint256 assets, address receiver)
+        public
+        override
+        whenNotPaused
+        returns (uint256)
+    {
+        return super.deposit(assets, receiver);
+    }
+
+    function mint(uint256 shares, address receiver)
+        public
+        override
+        whenNotPaused
+        returns (uint256)
+    {
+        return super.mint(shares, receiver);
+    }
+
+    function maxDeposit(address receiver) public view override returns (uint256) {
+        return paused() ? 0 : super.maxDeposit(receiver);
+    }
+
+    function maxMint(address receiver) public view override returns (uint256) {
+        return paused() ? 0 : super.maxMint(receiver);
     }
 
     function allowToken(address token) external onlyOwner {
@@ -289,7 +331,10 @@ contract RWAVault is ERC4626, Ownable, ReentrancyGuard {
         if (today != currentDay) {
             currentDay = today;
             ordersToday = 0;
-            dayStartNav = navUsdg();
+            // M1: anchor to the PRIOR day's last-observed NAV (not the post-gap value),
+            // so an overnight/weekend drawdown is counted and the halt can't be reset
+            // away. Falls back to current NAV only on the very first interaction.
+            dayStartNav = lastNav != 0 ? lastNav : navUsdg();
         }
     }
 
@@ -299,6 +344,7 @@ contract RWAVault is ERC4626, Ownable, ReentrancyGuard {
         external
         onlyManager
         nonReentrant
+        whenNotPaused
         returns (uint256 amountOut)
     {
         if (!isAllowed[o.stockToken]) revert TokenNotAllowed();
@@ -324,6 +370,13 @@ contract RWAVault is ERC4626, Ownable, ReentrancyGuard {
             _enforceExecBound(o.stockToken, o.amountIn, amountOut, true);
             costBasisUsdg[o.stockToken] += o.amountIn;
             stopPriceE18[o.stockToken] = o.stopPriceE18;
+            // M4: re-check concentration against the ACTUAL position acquired (oracle-
+            // valued), not the pre-trade `pv + amountIn` estimate — a favorable fill
+            // can't push the symbol past the cap.
+            if (
+                positionValue(o.stockToken) * BPS
+                    > uint256(guardrailConfig.caps().maxConcentrationBps) * navUsdg()
+            ) revert GuardrailViolation(Guardrails.Violation.Concentration);
         } else {
             IERC20 token = IERC20(o.stockToken);
             uint256 qtyBefore = token.balanceOf(address(this));
@@ -340,6 +393,7 @@ contract RWAVault is ERC4626, Ownable, ReentrancyGuard {
 
         ordersToday += 1;
         _maybeLatch(); // a successful trade during a drawdown persists the halt
+        lastNav = navUsdg(); // record close-of-activity NAV for the next day's baseline
         emit TradeExecuted(o.stockToken, o.isBuy, o.amountIn, amountOut, ordersToday);
     }
 
@@ -350,6 +404,7 @@ contract RWAVault is ERC4626, Ownable, ReentrancyGuard {
     function latchHalt() external {
         _refreshDay();
         _maybeLatch();
+        lastNav = navUsdg();
     }
 
     function _maybeLatch() internal {

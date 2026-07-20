@@ -65,7 +65,7 @@ function blackoutAt(s: number): number {
 
 /** Chapter-A progress: the camera finishes its flight before blackout #1. */
 function chapterA(s: number): number {
-  return Math.min(1, Math.max(0, s / 0.40));
+  return Math.min(1, Math.max(0, s / 0.44));
 }
 
 function skyAt(s: number) {
@@ -646,7 +646,7 @@ function Flock({ smooth, animate }: { smooth: RefN; animate: boolean }) {
     POS_CURVE.getPoint(Math.min(1, sA + 0.13), p);
     // in once the journey starts, out before the river chapter
     mat.opacity =
-      THREE.MathUtils.smoothstep(s, 0.03, 0.08) * (1 - THREE.MathUtils.smoothstep(s, 0.34, 0.42));
+      THREE.MathUtils.smoothstep(s, 0.03, 0.08) * (1 - THREE.MathUtils.smoothstep(s, 0.38, 0.46));
     group.current.children.forEach((child, i) => {
       const b = BIRDS[i];
       child.position.set(
@@ -682,28 +682,28 @@ type PaintCfg = {
 };
 
 const PAINT_CHAPTERS: PaintCfg[] = [
-  // full-1 windows tile continuously (next panel is FULL before the previous
-  // starts fading) — the 3D world never peeks through mid-river
+  // one visual per act — each panel owns a whole section, crossfades sit on the
+  // section seams so the background never flips mid-read
   {
     url: TEX.river1, order: 940, zoomFrom: 1.42, zoomTo: 1.16, panY: 0.22,
-    opacity: (s) => band(s, 0.415, 0.60, 0.045),
-    prog: (s) => Math.min(1, Math.max(0, (s - 0.37) / 0.23)),
+    opacity: (s) => band(s, 0.475, 0.665, 0.04),
+    prog: (s) => Math.min(1, Math.max(0, (s - 0.435) / 0.27)),
   },
   {
     url: TEX.river3, order: 942, zoomFrom: 1.14, zoomTo: 1.38, panY: 0.18,
-    opacity: (s) => band(s, 0.505, 0.70, 0.045),
-    prog: (s) => Math.min(1, Math.max(0, (s - 0.46) / 0.24)),
+    opacity: (s) => band(s, 0.585, 0.80, 0.04),
+    prog: (s) => Math.min(1, Math.max(0, (s - 0.585) / 0.255)),
   },
   {
     url: TEX.river2, order: 944, zoomFrom: 1.4, zoomTo: 1.18, panY: 0.2,
-    opacity: (s) => band(s, 0.60, 0.795, 0.045),
-    prog: (s) => Math.min(1, Math.max(0, (s - 0.555) / 0.24)),
+    opacity: (s) => band(s, 0.72, 0.925, 0.04),
+    prog: (s) => Math.min(1, Math.max(0, (s - 0.72) / 0.245)),
   },
   {
-    url: TEX.lake, order: 946, zoomFrom: 1.22, zoomTo: 1.05, panY: 0.06,
-    win: [0.02, 0.2, 0.58, 0.6], // centered on the WATER body — bright, no junk, no flat grass
-    opacity: (s) => THREE.MathUtils.smoothstep(s, 0.70, 0.745),
-    prog: (s) => Math.min(1, Math.max(0, (s - 0.70) / 0.30)),
+    url: TEX.lake, order: 946, zoomFrom: 1.18, zoomTo: 1.06, panY: 0.05,
+    win: [0.02, 0.2, 0.58, 0.6],
+    opacity: (s) => THREE.MathUtils.smoothstep(s, 0.845, 0.885),
+    prog: (s) => Math.min(1, Math.max(0, (s - 0.845) / 0.155)),
   },
 ];
 

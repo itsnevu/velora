@@ -24,10 +24,12 @@ contract GuardrailConfig {
     uint16 internal constant MAX_EXEC_SLIPPAGE_BPS = 5000;
 
     address public owner;
+    address public pendingOwner; // two-step handoff target (guards against fat-fingers)
     Guardrails.RiskCaps private _caps;
     uint16 private _execSlippageBps;
 
     event OwnerTransferred(address indexed from, address indexed to);
+    event OwnershipTransferStarted(address indexed from, address indexed to);
     event CapsUpdated(Guardrails.RiskCaps caps);
     event ExecSlippageUpdated(uint16 bps);
 
@@ -78,10 +80,20 @@ contract GuardrailConfig {
         emit ExecSlippageUpdated(bps);
     }
 
+    /// @notice Start a two-step ownership handoff. Ownership only moves once `to`
+    ///         calls {acceptOwnership} — so a mistyped/uncontrolled address can't take
+    ///         (or brick) the caps. Intended target in production: a multisig + timelock.
     function transferOwnership(address to) external onlyOwner {
         if (to == address(0)) revert ZeroAddress();
-        emit OwnerTransferred(owner, to);
-        owner = to;
+        pendingOwner = to;
+        emit OwnershipTransferStarted(owner, to);
+    }
+
+    function acceptOwnership() external {
+        if (msg.sender != pendingOwner) revert NotOwner();
+        emit OwnerTransferred(owner, pendingOwner);
+        owner = pendingOwner;
+        pendingOwner = address(0);
     }
 
     /// @dev Fail closed: every cap must be set (non-zero) and within sane bounds,

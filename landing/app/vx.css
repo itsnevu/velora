@@ -676,7 +676,7 @@ body:has(.vx-root)::after {
   justify-content: center;
   text-align: center;
   gap: 1.1em;
-  padding: 0 clamp(20px, 6vw, 90px);
+  padding: 0 clamp(20px, 6vw, 90px) 20vh; /* keep the CTA stack clear of the legal line */
   background: radial-gradient(120% 100% at 50% 45%, rgba(34, 36, 42, 0.12), rgba(34, 36, 42, 0.42));
 }
 .vx-foot__legal {
@@ -881,4 +881,38 @@ body:has(.vx-root)::after {
   text-shadow:
     0 1px 6px rgba(10, 11, 13, 0.85),
     0 4px 18px rgba(10, 11, 13, 0.55);
+}
+
+/* ══ FOOTER LEGIBILITY — the legal line must read over the bright lake ══ */
+.vx-foot::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 36vh;
+  background: linear-gradient(to top, rgba(14, 16, 19, 0.88), rgba(14, 16, 19, 0.5) 55%, transparent);
+  pointer-events: none;
+  z-index: 0;
+}
+.vx-foot > * { position: relative; z-index: 1; }
+.vx-foot__legal {
+  color: rgba(236, 242, 240, 0.88);
+  text-shadow: 0 1px 5px rgba(10, 11, 13, 0.9), 0 3px 14px rgba(10, 11, 13, 0.7);
+}
+.vx-foot__legal b { color: #ECF2F0; }
+
+/* dim helper texts must still read over the bright valley */
+.vx-eyebrow { color: rgba(236, 242, 240, 0.92); }
+.vx-sub--hero,
+.vx-cue,
+.vx-cue span {
+  color: rgba(236, 242, 240, 0.95);
+  text-shadow: 0 1px 6px rgba(10, 11, 13, 0.9), 0 3px 16px rgba(10, 11, 13, 0.65);
+}
+
+/* my blanket z-index rule accidentally un-anchored the legal — re-pin it */
+.vx-foot > .vx-foot__legal {
+  position: absolute;
+  z-index: 1;
 }
