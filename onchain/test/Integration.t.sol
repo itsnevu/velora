@@ -83,7 +83,10 @@ contract IntegrationTest is Test {
         usdg.mint(address(adapter), 1_000_000e18);
         stk.mint(address(adapter), 1_000_000e18);
 
-        subject = keccak256(abi.encodePacked("velora-vault:", address(vault)));
+        // Canonical, squat-proof subject: derived from the attester (this test) + label.
+        subject = registry.subjectFor(
+            address(this), keccak256(abi.encodePacked("velora-vault:", address(vault)))
+        );
     }
 
     function test_fullDeskLifecycle() public {
@@ -124,11 +127,12 @@ contract IntegrationTest is Test {
         assertApproxEqAbs(vault.navUsdg(), 10_200e18, 2);
 
         // --- 5. Desk attests the run series -> verifiable track record ---
-        vm.startPrank(address(this));
-        registry.attest(subject, 1, 10_000e18, 0, keccak256("d1"), "");
-        registry.attest(subject, 2, 10_100e18, 50e18, keccak256("d2"), "");
-        registry.attest(subject, 3, vault.navUsdg(), 100e18, keccak256("d3"), "");
-        vm.stopPrank();
+        // Use the squat-proof self-namespace (the surface PerfScore reads); label matches
+        // the derivation of `subject` above.
+        bytes32 label = keccak256(abi.encodePacked("velora-vault:", address(vault)));
+        registry.attestSelf(label, 1, 10_000e18, 0, keccak256("d1"), "");
+        registry.attestSelf(label, 2, 10_100e18, 50e18, keccak256("d2"), "");
+        registry.attestSelf(label, 3, vault.navUsdg(), 100e18, keccak256("d3"), "");
 
         PerfScore.PerfSummary memory s = perf.summary(subject);
         assertEq(s.samples, 3);

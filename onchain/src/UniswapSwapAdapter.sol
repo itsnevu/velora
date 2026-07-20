@@ -78,6 +78,9 @@ contract UniswapSwapAdapter is ISwapAdapter, Ownable2Step {
 
         uint256[] memory amounts =
             router.swapExactTokensForTokens(amountIn, minOut, path, to, block.timestamp);
+        // Zero any residual allowance (e.g. if the router pulled less than amountIn, as a
+        // fee-on-transfer tokenIn could cause) so no standing approval lingers (LOW-3).
+        IERC20(tokenIn).forceApprove(address(router), 0);
         amountOut = amounts[amounts.length - 1];
         if (amountOut < minOut) revert InsufficientOutput();
     }

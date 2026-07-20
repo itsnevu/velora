@@ -65,6 +65,9 @@ contract ChainlinkOracleAdapter is IPriceOracle, Ownable2Step {
         (, int256 answer, uint256 startedAt,,) = sequencerUptimeFeed.latestRoundData();
         // Chainlink: answer == 0 => up, 1 => down.
         if (answer != 0) revert SequencerDown();
+        // startedAt == 0 => the round is uninitialized/invalid; fail closed rather than
+        // treating "now - 0" as a grace window that is trivially "long over" (LOW-5).
+        if (startedAt == 0) revert SequencerDown();
         // forge-lint: disable-next-line(block-timestamp) — grace window is minutes-scale
         if (block.timestamp - startedAt <= sequencerGracePeriod) revert GracePeriodNotOver();
     }

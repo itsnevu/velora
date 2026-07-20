@@ -15,8 +15,11 @@ pragma solidity ^0.8.28;
 ///           100 bps = 1%, 10_000 bps = 100%. No floating point.
 ///         - Sizing / halt / throttle caps are scoped to **buys** (risk-INCREASING
 ///           orders). A guardrail must never trap capital, so risk-REDUCING sells
-///           are always permitted (subject only to the account being funded). The
-///           off-chain Risk Manager still previews sells per CLAUDE.md.
+///           are always permitted here (subject only to the account being funded).
+///           The vault layer adds one execution-quality bound to sells — a WIDE
+///           oracle-relative fill guard ({RWAVault._enforceExecBound}) that blocks
+///           only catastrophic/attacker fills, not ordinary de-risking. The off-chain
+///           Risk Manager still previews sells per CLAUDE.md.
 ///         - `ordersToday` is the total buys+sells count (README: "counts buys +
 ///           sells"); once it hits the cap, further *buys* are blocked but exits
 ///           remain open.
@@ -63,7 +66,10 @@ library Guardrails {
         CashBuffer,
         NoAveragingIntoLoser,
         MissingStop,
-        NotAllowed // token is not on the vault allowlist (preview-only sentinel)
+        NotAllowed, //           token is not on the vault allowlist   (preview-only sentinel)
+        ZeroAmount, //           order amountIn is zero                (preview-only sentinel)
+        InsufficientPosition, // sell exceeds the held balance         (preview-only sentinel)
+        Paused //                vault is paused (deposits/trading)    (preview-only sentinel)
     }
 
     /// @notice Judge a single order against the caps. Pure — no state, no side effects.

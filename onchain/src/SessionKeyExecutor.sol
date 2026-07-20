@@ -11,8 +11,11 @@ import { RWAVault } from "./RWAVault.sol";
 /// @notice The authorization layer between the AI desk and the vault. It is set as
 ///         the vault's `manager`, and the human owner delegates trading to agent
 ///         keys through revocable, expiring, tightly-scoped "sessions" — the same
-///         security shape as ERC-4337 session keys, so in production the agent key
-///         is a session key on the desk's ERC-4337 smart account.
+///         DESIGN INTENT as ERC-4337 session keys (scoped, revocable, expiring
+///         delegation), implemented here directly at the contract layer over plain
+///         EOA agent keys. It does NOT use the ERC-4337 EntryPoint/UserOperation
+///         machinery; pairing it with a 4337 smart account is an optional deployment
+///         choice, not a property of this contract.
 ///
 /// @dev    Defense in depth, two independent layers:
 ///           1. This executor: per-agent scoping — expiry, per-trade notional cap,

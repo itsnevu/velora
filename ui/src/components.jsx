@@ -71,45 +71,85 @@ function ScoreChip({ value, label }) {
 
 /* ---------- account header (command bar) ---------- */
 
-export function AccountHeader({ account, generatedAt }) {
+export function AccountHeader({ account, generatedAt, live, isDemo }) {
   const a = account || {}
-  const connected = !!a.connected
+  // When there is no real desk run (demo file) but the chain IS live, show the REAL
+  // on-chain vault figures in the header instead of sample brokerage numbers.
+  const useLive = !!(isDemo && live)
+  const connected = useLive ? true : !!a.connected
+  const acctName = useLive ? 'Robinhood Chain · vault' : (a.name || 'Agentic account')
+  const connLabel = useLive ? 'live on-chain' : (connected ? 'connected' : 'disconnected')
   return (
     <header className="topbar">
       <span className="topbar-glow" aria-hidden="true" />
 
       <div className="brand">
-        <span className="logo" aria-hidden="true">V</span>
+        <span className="logo" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M4 6 L16 27 L28 6 L22.6 6 L16 17.4 L9.4 6 Z" fill="#22242A"/><rect x="13.4" y="2.2" width="5.2" height="5.2" rx="0.4" transform="rotate(45 16 4.8)" fill="#22242A"/></svg></span>
         <div className="brand-meta">
           <div className="brand-title">Velora</div>
-          <div className="brand-sub" title={connected ? 'Live connection to the Agentic account' : 'Not connected'}>
+          <div className="brand-sub" title={useLive ? 'Live read from Robinhood Chain' : (connected ? 'Live connection to the Agentic account' : 'Not connected')}>
             <span className={`dot ${connected ? 'on' : 'off'}`} />
-            <span className="brand-acct">{a.name || 'Agentic account'}</span>
-            <span className="brand-conn">{connected ? 'connected' : 'disconnected'}</span>
+            <span className="brand-acct">{acctName}</span>
+            <span className="brand-conn">{connLabel}</span>
           </div>
         </div>
       </div>
 
-      <div className="topstats">
-        <div className="stat stat-hero" title="Total account equity">
-          <div className="stat-label">Equity</div>
-          <div className="stat-value hero mono">{usd(a.equity)}</div>
+      {useLive ? (
+        <div className="topstats">
+          <div className="stat stat-hero" title="On-chain vault net asset value">
+            <div className="stat-label">Vault NAV</div>
+            <div className="stat-value hero mono">{usd(live.nav)}</div>
+          </div>
+          <span className="stat-div" aria-hidden="true" />
+          <Stat label="Share price" value={usd(live.sharePrice, 4)} mono />
+          <Stat label="Cash" value={usd(live.cash)} mono />
+          <Stat label="Total shares" value={num(live.totalShares)} mono />
+          <Stat label="Utilization" value={`${live.utilizationPct ?? 0}%`} mono />
         </div>
-        <span className="stat-div" aria-hidden="true" />
-        <Stat label="Day P&L" value={`${usd(a.dayPnl)} (${pct(a.dayPnlPct)})`} cls={signClass(a.dayPnl)} mono />
-        <Stat label="Buying power" value={usd(a.buyingPower)} mono />
-        <Stat label="Cash" value={usd(a.cash)} mono />
-        <Stat label="Positions" value={num(a.openPositions)} mono />
-        <Stat label="Orders today" value={num(a.ordersToday)} mono />
-      </div>
+      ) : (
+        <div className="topstats">
+          <div className="stat stat-hero" title="Total account equity">
+            <div className="stat-label">Equity</div>
+            <div className="stat-value hero mono">{usd(a.equity)}</div>
+          </div>
+          <span className="stat-div" aria-hidden="true" />
+          <Stat label="Day P&L" value={`${usd(a.dayPnl)} (${pct(a.dayPnlPct)})`} cls={signClass(a.dayPnl)} mono />
+          <Stat label="Buying power" value={usd(a.buyingPower)} mono />
+          <Stat label="Cash" value={usd(a.cash)} mono />
+          <Stat label="Positions" value={num(a.openPositions)} mono />
+          <Stat label="Orders today" value={num(a.ordersToday)} mono />
+        </div>
+      )}
 
       <a className="vault-link" href="/vault.html" title="Open the investor vault dApp">Open Vault ↗</a>
 
       <div className="asof" title={generatedAt || ''}>
-        <span className="asof-k">as of</span>
-        <span className="asof-v">{timeAgo(generatedAt)}</span>
+        <span className="asof-k">{useLive ? 'live' : 'as of'}</span>
+        <span className="asof-v">{useLive ? 'now' : timeAgo(generatedAt)}</span>
       </div>
     </header>
+  )
+}
+
+/// Honest empty-state for the brokerage/AI-desk sections when no real desk run exists in
+/// this environment. Shown INSTEAD of sample data so the dashboard never fakes a run.
+export function DeskRunGate() {
+  return (
+    <section className="panel gate">
+      <h2>AI desk · not run here yet</h2>
+      <p className="gate-lead">
+        Candidates, risk verdicts, the proposed trade and account P&L come from a live desk
+        cycle against the Robinhood Agentic (brokerage) account. That needs the{' '}
+        <code>robinhood-trading</code> MCP server connected — the on-chain vault below is already live.
+      </p>
+      <ol className="gate-steps">
+        <li>Connect <code>robinhood-trading</code> MCP + set <code>RH_AGENTIC_ACCOUNT_NUMBER</code>.</li>
+        <li>Run a desk cycle in the session (analysts → risk manager → preview).</li>
+        <li>It writes <code>ui/public/desk-state.json</code>; these panels populate for real.</li>
+      </ol>
+      <div className="oc-cap">No sample data shown — this stays empty until a real run.</div>
+    </section>
   )
 }
 
@@ -595,8 +635,8 @@ export function VaultPanel({ vault, network }) {
         <span className="risk-num">{util}%</span>
       </div>
       <div className="oc-cap">
-        ERC-4626 vault wired to the on-chain Guardrails · APY {v.apyPct == null ? '— pending' : pct(v.apyPct)} ·
-        preview / illustrative — not a live balance.
+        ERC-4626 vault wired to the on-chain Guardrails · APY {v.apyPct == null ? '— pending' : pct(v.apyPct)}
+        {v.live ? ' · live read from Robinhood Chain' : ' · preview / illustrative — not a live balance.'}
       </div>
       {network && !network.deployed && (
         <div className="oc-cap dim">Contract address: — pending deploy</div>

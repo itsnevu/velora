@@ -524,3 +524,59 @@ small { opacity: 0.65; font-size: 0.85em; }
 /* the stray grey strip was this row's scrollbar — gone */
 .topstats { scrollbar-width: none; }
 .topstats::-webkit-scrollbar { display: none; height: 0; }
+
+/* ══ UNIFIED V MARK — same geometric mark as the favicon/landing ══ */
+.logo svg { width: 19px; height: 19px; display: block; }
+.vfloat .logo svg { width: 17px; height: 17px; }
+
+/* ══ NEO PANELS — floating slabs like the header ══ */
+.panel {
+  border-radius: 16px;
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  transition: transform 0.25s var(--ease), border-color 0.25s var(--ease), box-shadow 0.25s var(--ease);
+}
+.panel:hover {
+  transform: translateY(-2px);
+  border-color: var(--border-2);
+  box-shadow: 0 20px 46px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+/* chartreuse energy in the meters */
+.meter-fill.ok {
+  background: linear-gradient(90deg, #8FAE2E, var(--pos));
+  box-shadow: 0 0 10px rgba(215, 254, 81, 0.35);
+}
+.grid tbody tr { transition: background 0.15s; }
+.grid tbody tr:hover { background: rgba(215, 254, 81, 0.045); }
+/* faint measurement grid — the landing's terminal-precision texture */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    linear-gradient(to right, rgba(233, 243, 238, 0.028) 0 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(233, 243, 238, 0.028) 0 1px, transparent 1px);
+  background-size: 88px 88px;
+  mask-image: radial-gradient(120% 100% at 50% 0%, rgba(0, 0, 0, 0.5), transparent 75%);
+  -webkit-mask-image: radial-gradient(120% 100% at 50% 0%, rgba(0, 0, 0, 0.5), transparent 75%);
+}
+.app { position: relative; z-index: 1; }
+
+/* ── live on-chain notice + honest desk-run gate + on-chain positions head ── */
+.live-note {
+  margin: 10px 0 4px; padding: 11px 15px; border-radius: 12px;
+  background: var(--pos-bg); border: 1px solid rgba(215, 254, 81, 0.28);
+  font-size: 12.5px; color: var(--text); line-height: 1.55;
+}
+.live-note b { color: var(--pos); }
+.live-note code, .gate code {
+  font-family: var(--font-mono); font-size: 11px; background: var(--bg-2);
+  padding: 1px 6px; border-radius: 5px; color: var(--pos);
+}
+.pos-head { margin: 20px 0 8px; }
+.panel.gate { border: 1px dashed var(--border-2); background: linear-gradient(180deg, rgba(215,254,81,0.03), transparent); }
+.gate-lead { font-size: 13px; color: var(--text-dim); line-height: 1.6; margin: 4px 0 14px; }
+.gate-steps { margin: 0 0 12px; padding-left: 18px; display: grid; gap: 7px; }
+.gate-steps li { font-size: 12.5px; color: var(--text); line-height: 1.5; }
+.gate-steps li::marker { color: var(--pos); font-family: var(--font-mono); font-size: 11px; }

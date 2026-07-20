@@ -15,6 +15,9 @@ function deskTriggerPlugin() {
     name: 'desk-trigger',
     configureServer(server) {
       server.middlewares.use((req, res, next) => {
+        if (req.url === '/vault' || req.url === '/vault/') {
+          req.url = '/vault.html'
+        }
         if (req.url === '/api/run' && req.method === 'POST') {
           let body = ''
           req.on('data', (c) => (body += c))
@@ -43,6 +46,12 @@ function deskTriggerPlugin() {
             .catch(() => res.end(JSON.stringify({ status: 'idle' })))
           return
         }
+        next()
+      })
+    },
+    configurePreviewServer(server) {
+      server.middlewares.use((req, res, next) => {
+        if (req.url === '/vault' || req.url === '/vault/') req.url = '/vault.html'
         next()
       })
     },

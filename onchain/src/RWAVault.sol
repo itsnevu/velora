@@ -41,6 +41,7 @@ contract RWAVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
     using SafeERC20 for IERC20;
 
     uint256 private constant BPS = 10_000;
+    uint256 private constant PPS_SCALE = 1e18; // fixed-point scale for price-per-share
 
     /// @dev One rebalance instruction from the desk.
     struct TradeOrder {
@@ -65,8 +66,8 @@ contract RWAVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
 
     uint8 public ordersToday;
     uint256 public currentDay;
-    uint256 public dayStartNav;
-    uint256 public lastNav; // last observed NAV; carried into the next day's halt baseline
+    uint256 public dayStartPps; // price-per-share at day start — the flow-invariant halt baseline
+    uint256 public lastPps; // last observed price-per-share; carried into the next day's baseline
     uint256 public haltedDay; // day index for which trading is latched-halted
 
     event ManagerSet(address indexed manager);
@@ -89,6 +90,7 @@ contract RWAVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
     error Slippage();
     error ExecSlippage();
     error StillHeld();
+    error FeedDown();
     error GuardrailViolation(Guardrails.Violation violation);
 
     modifier onlyManager() {
@@ -150,6 +152,7 @@ contract RWAVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
     function deposit(uint256 assets, address receiver)
         public
         override
+        nonReentrant
         whenNotPaused
         returns (uint256)
     {
@@ -159,10 +162,31 @@ contract RWAVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
     function mint(uint256 shares, address receiver)
         public
         override
+        nonReentrant
         whenNotPaused
         returns (uint256)
     {
         return super.mint(shares, receiver);
+    }
+
+    /// @dev Exit paths are NOT pausable (never trap capital) but ARE reentrancy-guarded,
+    ///      so a malicious asset/hook token cannot reenter mid-withdrawal (LOW-1).
+    function withdraw(uint256 assets, address receiver, address owner_)
+        public
+        override
+        nonReentrant
+        returns (uint256)
+    {
+        return super.withdraw(assets, receiver, owner_);
+    }
+
+    function redeem(uint256 shares, address receiver, address owner_)
+        public
+        override
+        nonReentrant
+        returns (uint256)
+    {
+        return super.redeem(shares, receiver, owner_);
     }
 
     function maxDeposit(address receiver) public view override returns (uint256) {
@@ -212,14 +236,22 @@ contract RWAVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
     }
 
     /// @dev `_price` returns the USDG-native value of ONE WHOLE token, so we divide
-    ///      by 10**tokenDecimals to value an arbitrary balance (decimal-robust). An
-    ///      empty leg is skipped WITHOUT touching the oracle, so a single stale/missing
-    ///      feed on a zero-balance (or dust-listed) token can never brick NAV — and
-    ///      thus can never brick deposits/withdrawals across the whole vault.
+    ///      by 10**tokenDecimals to value an arbitrary balance (decimal-robust).
+    ///      Valuation fails OPEN (unlike trading, which fails closed): an empty leg is
+    ///      skipped without touching the oracle, and if a non-empty leg's feed is
+    ///      dead/stale/reverting we exclude it (value 0) instead of letting one bad
+    ///      feed brick every NAV-dependent path. So NAV survives a dead feed on ANY
+    ///      balance — including a 1-wei dust donation of an allowlisted token (H2).
+    ///      Excluding a live holding UNDERstates NAV (conservative: withdrawers can
+    ///      never over-draw), and {redeemInKind} still returns the real token pro-rata.
     function positionValue(address token) public view returns (uint256) {
         uint256 bal = IERC20(token).balanceOf(address(this));
         if (bal == 0) return 0;
-        return (bal * _price(token)) / (10 ** tokenDecimals[token]);
+        try oracle.price(token) returns (uint256 p) {
+            return (bal * p) / (10 ** tokenDecimals[token]);
+        } catch {
+            return 0;
+        }
     }
 
     /// @notice Full portfolio value in USDG: cash + every Stock Token holding.
@@ -243,15 +275,55 @@ contract RWAVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         return positionValue(token) < costBasisUsdg[token];
     }
 
-    /// @notice ERC-4626 hook: total value backing the shares.
+    /// @dev True if any token the vault INTENTIONALLY holds (cost basis > 0, non-zero
+    ///      balance) currently has an unpriceable feed. positionValue() fails OPEN for
+    ///      the NAV *view* (dust-resilient), but the share-BACKING NAV must fail CLOSED
+    ///      for a material holding: otherwise a depositor could mint shares against an
+    ///      understated NAV and extract the difference via the oracle-free {redeemInKind}
+    ///      (H2 mint-side theft). A pure donation/dust leg has costBasis == 0 and is
+    ///      correctly ignored here, so it can never brick the share paths.
+    function _materialFeedDown() internal view returns (bool) {
+        uint256 len = _allowed.length;
+        for (uint256 i; i < len; ++i) {
+            address t = _allowed[i];
+            if (costBasisUsdg[t] == 0) continue; // donation/dust — never bought
+            if (IERC20(t).balanceOf(address(this)) == 0) continue;
+            try oracle.price(t) returns (uint256) { } catch { return true; }
+        }
+        return false;
+    }
+
+    /// @notice ERC-4626 hook: total value backing the shares. Fails CLOSED (reverts) if a
+    ///         material holding can't be priced, so shares are never minted/burned against
+    ///         a silently-understated NAV. The always-solvent {redeemInKind} exit stays
+    ///         open regardless (it reads raw balances, never the oracle).
     function totalAssets() public view override returns (uint256) {
+        if (_materialFeedDown()) revert FeedDown();
         return navUsdg();
     }
 
+    /// @dev Price-per-share = NAV / shares (scaled). Invariant to deposits/withdrawals
+    ///      (they mint/burn shares at exactly this ratio), so it is the correct anchor
+    ///      for a daily-loss halt that must ignore capital flows and react only to real
+    ///      P&L (trade losses + overnight gaps). Returns 0 for an empty vault.
+    function _pps() internal view returns (uint256) {
+        uint256 supply = totalSupply();
+        if (supply == 0) return 0;
+        return (navUsdg() * PPS_SCALE) / supply;
+    }
+
+    /// @dev The day-start price-per-share re-expressed at the CURRENT share supply —
+    ///      i.e. what the book would be worth now had per-share value not moved since
+    ///      day start. The halt compares live NAV against THIS, not a raw stored NAV,
+    ///      which is what makes it immune to deposits (M1 fix).
+    function _baselineNav() internal view returns (uint256) {
+        return (dayStartPps * totalSupply()) / PPS_SCALE;
+    }
+
     function _dayPnl(uint256 nav) internal view returns (int256) {
-        if (dayStartNav == 0) return int256(0);
-        // forge-lint: disable-next-line(unsafe-typecast) — NAV in 18-dec USDG is << int256 max
-        return int256(nav) - int256(dayStartNav);
+        if (dayStartPps == 0) return int256(0);
+        // forge-lint: disable-next-line(unsafe-typecast) — NAV in USDG is << int256 max
+        return int256(nav) - int256(_baselineNav());
     }
 
     /// @notice Build the guardrail context for an order (used by preview + execute).
@@ -294,9 +366,17 @@ contract RWAVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
     ///         approval": the desk/UI can show exactly which rule an order would
     ///         hit (or `None`) before anyone signs.
     function previewTrade(TradeOrder calldata o) external view returns (Guardrails.Violation) {
-        // Distinct sentinel so a UI never reads "None" (allowed) for an unlisted token;
-        // {executeTrade} would revert `TokenNotAllowed` for the same order.
+        // Static guardrail preview: surfaces the DETERMINISTIC reverts executeTrade would
+        // hit for this order, in the same precedence, before anyone signs. Distinct
+        // sentinels so a UI never reads "None" (allowed) for an order that is guaranteed
+        // to revert. Fill-DEPENDENT reverts (Slippage / ExecSlippage / post-trade
+        // Concentration) cannot be known without executing and are intentionally out of
+        // scope here — the preview models the book, not the AMM.
         if (!isAllowed[o.stockToken]) return Guardrails.Violation.NotAllowed;
+        if (o.amountIn == 0) return Guardrails.Violation.ZeroAmount;
+        if (!o.isBuy && IERC20(o.stockToken).balanceOf(address(this)) < o.amountIn) {
+            return Guardrails.Violation.InsufficientPosition;
+        }
         return Guardrails.evaluate(guardrailConfig.caps(), _context(o));
     }
 
@@ -311,14 +391,21 @@ contract RWAVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
 
     /// @dev Bound a realized fill to the oracle price. Independent of the caller's
     ///      `minAmountOut` (which the agent controls), so a compromised manager cannot
-    ///      route the vault into a ruinous swap via a thin/attacker pool. Tolerance is
-    ///      owner-set in {GuardrailConfig}; the agent can never widen it. Applied to
-    ///      buys AND sells — closing the "unguarded sell drain" during a halt.
+    ///      route the vault into a ruinous swap via a thin/attacker pool. Tolerances are
+    ///      owner-set in {GuardrailConfig}; the agent can never widen them.
+    ///
+    ///      H1 fix: buys use the TIGHT tolerance, sells a WIDER one. A de-risking sell
+    ///      must not revert just because the pool legitimately trades a few % under a
+    ///      heartbeat-lagged oracle during a gap-down (that would trap capital exactly
+    ///      when exiting matters most). The wide sell bound still reverts a catastrophic
+    ///      / attacker fill, so "sells never trap capital" holds for ordinary moves
+    ///      while the anti-drain guarantee survives for egregious ones.
     function _enforceExecBound(address token, uint256 amountIn, uint256 amountOut, bool isBuy)
         internal
         view
     {
-        uint256 slip = guardrailConfig.maxExecSlippageBps();
+        uint256 slip =
+            isBuy ? guardrailConfig.maxExecSlippageBps() : guardrailConfig.maxSellSlippageBps();
         uint256 price = _price(token); // USDG-native value of one whole token
         uint256 expected = isBuy
             ? (amountIn * (10 ** tokenDecimals[token])) / price  // stock units for amountIn USDG
@@ -331,10 +418,12 @@ contract RWAVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         if (today != currentDay) {
             currentDay = today;
             ordersToday = 0;
-            // M1: anchor to the PRIOR day's last-observed NAV (not the post-gap value),
-            // so an overnight/weekend drawdown is counted and the halt can't be reset
-            // away. Falls back to current NAV only on the very first interaction.
-            dayStartNav = lastNav != 0 ? lastNav : navUsdg();
+            // M1 (fixed): anchor to the prior day's last-observed price-per-share, which
+            // is invariant to deposits/withdrawals. An overnight/weekend drawdown is
+            // still counted (per-share value moved), but ordinary share flows can neither
+            // defeat (net inflow) nor spuriously trip (net outflow) the daily-loss halt.
+            // Falls back to the live pps only on the very first interaction.
+            dayStartPps = lastPps != 0 ? lastPps : _pps();
         }
     }
 
@@ -393,7 +482,7 @@ contract RWAVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
 
         ordersToday += 1;
         _maybeLatch(); // a successful trade during a drawdown persists the halt
-        lastNav = navUsdg(); // record close-of-activity NAV for the next day's baseline
+        lastPps = _pps(); // record close-of-activity price-per-share for the next day's baseline
         emit TradeExecuted(o.stockToken, o.isBuy, o.amountIn, amountOut, ordersToday);
     }
 
@@ -404,14 +493,15 @@ contract RWAVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
     function latchHalt() external {
         _refreshDay();
         _maybeLatch();
-        lastNav = navUsdg();
+        lastPps = _pps();
     }
 
     function _maybeLatch() internal {
-        if (dayStartNav == 0) return;
+        if (dayStartPps == 0) return;
         uint256 nav = navUsdg();
-        if (nav >= dayStartNav) return;
-        uint256 loss = dayStartNav - nav;
+        uint256 baseline = _baselineNav();
+        if (nav >= baseline) return;
+        uint256 loss = baseline - nav;
         if (loss * 10_000 >= uint256(guardrailConfig.caps().dailyLossHaltBps) * nav) {
             uint256 today = block.timestamp / 1 days;
             if (haltedDay != today) {

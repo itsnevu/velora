@@ -143,11 +143,15 @@ contract DeskRegistry {
 
     // ------------------------------------------------------------------ reads
 
-    /// @dev Reads prefer the squat-proof self-namespace when present, else the raw log,
-    ///      so {attestSelf} and {attest} records are both visible through one API.
+    /// @dev M6 fix: the CANONICAL read surface resolves strictly to the squat-proof
+    ///      self-namespace — it NEVER falls back to (nor merges) the raw log. This
+    ///      closes two holes the old "prefer self, else raw" fallback opened: (1) a raw
+    ///      squatter can no longer pre-seed the reads of a `subjectFor`-derived subject,
+    ///      and (2) a desk can no longer hide its raw history by self-attesting once to
+    ///      flip which namespace answers. Raw attestations are readable ONLY through the
+    ///      explicit `raw*` getters below, which are clearly-"unverified" by construction.
     function _read(bytes32 subject) internal view returns (Attestation[] storage) {
-        Attestation[] storage sl = _selfLog[subject];
-        return sl.length > 0 ? sl : _log[subject];
+        return _selfLog[subject];
     }
 
     function count(bytes32 subject) external view returns (uint256) {
@@ -165,6 +169,7 @@ contract DeskRegistry {
     }
 
     /// @notice NAV + timestamp series for a subject, oldest-first. Feeds {PerfScore}.
+    ///         Canonical (self-namespace) data only — see {_read}.
     function series(bytes32 subject)
         external
         view
@@ -178,5 +183,21 @@ contract DeskRegistry {
             navs[i] = l[i].nav;
             ts[i] = l[i].timestamp;
         }
+    }
+
+    // ---- raw namespace (UNVERIFIED: a predictable subject can be front-run/squatted) ----
+
+    function rawCount(bytes32 subject) external view returns (uint256) {
+        return _log[subject].length;
+    }
+
+    function rawAt(bytes32 subject, uint256 i) external view returns (Attestation memory) {
+        return _log[subject][i];
+    }
+
+    function rawLatest(bytes32 subject) external view returns (Attestation memory) {
+        Attestation[] storage l = _log[subject];
+        if (l.length == 0) revert NoData();
+        return l[l.length - 1];
     }
 }

@@ -30,6 +30,7 @@ contract HardeningTest is Test {
     address HUMAN = address(0xB00D);
     address MANAGER = address(0x1234);
     address ALICE = address(0xA11CE);
+    address BOB = address(0xB0B);
 
     uint256 constant PRICE = 50e18;
 
@@ -139,25 +140,45 @@ contract HardeningTest is Test {
         vault.executeTrade(o);
     }
 
-    /// Sells are bounded too — closing the "unguarded sell drain" (MEDIUM-2).
-    function test_sell_badFill_reverts_despiteZeroMinOut() public {
+    /// H1 fix: a MODERATE de-risking sell (10% under oracle — an ordinary gap-down)
+    /// must NOT be trapped. Under the old single 2% bound applied to sells this reverted;
+    /// now sells use the wider tolerance so exiting is never blocked in normal conditions.
+    function test_sell_moderateFill_passes_afterH1() public {
         adapter.setSlippage(0);
-        _buy(10e18); // acquire a position to sell
+        _buy(10e18); // acquire a position to sell (buy at oracle price)
         uint256 held = stk.balanceOf(address(vault));
         assertGt(held, 0);
 
-        adapter.setSlippage(300); // 3% on the way out
-        RWAVault.TradeOrder memory o = RWAVault.TradeOrder({
-            stockToken: address(stk),
-            isBuy: false,
-            amountIn: held,
-            minAmountOut: 0,
-            stopPriceE18: 0,
-            leftSideException: false
-        });
+        adapter.setSlippage(1000); // 10% out — inside the 15% sell tolerance
+        vm.prank(MANAGER);
+        uint256 out =
+            vault.executeTrade(RWAVault.TradeOrder(address(stk), false, held, 0, 0, false));
+        assertGt(out, 0); // sell cleared, capital not trapped
+    }
+
+    /// ...but a CATASTROPHIC sell fill (30% under oracle) still reverts — the anti-drain
+    /// guarantee survives for egregious/attacker fills.
+    function test_sell_catastrophicFill_reverts() public {
+        adapter.setSlippage(0);
+        _buy(10e18);
+        uint256 held = stk.balanceOf(address(vault));
+
+        adapter.setSlippage(3000); // 30% out — beyond the 15% sell tolerance
         vm.prank(MANAGER);
         vm.expectRevert(RWAVault.ExecSlippage.selector);
-        vault.executeTrade(o);
+        vault.executeTrade(RWAVault.TradeOrder(address(stk), false, held, 0, 0, false));
+    }
+
+    /// Sell tolerance is owner-set and wider than the buy tolerance by default.
+    function test_sellSlippage_default_and_ownerOnly() public {
+        assertEq(cfg.maxSellSlippageBps(), 1500);
+        assertGt(cfg.maxSellSlippageBps(), cfg.maxExecSlippageBps());
+        vm.prank(MANAGER);
+        vm.expectRevert(GuardrailConfig.NotOwner.selector);
+        cfg.setSellSlippageBps(2000);
+        vm.prank(HUMAN);
+        cfg.setSellSlippageBps(2000);
+        assertEq(cfg.maxSellSlippageBps(), 2000);
     }
 
     /// Owner can tighten the bound; agent (manager) cannot touch it.
@@ -207,6 +228,23 @@ contract HardeningTest is Test {
         usdg.mint(ALICE, 10e18);
         vm.startPrank(ALICE);
         vault.deposit(10e18, ALICE);
+        vault.withdraw(5e18, ALICE, ALICE);
+        vm.stopPrank();
+    }
+
+    /// H2 fix: a 1-wei DUST donation of an allowlisted token whose feed is dead must not
+    /// brick NAV. positionValue now fails OPEN (excludes the leg) for ANY balance, not just
+    /// an exactly-zero one, so the whole vault surface keeps working. (Old code priced the
+    /// 1-wei leg and reverted, re-bricking deposits/withdrawals.)
+    function test_nav_resilient_to_deadFeed_dustDonation() public {
+        other.mint(address(vault), 1); // permissionless dust donation
+        oracle.setRevert(address(other), true); // its feed dies
+
+        assertEq(vault.navUsdg(), 100e18); // NAV readable; dust leg excluded
+
+        usdg.mint(ALICE, 10e18);
+        vm.startPrank(ALICE);
+        vault.deposit(10e18, ALICE); // still works
         vault.withdraw(5e18, ALICE, ALICE);
         vm.stopPrank();
     }
@@ -294,6 +332,49 @@ contract HardeningTest is Test {
         assertEq(uint256(vault.previewTrade(o)), uint256(Guardrails.Violation.DailyLossHalt));
     }
 
+    /// M1 (BROKEN→fixed): a deposit AFTER the baseline is set must NOT defeat the halt.
+    /// Setup: day-1 buy (position 15), roll day, BOB deposits 10, then the book crashes.
+    /// Absolute NAV (101) stays ABOVE day-1's stored NAV (100) — so the OLD code saw a
+    /// "gain" and never halted. The per-share baseline sees the true −12.5%/share loss.
+    function test_halt_survivesDepositInflation() public {
+        vm.prank(MANAGER);
+        vault.executeTrade(
+            RWAVault.TradeOrder(address(stk), true, 15e18, 0, PRICE * 90 / 100, false)
+        );
+        vm.warp(block.timestamp + 1 days); // roll day → dayStartPps = day-1 pps (1e18)
+
+        usdg.mint(BOB, 10e18); // a fresh deposit inflates absolute NAV
+        vm.startPrank(BOB);
+        usdg.approve(address(vault), type(uint256).max);
+        vault.deposit(10e18, BOB);
+        vm.stopPrank();
+
+        oracle.setPrice(address(stk), PRICE * 40 / 100); // position 15 → 6, a real −9 loss
+
+        // navUsdg ≈ 101 > 100 (old stored NAV) yet the per-share halt fires.
+        vault.latchHalt();
+        assertEq(vault.haltedDay(), block.timestamp / 1 days);
+        RWAVault.TradeOrder memory buy =
+            RWAVault.TradeOrder(address(stk), true, 1e18, 0, 18e18, false);
+        assertEq(uint256(vault.previewTrade(buy)), uint256(Guardrails.Violation.DailyLossHalt));
+    }
+
+    /// M1 (other direction): a large ordinary redemption must NOT spuriously trip the halt.
+    /// A fair-value exit leaves per-share value unchanged, so no loss is recorded. (The OLD
+    /// absolute baseline saw the shrunken NAV as a huge "loss" and wrongly halted.)
+    function test_halt_notTrippedByRedemption() public {
+        _buy(10e18);
+        vm.warp(block.timestamp + 1 days);
+
+        uint256 half = vault.balanceOf(ALICE) / 2;
+        vm.prank(ALICE);
+        vault.redeem(half, ALICE, ALICE); // fair-value exit; pps unchanged
+
+        RWAVault.TradeOrder memory buy =
+            RWAVault.TradeOrder(address(stk), true, 1e18, 0, PRICE * 90 / 100, false);
+        assertEq(uint256(vault.previewTrade(buy)), uint256(Guardrails.Violation.None));
+    }
+
     function test_vault_ownership_isTwoStep() public {
         address NEW = address(0xBEEF);
         vm.prank(HUMAN);
@@ -365,5 +446,25 @@ contract HardeningTest is Test {
         assertEq(reg.selfAttesterOf(subj), VICTIM);
         assertEq(reg.count(subj), 1);
         assertEq(reg.latest(subj).nav, 100e18); // victim's, not the attacker's 999e18
+    }
+
+    /// M6 (WEAK→fixed): the cross-namespace read-fallback is gone. A desk can no longer
+    /// hide raw history by self-attesting once to flip which namespace answers — canonical
+    /// reads resolve strictly to the self-log, and raw stays in its own visible namespace.
+    function test_selfLog_doesNotFallBackToRaw() public {
+        DeskRegistry reg = new DeskRegistry();
+        bytes32 label = keccak256("desk-A");
+        address DESK = address(0xDEE5);
+        bytes32 subj = reg.subjectFor(DESK, label);
+
+        vm.startPrank(DESK);
+        reg.attest(subj, 1, 100e18, 0, bytes32(0), ""); // real -80% disaster, raw namespace
+        reg.attest(subj, 2, 20e18, 0, bytes32(0), "");
+        reg.attestSelf(label, 1, 100e18, 0, bytes32(0), ""); // clean number, self namespace
+        vm.stopPrank();
+
+        assertEq(reg.count(subj), 1); // canonical = self-log ONLY (was 1 disaster hidden)
+        assertEq(reg.rawCount(subj), 2); // the -80% history is still on-chain, separately
+        assertEq(reg.rawLatest(subj).nav, 20e18); // not erased — just not canonical
     }
 }

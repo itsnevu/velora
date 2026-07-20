@@ -13,15 +13,29 @@ contract DeskRegistryTest is Test {
     address constant IMPOSTER = address(0xBAD);
     bytes32 constant SUBJECT = keccak256("velora-vault-1");
     bytes32 constant SUBJECT_B = keccak256("velora-vault-2");
+    // Labels for the squat-proof self-namespace (the canonical, PerfScore-facing path).
+    bytes32 constant LABEL = keccak256("velora-label-1");
+    bytes32 constant LABEL_B = keccak256("velora-label-2");
 
     function setUp() public {
         reg = new DeskRegistry();
         perf = new PerfScore(reg);
     }
 
+    // Raw attestation (front-runnable namespace; read only via reg.raw*).
     function _attest(bytes32 subject, uint64 epoch, uint256 nav) internal {
         vm.prank(DESK);
         reg.attest(subject, epoch, nav, int256(0), keccak256(abi.encode(epoch, nav)), "");
+    }
+
+    // Canonical self-attestation (squat-proof; the surface PerfScore consumes).
+    function _attestSelf(bytes32 label, uint64 epoch, uint256 nav) internal {
+        vm.prank(DESK);
+        reg.attestSelf(label, epoch, nav, int256(0), keccak256(abi.encode(epoch, nav)), "");
+    }
+
+    function _subj(bytes32 label) internal view returns (bytes32) {
+        return reg.subjectFor(DESK, label);
     }
 
     // ------------------------------------------------------------------ registry basics
@@ -29,8 +43,8 @@ contract DeskRegistryTest is Test {
     function test_firstAttest_claimsSubject() public {
         _attest(SUBJECT, 1, 100e18);
         assertEq(reg.attesterOf(SUBJECT), DESK);
-        assertEq(reg.count(SUBJECT), 1);
-        assertEq(reg.latest(SUBJECT).nav, 100e18);
+        assertEq(reg.rawCount(SUBJECT), 1);
+        assertEq(reg.rawLatest(SUBJECT).nav, 100e18);
     }
 
     function test_onlySubjectAttester_canAppend() public {
@@ -62,7 +76,7 @@ contract DeskRegistryTest is Test {
     function test_timestampIsChainStamped() public {
         vm.warp(1_800_000_000);
         _attest(SUBJECT, 1, 100e18);
-        assertEq(reg.at(SUBJECT, 0).timestamp, 1_800_000_000);
+        assertEq(reg.rawAt(SUBJECT, 0).timestamp, 1_800_000_000);
     }
 
     function test_latest_revertsWhenEmpty() public {
@@ -73,11 +87,11 @@ contract DeskRegistryTest is Test {
     // ------------------------------------------------------------------ PerfScore: monotonic up
 
     function test_perf_monotonicUp_noDrawdown() public {
-        _attest(SUBJECT, 1, 100e18);
-        _attest(SUBJECT, 2, 110e18);
-        _attest(SUBJECT, 3, 121e18); // +10% each step
+        _attestSelf(LABEL, 1, 100e18);
+        _attestSelf(LABEL, 2, 110e18);
+        _attestSelf(LABEL, 3, 121e18); // +10% each step
 
-        PerfScore.PerfSummary memory s = perf.summary(SUBJECT);
+        PerfScore.PerfSummary memory s = perf.summary(_subj(LABEL));
         assertEq(s.samples, 3);
         assertEq(s.startNav, 100e18);
         assertEq(s.endNav, 121e18);
@@ -92,12 +106,12 @@ contract DeskRegistryTest is Test {
 
     function test_perf_withDrawdown_handComputed() public {
         // Series [100, 120, 90, 108] — every number hand-verified in the test comments.
-        _attest(SUBJECT_B, 1, 100e18);
-        _attest(SUBJECT_B, 2, 120e18);
-        _attest(SUBJECT_B, 3, 90e18);
-        _attest(SUBJECT_B, 4, 108e18);
+        _attestSelf(LABEL_B, 1, 100e18);
+        _attestSelf(LABEL_B, 2, 120e18);
+        _attestSelf(LABEL_B, 3, 90e18);
+        _attestSelf(LABEL_B, 4, 108e18);
 
-        PerfScore.PerfSummary memory s = perf.summary(SUBJECT_B);
+        PerfScore.PerfSummary memory s = perf.summary(_subj(LABEL_B));
         assertEq(s.samples, 4);
         assertEq(s.totalReturnBps, int256(800)); // (108-100)/100 = +8%
         assertEq(s.maxDrawdownBps, 2500); // peak 120 -> trough 90 = -25%
@@ -117,9 +131,9 @@ contract DeskRegistryTest is Test {
     }
 
     function test_perf_headline() public {
-        _attest(SUBJECT, 1, 100e18);
-        _attest(SUBJECT, 2, 150e18);
-        (int256 tr, uint256 dd, uint256 samples) = perf.headline(SUBJECT);
+        _attestSelf(LABEL, 1, 100e18);
+        _attestSelf(LABEL, 2, 150e18);
+        (int256 tr, uint256 dd, uint256 samples) = perf.headline(_subj(LABEL));
         assertEq(tr, int256(5000)); // +50%
         assertEq(dd, 0);
         assertEq(samples, 2);
@@ -128,9 +142,9 @@ contract DeskRegistryTest is Test {
     // ------------------------------------------------------------------ negative performance
 
     function test_perf_lossShowsNegativeReturn() public {
-        _attest(SUBJECT, 1, 100e18);
-        _attest(SUBJECT, 2, 80e18); // -20%
-        PerfScore.PerfSummary memory s = perf.summary(SUBJECT);
+        _attestSelf(LABEL, 1, 100e18);
+        _attestSelf(LABEL, 2, 80e18); // -20%
+        PerfScore.PerfSummary memory s = perf.summary(_subj(LABEL));
         assertEq(s.totalReturnBps, int256(-2000));
         assertEq(s.maxDrawdownBps, 2000);
         assertEq(s.meanPeriodReturnBps, int256(-2000));

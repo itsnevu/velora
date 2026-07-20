@@ -17,21 +17,27 @@ import { Guardrails } from "./libraries/Guardrails.sol";
 ///         A cap left at zero is treated as "missing" and the config refuses to
 ///         deploy or update (fail closed) — mirroring "a missing cap => VETO".
 contract GuardrailConfig {
-    /// @dev Default execution-slippage tolerance: a trade's realized fill may sit at
+    /// @dev Default BUY execution-slippage tolerance: a buy's realized fill may sit at
     ///      most 2% below the oracle price. Owner-tunable via {setExecSlippageBps}.
     uint16 internal constant DEFAULT_EXEC_SLIPPAGE_BPS = 200;
-    /// @dev The tolerance can never be widened past 50% — it must stay a real bound.
+    /// @dev Default SELL tolerance is WIDER (15%): a de-risking sell must clear even when
+    ///      the pool trades a few % under a heartbeat-lagged oracle in a gap-down, so a
+    ///      guardrail never traps capital. Still blocks a catastrophic/attacker fill.
+    uint16 internal constant DEFAULT_SELL_SLIPPAGE_BPS = 1500;
+    /// @dev Either tolerance can never be widened past 50% — it must stay a real bound.
     uint16 internal constant MAX_EXEC_SLIPPAGE_BPS = 5000;
 
     address public owner;
     address public pendingOwner; // two-step handoff target (guards against fat-fingers)
     Guardrails.RiskCaps private _caps;
     uint16 private _execSlippageBps;
+    uint16 private _sellSlippageBps;
 
     event OwnerTransferred(address indexed from, address indexed to);
     event OwnershipTransferStarted(address indexed from, address indexed to);
     event CapsUpdated(Guardrails.RiskCaps caps);
     event ExecSlippageUpdated(uint16 bps);
+    event SellSlippageUpdated(uint16 bps);
 
     error NotOwner();
     error ZeroAddress();
@@ -48,9 +54,11 @@ contract GuardrailConfig {
         owner = owner_;
         _caps = caps_;
         _execSlippageBps = DEFAULT_EXEC_SLIPPAGE_BPS;
+        _sellSlippageBps = DEFAULT_SELL_SLIPPAGE_BPS;
         emit OwnerTransferred(address(0), owner_);
         emit CapsUpdated(caps_);
         emit ExecSlippageUpdated(DEFAULT_EXEC_SLIPPAGE_BPS);
+        emit SellSlippageUpdated(DEFAULT_SELL_SLIPPAGE_BPS);
     }
 
     /// @notice The active caps, consumed by the vault / executor before every order.
@@ -58,12 +66,20 @@ contract GuardrailConfig {
         return _caps;
     }
 
-    /// @notice Max tolerated gap (bps) between a trade's realized fill and the oracle
-    ///         price. The vault enforces this on EVERY `executeTrade` (buys and sells),
-    ///         independent of the caller-supplied `minAmountOut`, so a compromised agent
-    ///         key cannot route the book into a ruinous swap. Owner-only, agent can't widen.
+    /// @notice Max tolerated gap (bps) between a BUY's realized fill and the oracle price.
+    ///         The vault enforces this on every buy `executeTrade`, independent of the
+    ///         caller-supplied `minAmountOut`, so a compromised agent key cannot route the
+    ///         book into a ruinous swap. Owner-only, agent can't widen.
     function maxExecSlippageBps() external view returns (uint16) {
         return _execSlippageBps;
+    }
+
+    /// @notice Max tolerated gap (bps) for a SELL's realized fill vs the oracle price.
+    ///         Deliberately wider than the buy tolerance so a de-risking sell is never
+    ///         trapped by an ordinary gap-down, while a catastrophic/attacker fill still
+    ///         reverts. Owner-only, agent can't widen.
+    function maxSellSlippageBps() external view returns (uint16) {
+        return _sellSlippageBps;
     }
 
     /// @notice Owner-only cap update. The agent can never reach this.
@@ -73,11 +89,18 @@ contract GuardrailConfig {
         emit CapsUpdated(caps_);
     }
 
-    /// @notice Owner-only execution-slippage tolerance update (agent can never reach it).
+    /// @notice Owner-only BUY execution-slippage tolerance update (agent can never reach it).
     function setExecSlippageBps(uint16 bps) external onlyOwner {
         if (bps == 0 || bps > MAX_EXEC_SLIPPAGE_BPS) revert InvalidCaps();
         _execSlippageBps = bps;
         emit ExecSlippageUpdated(bps);
+    }
+
+    /// @notice Owner-only SELL execution-slippage tolerance update (agent can never reach it).
+    function setSellSlippageBps(uint16 bps) external onlyOwner {
+        if (bps == 0 || bps > MAX_EXEC_SLIPPAGE_BPS) revert InvalidCaps();
+        _sellSlippageBps = bps;
+        emit SellSlippageUpdated(bps);
     }
 
     /// @notice Start a two-step ownership handoff. Ownership only moves once `to`

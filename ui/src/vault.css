@@ -113,6 +113,15 @@
 .vaction:disabled { background: var(--panel-2); color: var(--text-faint); box-shadow: none; cursor: not-allowed; }
 .vaction.ghost { background: transparent; color: var(--text); box-shadow: inset 0 0 0 1px var(--border-2); }
 .vaction.ghost:hover:not(:disabled) { background: rgba(215, 254, 81, 0.06); box-shadow: inset 0 0 0 1px rgba(215, 254, 81, 0.4); }
+/* Testnet faucet helper — subtle, sits above the primary Deposit CTA. */
+.vfaucet {
+  width: calc(100% - 12px); margin: 10px 6px 0; padding: 11px; border-radius: 14px;
+  font-family: var(--font-mono); font-size: 12px; font-weight: 600; letter-spacing: .3px; cursor: pointer;
+  color: var(--pos); background: var(--pos-bg); border: 1px dashed rgba(215, 254, 81, 0.42);
+  transition: background .2s var(--ease);
+}
+.vfaucet:hover:not(:disabled) { background: rgba(215, 254, 81, 0.16); }
+.vfaucet:disabled { color: var(--text-faint); border-color: var(--border); cursor: not-allowed; }
 
 /* under-card: position strip + tx line */
 .vunder { width: 100%; max-width: 460px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
@@ -124,6 +133,9 @@
 .vtx a { color: var(--pos); text-decoration: underline; text-underline-offset: 3px; }
 .vtx .live { width: 7px; height: 7px; border-radius: 50%; background: var(--warn); box-shadow: 0 0 8px rgba(255, 197, 61, 0.5); animation: vblink 1.2s step-end infinite; }
 .verr { font-family: var(--font-mono); font-size: 11.5px; color: #ffb4ae; background: var(--neg-bg); border: 1px solid rgba(255, 91, 82, 0.35); border-radius: 12px; padding: 10px 14px; max-width: 460px; text-align: center; line-height: 1.5; }
+/* Network-mismatch notice — amber, not error-red: it's a one-click fix. */
+.verr.warn { color: #f4d78a; background: rgba(244, 200, 90, 0.08); border-color: rgba(244, 200, 90, 0.34); }
+.verr.warn b { color: var(--pos); }
 @keyframes vblink { 50% { opacity: 0.25; } }
 
 /* contracts — collapsed by default, minimal */
@@ -152,3 +164,39 @@
 .vault-boot { color: var(--text-dim); padding: 140px 20px; text-align: center; font-family: var(--font-serif); font-size: 17px; }
 .vault-boot.err { color: var(--neg); font-family: var(--font-sans); font-size: 13px; }
 .vault-boot code { font-family: var(--font-mono); background: var(--bg-2); padding: 1px 6px; border-radius: 5px; }
+
+/* ══ VAULT HERO — serif arrival, matches the landing's voice ══ */
+.vhero { text-align: center; margin: 0 auto 26px; max-width: 640px; }
+.vhero-kicker {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+  letter-spacing: 2.5px; text-transform: uppercase; color: var(--text-dim);
+}
+.vhero-kicker .tick {
+  width: 7px; height: 7px; background: var(--pos); border-radius: 1.5px;
+  transform: rotate(45deg); box-shadow: 0 0 10px var(--pos-glow);
+}
+.vhero-title {
+  font-family: var(--font-serif); font-weight: 500; font-size: clamp(38px, 5vw, 54px);
+  line-height: 1.04; margin: 12px 0 10px; color: var(--text);
+  text-shadow: 0 0 44px rgba(215, 254, 81, 0.14);
+}
+.vhero-sub { font-family: var(--font-sans); font-size: 14px; line-height: 1.65; color: var(--text-dim); margin: 0; }
+
+/* deeper neo float on the action card */
+.vcard {
+  border-radius: 20px !important;
+  box-shadow: 0 26px 60px rgba(0, 0, 0, 0.5), 0 4px 14px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+}
+/* the page breathes like the landing — faint grid + low chartreuse aurora */
+.vault-app::after {
+  content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background:
+    radial-gradient(120% 55% at 30% 112%, rgba(215, 254, 81, 0.07), transparent 60%),
+    radial-gradient(130% 60% at 75% 118%, rgba(215, 254, 81, 0.05), transparent 62%),
+    linear-gradient(to right, rgba(233, 243, 238, 0.026) 0 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(233, 243, 238, 0.026) 0 1px, transparent 1px);
+  background-size: auto, auto, 88px 88px, 88px 88px;
+}
+.vstage { position: relative; z-index: 1; }

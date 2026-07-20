@@ -59,6 +59,7 @@ const ERC20_ABI = parseAbi([
   'function approve(address,uint256) returns (bool)',
   'function decimals() view returns (uint8)',
   'function symbol() view returns (string)',
+  'function mint(address,uint256)', // testnet mock only — no-op path on mainnet USDG
 ])
 const AUTOSAVE_ABI = parseAbi([
   'function createPlan(uint256 amountPerPeriod, uint64 period, uint32 totalPeriods)',
@@ -87,6 +88,7 @@ const TABS = [
 export default function VaultApp() {
   const [cfg, setCfg] = useState(null)
   const [account, setAccount] = useState(null)
+  const [walletChainId, setWalletChainId] = useState(null)
   const [pos, setPos] = useState(null)
   const [busy, setBusy] = useState(false)
   const [lastTx, setLastTx] = useState(null) // { label, status, hash }
@@ -175,30 +177,68 @@ export default function VaultApp() {
     setPos({ symbol, vdec, asset, shares, value, nav, supply, maxWd, uDec, uSym, uBal, plan })
   }, [cfg, publicClient])
 
+  // Read the wallet's current chain once on load so we can warn on a mismatch
+  // before the user even tries a transaction.
+  useEffect(() => {
+    window.ethereum?.request?.({ method: 'eth_chainId' })
+      .then((h) => setWalletChainId(parseInt(h, 16)))
+      .catch(() => {})
+  }, [])
+
+  // Keep the dApp in sync with the wallet: if the user switches account or network
+  // in MetaMask, reflect it here instead of showing a stale connection.
+  useEffect(() => {
+    const eth = window.ethereum
+    if (!eth?.on) return
+    const onAccounts = (accts) => {
+      const a = accts && accts[0] ? accts[0] : null
+      setAccount(a)
+      if (!a) setPos(null)
+    }
+    const onChain = (hexId) => setWalletChainId(parseInt(hexId, 16))
+    eth.on('accountsChanged', onAccounts)
+    eth.on('chainChanged', onChain)
+    return () => {
+      eth.removeListener?.('accountsChanged', onAccounts)
+      eth.removeListener?.('chainChanged', onChain)
+    }
+  }, [])
+
+  // Refresh the position whenever the connected account (or config) changes.
+  useEffect(() => {
+    if (account && cfg) refresh(account)
+  }, [account, cfg, refresh])
+
+  // Point the wallet at the vault's chain. Adds it first if unknown (4902).
+  const ensureChain = useCallback(async () => {
+    if (!cfg || !window.ethereum) return
+    const hexId = '0x' + cfg.chainId.toString(16)
+    try {
+      await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: hexId }] })
+    } catch (switchErr) {
+      // 4902 = chain unknown to wallet → add it, which also selects it.
+      if (switchErr?.code === 4902 && chain?.rpcUrls?.default?.http?.[0]) {
+        await window.ethereum.request({
+          method: 'wallet_addEthereumChain',
+          params: [{
+            chainId: hexId,
+            chainName: chain.name,
+            nativeCurrency: chain.nativeCurrency,
+            rpcUrls: chain.rpcUrls.default.http,
+            blockExplorers: chain.blockExplorers ? [chain.blockExplorers.default] : undefined,
+          }],
+        })
+      } else {
+        throw switchErr
+      }
+    }
+  }, [cfg, chain])
+
   async function connect() {
     setErr('')
     try {
       const [acct] = await window.ethereum.request({ method: 'eth_requestAccounts' })
-      const hexId = '0x' + cfg.chainId.toString(16)
-      try {
-        await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: hexId }] })
-      } catch (switchErr) {
-        // 4902 = chain unknown to wallet → add it, then it's selected.
-        if (switchErr?.code === 4902 && chain?.rpcUrls?.default?.http?.[0]) {
-          try {
-            await window.ethereum.request({
-              method: 'wallet_addEthereumChain',
-              params: [{
-                chainId: hexId,
-                chainName: chain.name,
-                nativeCurrency: chain.nativeCurrency,
-                rpcUrls: chain.rpcUrls.default.http,
-                blockExplorers: chain.blockExplorers ? [chain.blockExplorers.default] : undefined,
-              }],
-            })
-          } catch { /* user rejected add */ }
-        }
-      }
+      try { await ensureChain() } catch { /* user can switch later via the banner */ }
       setAccount(acct)
       await refresh(acct)
     } catch (e) {
@@ -265,6 +305,13 @@ export default function VaultApp() {
   function doCancelPlan() {
     tx(() => walletClient().writeContract({ account, chain, address: cfg.contracts.autosave, abi: AUTOSAVE_ABI, functionName: 'cancelPlan', args: [] }), `Cancel autosave`)
   }
+  // Testnet-only faucet: the deployed USDG is a mock with a permissionless mint,
+  // so a tester can top up their own balance to try Deposit without a terminal.
+  function doFaucet() {
+    if (!pos) return
+    const amount = parseUnits('1000', pos.uDec)
+    tx(() => walletClient().writeContract({ account, chain, address: pos.asset, abi: ERC20_ABI, functionName: 'mint', args: [account, amount] }), `Mint 1,000 ${pos.uSym}`)
+  }
 
   // ---- helpers ----
   const fmt = (v, d, p = 2) => (v == null ? '—' : Number(formatUnits(v, d)).toLocaleString(undefined, { maximumFractionDigits: p }))
@@ -281,16 +328,19 @@ export default function VaultApp() {
   else if (tab === 'redeem') field = { token: vSym, dec: pos?.vdec, bal: pos?.shares, balLabel: 'Your shares', value: inkindShares, set: setInkindShares, action: doRedeemInKind, cta: 'Redeem', hint: 'You get a pro-rata slice of cash + every Stock Token.' }
 
   const amtValid = field && Number(field.value) > 0
-  const actionDisabled = !account ? !cfg : (busy || !amtValid)
-  const onAction = !account ? connect : (field ? field.action : undefined)
-  const actionLabel = !account ? 'Connect wallet' : busy ? 'Confirming…' : (field ? field.cta : '')
+  const wrongNet = !!account && walletChainId != null && !!cfg && walletChainId !== cfg.chainId
+  // Faucet only makes sense on the mock-token networks (testnet / local anvil).
+  const canFaucet = !!account && !!pos && !wrongNet && (cfg?.chainId === 46630 || cfg?.chainId === 31337)
+  const actionDisabled = !account ? !cfg : wrongNet ? busy : (busy || !amtValid)
+  const onAction = !account ? connect : wrongNet ? ensureChain : (field ? field.action : undefined)
+  const actionLabel = !account ? 'Connect wallet' : wrongNet ? `Switch to ${chain?.name || 'the vault network'}` : busy ? 'Confirming…' : (field ? field.cta : '')
 
   return (
     <div className="vault-app">
       {/* ── floating header ── */}
       <header className="vfloat">
         <a className="vfloat-brand" href="/" title="Back to the Desk">
-          <span className="logo" aria-hidden="true">V</span>
+          <span className="logo" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M4 6 L16 27 L28 6 L22.6 6 L16 17.4 L9.4 6 Z" fill="#22242A"/><rect x="13.4" y="2.2" width="5.2" height="5.2" rx="0.4" transform="rotate(45 16 4.8)" fill="#22242A"/></svg></span>
           Velora <span className="vfloat-chip">Vault</span>
         </a>
         <nav className="vfloat-nav">
@@ -307,7 +357,13 @@ export default function VaultApp() {
 
       {/* ── centered action stage ── */}
       <main className="vstage">
-        {err && <div className="verr">{err}</div>}
+        <div className="vhero">
+          <div className="vhero-kicker"><span className="tick" aria-hidden="true" />ERC-4626 · ROBINHOOD CHAIN · TESTNET</div>
+          <h1 className="vhero-title">The Vault</h1>
+          <p className="vhero-sub">Deposit USDG. The desk trades inside on-chain guardrails — and you approve every move.</p>
+        </div>
+        {wrongNet && <div className="verr warn">Wrong network — your wallet is on chain {walletChainId}. Switch to <b>{chain?.name}</b> to deposit or trade.</div>}
+        {err && !wrongNet && <div className="verr">{err}</div>}
 
         <div className="vcard">
           <div className="vtabs">
@@ -336,6 +392,11 @@ export default function VaultApp() {
                 </div>
               </div>
               {field.hint && <div className="vhint">{field.hint}</div>}
+              {tab === 'deposit' && canFaucet && (
+                <button className="vfaucet" disabled={busy} onClick={doFaucet}>
+                  {busy ? 'Confirming…' : `Get 1,000 test ${uSym} ↓`}
+                </button>
+              )}
               <button className="vaction" disabled={actionDisabled} onClick={onAction}>{actionLabel}</button>
             </>
           )}
