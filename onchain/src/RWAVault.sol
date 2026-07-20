@@ -312,16 +312,28 @@ contract RWAVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         return (navUsdg() * PPS_SCALE) / supply;
     }
 
+    /// @dev The day-start price-per-share that a state-changing call would use — mirrors
+    ///      {_refreshDay} so a VIEW (previewTrade) computes the SAME baseline executeTrade
+    ///      will, even on the first interaction of a new day (QW fix: preview and execute
+    ///      must not disagree across a day boundary).
+    function _effectiveDayStartPps() internal view returns (uint256) {
+        // forge-lint: disable-next-line(block-timestamp) — day-bucket granularity only
+        if (block.timestamp / 1 days != currentDay) {
+            return lastPps != 0 ? lastPps : _pps();
+        }
+        return dayStartPps;
+    }
+
     /// @dev The day-start price-per-share re-expressed at the CURRENT share supply —
     ///      i.e. what the book would be worth now had per-share value not moved since
     ///      day start. The halt compares live NAV against THIS, not a raw stored NAV,
     ///      which is what makes it immune to deposits (M1 fix).
     function _baselineNav() internal view returns (uint256) {
-        return (dayStartPps * totalSupply()) / PPS_SCALE;
+        return (_effectiveDayStartPps() * totalSupply()) / PPS_SCALE;
     }
 
     function _dayPnl(uint256 nav) internal view returns (int256) {
-        if (dayStartPps == 0) return int256(0);
+        if (_effectiveDayStartPps() == 0) return int256(0);
         // forge-lint: disable-next-line(unsafe-typecast) — NAV in USDG is << int256 max
         return int256(nav) - int256(_baselineNav());
     }
@@ -372,6 +384,7 @@ contract RWAVault is ERC4626, Ownable2Step, ReentrancyGuard, Pausable {
         // to revert. Fill-DEPENDENT reverts (Slippage / ExecSlippage / post-trade
         // Concentration) cannot be known without executing and are intentionally out of
         // scope here — the preview models the book, not the AMM.
+        if (paused()) return Guardrails.Violation.Paused;
         if (!isAllowed[o.stockToken]) return Guardrails.Violation.NotAllowed;
         if (o.amountIn == 0) return Guardrails.Violation.ZeroAmount;
         if (!o.isBuy && IERC20(o.stockToken).balanceOf(address(this)) < o.amountIn) {
