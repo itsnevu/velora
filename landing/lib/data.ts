@@ -58,7 +58,7 @@ export const ROADMAP = [
   { phase: "FASE 0 · SETUP", title: "Guardrails & contract", body: "Private repo, OAuth to the Agentic account, operating contract, and the permission gate that puts every order behind a manual prompt." },
   { phase: "FASE 1 · CORE", title: "The four agents + logging", body: "Fundamental, Technical, Macro/News, Risk Manager as isolated sub-agents. JSONL reasoning logs for audit." },
   { phase: "FASE 2 · DASHBOARD", title: "Desk mirror + paper trading", body: "Read-only dashboard mirrors desk-state live. Robinhood integration starts in paper mode." },
-  { phase: "FASE 3 · ON-CHAIN", title: "Guardrails, vault & proof", body: "The desk's written caps compiled into an on-chain Guardrails library, an RWA Vault (ERC-4626, share token vVLRA) wired to it, and Proof-of-Track-Record attestations so decisions and outcomes are verifiable. Robinhood Chain, testnet-first, pending review — nothing deployed, not an investment product.", experimental: true },
+  { phase: "FASE 3 · ON-CHAIN", title: "Guardrails, vault & proof", body: "The desk's written caps compiled into an on-chain Guardrails library, an RWA Vault (ERC-4626, share token vAELIX) wired to it, and Proof-of-Track-Record attestations so decisions and outcomes are verifiable. Robinhood Chain, testnet-first, pending review — nothing deployed, not an investment product.", experimental: true },
   { phase: "FASE 4 · EXECUTOR", title: "Guardrail-bounded executor", body: "An ERC-4337 agent executor with a scoped session key that cannot exceed the Guardrails and stays approval-gated — plus optional Autosave / DCA on top of the vault. Robinhood Chain, testnet-first, pending review; not an investment product.", experimental: true },
   { phase: "FASE 5 · SCALE", title: "Backtesting & optimization", body: "Strategy backtests, prompt-cost optimization, and broader coverage." },
 ] as const;
@@ -115,7 +115,7 @@ export const FAQ = [
   },
   {
     q: "What about the on-chain vault and verifiable track record?",
-    a: "That’s the on-chain direction, and it’s testnet-first. The plan: an RWA Vault (ERC-4626, share token vVLRA) wired to a Guardrails library that compiles the desk’s written caps on-chain, plus a Proof-of-Track-Record attestation registry so decisions and outcomes are verifiable rather than claimed. Nothing is deployed yet — every on-chain surface is a testnet preview showing illustrative values, there is no live track record, and human approval and the guardrails still apply. Not an investment product and not investment advice.",
+    a: "That’s the on-chain direction, and it’s testnet-first. The plan: an RWA Vault (ERC-4626, share token vAELIX) wired to a Guardrails library that compiles the desk’s written caps on-chain, plus a Proof-of-Track-Record attestation registry so decisions and outcomes are verifiable rather than claimed. Nothing is deployed yet — every on-chain surface is a testnet preview showing illustrative values, there is no live track record, and human approval and the guardrails still apply. Not an investment product and not investment advice.",
   },
   {
     q: "Who executes on-chain — does the agent trade by itself?",

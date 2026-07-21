@@ -7,7 +7,7 @@
 **A team of specialist AI analysts that research your watchlist inside Claude Code,
 connect to a Robinhood Agentic account over MCP, and never place an order without your approval.**
 
-[**📖 Documentation**](https://www.projectvex.ai/docs) · [**🌐 Website**](https://www.projectvex.ai) · [**⚡ Quickstart**](https://www.projectvex.ai/docs/quickstart) · [**🛡 Guardrails**](https://www.projectvex.ai/docs/guardrails)
+[**📖 Documentation**](https://www.aelix.xyz/docs) · [**🌐 Website**](https://www.aelix.xyz) · [**⚡ Quickstart**](https://www.aelix.xyz/docs/quickstart) · [**🛡 Guardrails**](https://www.aelix.xyz/docs/guardrails)
 
 ![License: MIT](https://img.shields.io/badge/License-MIT-c5e94a.svg)
 ![Built with Claude Code](https://img.shields.io/badge/built%20with-Claude%20Code-16180d)
@@ -86,7 +86,7 @@ flowchart TD
 
 Steps 1–7 are research and produce **no order**. The desk's standard output is the
 **preview card at step 8** — it stops there until you confirm. The full lifecycle is in
-[the docs](https://www.projectvex.ai/docs/workflow).
+[the docs](https://www.aelix.xyz/docs/workflow).
 
 ## The desk team
 
@@ -99,7 +99,7 @@ Steps 1–7 are research and produce **no order**. The desk's standard output is
 | **Risk Manager** | `.claude/agents/risk-manager.md` | ❌ *(veto power)* | Checks every trade against written caps |
 
 **Least privilege:** only the PM has order tools. The analysts and Risk Manager physically
-cannot place a trade. Details → [The Desk Team](https://www.projectvex.ai/docs/team).
+cannot place a trade. Details → [The Desk Team](https://www.aelix.xyz/docs/team).
 
 ## Quickstart
 
@@ -123,7 +123,7 @@ cd ui && npm install && npm run dev     # http://localhost:5180 (shows demo unti
 claude mcp remove robinhood-trading
 ```
 
-Full walkthrough → [Installation & Setup](https://www.projectvex.ai/docs/setup).
+Full walkthrough → [Installation & Setup](https://www.aelix.xyz/docs/setup).
 
 > [!NOTE]
 > The sub-agents in `.claude/agents/` load when Claude Code **starts** — after adding or
@@ -141,9 +141,9 @@ Full walkthrough → [Installation & Setup](https://www.projectvex.ai/docs/setup
   if a cap is unset, a stop is missing, or account data looks inconsistent.
 - You can disconnect the MCP anytime from the Robinhood app — that's your kill switch.
 
-Deep dive → [Guardrails](https://www.projectvex.ai/docs/guardrails) ·
-[Prompt-Injection Defense](https://www.projectvex.ai/docs/prompt-injection) ·
-[Strategies & Risk](https://www.projectvex.ai/docs/strategies).
+Deep dive → [Guardrails](https://www.aelix.xyz/docs/guardrails) ·
+[Prompt-Injection Defense](https://www.aelix.xyz/docs/prompt-injection) ·
+[Strategies & Risk](https://www.aelix.xyz/docs/strategies).
 
 ## What's in the repo
 
@@ -164,24 +164,24 @@ Deep dive → [Guardrails](https://www.projectvex.ai/docs/guardrails) ·
 ├── logs/                      # JSONL decision trail (real logs gitignored)
 ├── ui/                        # Read-only Robinhood-style dashboard (Vite + React)
 │   └── public/desk-state.example.json   # demo data (live desk-state.json is gitignored)
-└── landing/                   # Marketing site + full documentation (Next.js) → projectvex.ai
+└── landing/                   # Marketing site + full documentation (Next.js) → aelix.xyz
 ```
 
 Real account state, OAuth tokens, and live logs are **never** committed — only sanitized
-`*.example.*` files are. See [Configuration](https://www.projectvex.ai/docs/configuration).
+`*.example.*` files are. See [Configuration](https://www.aelix.xyz/docs/configuration).
 
 ## Documentation
 
-The complete, browsable docs live at **[projectvex.ai/docs](https://www.projectvex.ai/docs)**:
+The complete, browsable docs live at **[aelix.xyz/docs](https://www.aelix.xyz/docs)**:
 
 | | |
 |---|---|
-| [Overview](https://www.projectvex.ai/docs) | What Aelix is and the core idea |
-| [Quickstart](https://www.projectvex.ai/docs/quickstart) · [Setup](https://www.projectvex.ai/docs/setup) | From clone to first desk run |
-| [Architecture](https://www.projectvex.ai/docs/architecture) · [The Desk Team](https://www.projectvex.ai/docs/team) · [The Desk Run](https://www.projectvex.ai/docs/workflow) | How it works |
-| [Guardrails](https://www.projectvex.ai/docs/guardrails) · [Prompt-Injection Defense](https://www.projectvex.ai/docs/prompt-injection) · [Strategies & Risk](https://www.projectvex.ai/docs/strategies) | Safety |
-| [Configuration](https://www.projectvex.ai/docs/configuration) · [MCP & Tools](https://www.projectvex.ai/docs/mcp) · [Dashboard](https://www.projectvex.ai/docs/dashboard) · [Backtester](https://www.projectvex.ai/docs/backtesting) · [Audit Logging](https://www.projectvex.ai/docs/logging) | Reference |
-| [FAQ](https://www.projectvex.ai/docs/faq) · [Glossary](https://www.projectvex.ai/docs/glossary) · [Safety & Disclaimer](https://www.projectvex.ai/docs/disclaimer) | More |
+| [Overview](https://www.aelix.xyz/docs) | What Aelix is and the core idea |
+| [Quickstart](https://www.aelix.xyz/docs/quickstart) · [Setup](https://www.aelix.xyz/docs/setup) | From clone to first desk run |
+| [Architecture](https://www.aelix.xyz/docs/architecture) · [The Desk Team](https://www.aelix.xyz/docs/team) · [The Desk Run](https://www.aelix.xyz/docs/workflow) | How it works |
+| [Guardrails](https://www.aelix.xyz/docs/guardrails) · [Prompt-Injection Defense](https://www.aelix.xyz/docs/prompt-injection) · [Strategies & Risk](https://www.aelix.xyz/docs/strategies) | Safety |
+| [Configuration](https://www.aelix.xyz/docs/configuration) · [MCP & Tools](https://www.aelix.xyz/docs/mcp) · [Dashboard](https://www.aelix.xyz/docs/dashboard) · [Backtester](https://www.aelix.xyz/docs/backtesting) · [Audit Logging](https://www.aelix.xyz/docs/logging) | Reference |
+| [FAQ](https://www.aelix.xyz/docs/faq) · [Glossary](https://www.aelix.xyz/docs/glossary) · [Safety & Disclaimer](https://www.aelix.xyz/docs/disclaimer) | More |
 
 To run the site + docs locally:
 
@@ -197,7 +197,7 @@ account funded with a dedicated budget — that budget is the most it can ever l
 is no track record and no performance claim here**; all example data is illustrative. All
 investment decisions are your own responsibility. Use only risk capital. Any crypto/token
 material referenced in exploratory notes is **out of scope, unverified, and not
-implemented** — see [Safety & Disclaimer](https://www.projectvex.ai/docs/disclaimer).
+implemented** — see [Safety & Disclaimer](https://www.aelix.xyz/docs/disclaimer).
 
 <div align="center">
 

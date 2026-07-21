@@ -11,7 +11,7 @@ export function Token() {
         <Reveal className="token-box">
           <div>
             <h3>
-              <GlitchText text="$VLRA — a roadmap experiment" mode="hover" />
+              <GlitchText text="$AELIX — a roadmap experiment" mode="hover" />
             </h3>
             <p>
               A planned utility token on Robinhood Chain (L2) for premium research access, governance

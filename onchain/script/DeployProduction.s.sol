@@ -103,7 +103,7 @@ contract DeployProduction is Script {
         s.vault = new RWAVault(
             IERC20(c.usdg),
             "Aelix RWA Vault",
-            "vVLRA",
+            "vAELIX",
             c.owner,
             s.cfg,
             s.oracle,
@@ -163,7 +163,7 @@ contract DeployProduction is Script {
         console2.log("PerfScore        ", address(s.perf));
         console2.log("ChainlinkOracle  ", address(s.oracle));
         console2.log("UniswapSwap      ", address(s.swap));
-        console2.log("RWAVault (vVLRA) ", address(s.vault));
+        console2.log("RWAVault (vAELIX) ", address(s.vault));
         console2.log("SessionKeyExec   ", address(s.exec));
         console2.log("AelixAutosave   ", address(s.save));
         console2.log("stocks allowlisted", c.stocks.length);

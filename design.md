@@ -367,7 +367,7 @@ telah **digantikan** oleh desk **equities** Claude-Code-native. Semua elemen cry
 berikut dipindahkan ke sini apa adanya untuk arsip.
 
 ### B. Strategi Token ($AELIX) — TIDAK diimplementasikan
-- Ide token utility `$VLRA`/`$AELIX` di "Robinhood Chain (L2)" dengan supply contoh
+- Ide token utility `$AELIX` di "Robinhood Chain (L2)" dengan supply contoh
   1.000.000.000, di-deploy via **Bankr** launchpad ("Deploy via X reply" / Bankr Console),
   klaim fee-sharing ke creator.
 - Utility yang diusulkan: akses premium, governance (voting parameter risiko/aset), diskon

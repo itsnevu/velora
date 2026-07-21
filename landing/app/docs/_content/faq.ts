@@ -36,11 +36,11 @@ export const content: DocContent = {
     },
     {
       type: "heading",
-      text: "What about crypto and the $VLRA / $AELIX token?",
+      text: "What about crypto and the $AELIX token?",
     },
     {
       type: "prose",
-      md: "Crypto trading isn't supported by the underlying beta. The `$AELIX` / `$VLRA` token is an **out-of-scope, aspirational, testnet-first roadmap idea** — a Web3 experiment, **not** an investment product, and **not implemented** anywhere in this repo. There is no blockchain, RPC, wallet, or token code here. It is gated behind legal/securities review. See [Safety & Disclaimer](/docs/disclaimer).",
+      md: "Crypto trading isn't supported by the underlying beta. The `$AELIX` token is an **out-of-scope, aspirational, testnet-first roadmap idea** — a Web3 experiment, **not** an investment product, and **not implemented** anywhere in this repo. There is no blockchain, RPC, wallet, or token code here. It is gated behind legal/securities review. See [Safety & Disclaimer](/docs/disclaimer).",
     },
     {
       type: "heading",

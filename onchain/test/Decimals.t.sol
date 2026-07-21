@@ -47,7 +47,7 @@ contract DecimalsTest is Test {
         vault = new RWAVault(
             IERC20(address(usdg)),
             "Aelix RWA Vault",
-            "vVLRA",
+            "vAELIX",
             HUMAN,
             cfg,
             IPriceOracle(address(oracle)),

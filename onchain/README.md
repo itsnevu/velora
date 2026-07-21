@@ -22,7 +22,7 @@ functional preview, **not** real RWA exposure.
 
 | Contract | Address |
 |---|---|
-| RWAVault (vVLRA) | [`0xFA69…E500`](https://explorer.testnet.chain.robinhood.com/address/0xFA698f14C8D7540d35E63c0AC3685AeEc957E500) |
+| RWAVault (vAELIX) | [`0xFA69…E500`](https://explorer.testnet.chain.robinhood.com/address/0xFA698f14C8D7540d35E63c0AC3685AeEc957E500) |
 | GuardrailConfig | [`0x7Ab7…0E5b`](https://explorer.testnet.chain.robinhood.com/address/0x7Ab7a94200153C473Fc35F413407aedA60D30E5b) |
 | DeskRegistry | [`0x381F…2ac6`](https://explorer.testnet.chain.robinhood.com/address/0x381FE4f75E5e051C90D60ba3a7553D9Cb6062ac6) |
 | PerfScore | [`0xda51…8fD0`](https://explorer.testnet.chain.robinhood.com/address/0xda5114a29B6D1C865e204AbCd9Bd39dc8d718fD0) |

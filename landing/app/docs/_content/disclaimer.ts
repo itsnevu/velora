@@ -70,7 +70,7 @@ export const content: DocContent = {
       type: "callout",
       tone: "warn",
       title: "Not implemented, not verified, not a product",
-      md: "Exploratory notes reference a `$AELIX` / `$VLRA` utility token, a \"Robinhood Chain\" L2, Alchemy RPC endpoints, wallets, and a Bankr launchpad. **None of this is part of the running system.** These are aspirational ideas from an early draft — unverified, unimplemented, and gated behind legal/securities review plus official confirmation of non-equities availability. There is **no blockchain, RPC, wallet, or token code** in this repo. Do not treat any of it as a product feature.",
+      md: "Exploratory notes reference a `$AELIX` utility token, a \"Robinhood Chain\" L2, Alchemy RPC endpoints, wallets, and a Bankr launchpad. **None of this is part of the running system.** These are aspirational ideas from an early draft — unverified, unimplemented, and gated behind legal/securities review plus official confirmation of non-equities availability. There is **no blockchain, RPC, wallet, or token code** in this repo. Do not treat any of it as a product feature.",
     },
     {
       type: "prose",

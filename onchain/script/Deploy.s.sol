@@ -104,7 +104,7 @@ contract Deploy is Script {
         s.vault = new RWAVault(
             IERC20(address(s.usdg)),
             "Aelix RWA Vault",
-            "vVLRA",
+            "vAELIX",
             owner,
             s.cfg,
             IPriceOracle(address(s.oracle)),
@@ -172,7 +172,7 @@ contract Deploy is Script {
         console2.log("GuardrailConfig  ", address(s.cfg));
         console2.log("DeskRegistry     ", address(s.registry));
         console2.log("PerfScore        ", address(s.perf));
-        console2.log("RWAVault (vVLRA) ", address(s.vault));
+        console2.log("RWAVault (vAELIX) ", address(s.vault));
         console2.log("SessionKeyExec   ", address(s.exec));
         console2.log("AelixAutosave   ", address(s.save));
         console2.log("-- demo periphery (replace in prod) --");

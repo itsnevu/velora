@@ -44,7 +44,7 @@ export default function OpengraphImage() {
             color: "#D7FE51",
           }}
         >
-          www.projectvex.ai
+          www.aelix.xyz
         </div>
       </div>
     ),
