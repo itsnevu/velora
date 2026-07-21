@@ -1,4 +1,4 @@
-# Project Velora — Agentic AI Equity Research Desk
+# Project Aelix — Agentic AI Equity Research Desk
 
 **Versi:** 2.0.0
 **Tanggal:** 11 Juli 2026
@@ -8,7 +8,7 @@
 
 ## 1. Executive Summary & Vision
 
-**Project Velora** adalah sebuah **research desk berbasis Agentic AI (Multi-Agent)** yang
+**Project Aelix** adalah sebuah **research desk berbasis Agentic AI (Multi-Agent)** yang
 berjalan **di dalam Claude Code** dan terhubung ke sebuah **akun Robinhood Agentic**
 melalui MCP (Model Context Protocol). Fungsinya adalah **asisten riset & rekomendasi
 saham (equities)** — sebuah tim analis AI yang menyaring watchlist, memperdebatkan setiap
@@ -19,7 +19,7 @@ kandidat, dan menyerahkan sebuah **kartu preview order** kepada Anda.
 > crypto/options/futures. Materi crypto/token pada versi 1.0 dokumen ini telah dipindahkan
 > ke **Lampiran** dan **belum diimplementasikan**.
 
-Berbeda dengan bot trading otomatis, Velora menganut filosofi **"Human-in-the-loop"**
+Berbeda dengan bot trading otomatis, Aelix menganut filosofi **"Human-in-the-loop"**
 secara struktural: **desk berhenti pada kartu preview dan TIDAK PERNAH menempatkan order
 sendiri.** Persetujuan hanya terjadi di dalam sesi Claude Code yang hidup, melalui
 konfirmasi eksplisit dari user. Keputusan akhir mutlak dipegang manusia.
@@ -330,7 +330,7 @@ Untuk memenuhi prinsip Transparansi & Audit:
 
 ## 13. Catatan Penting (Disclaimer)
 
-**Disclaimer:** Project Velora adalah **alat bantu riset, bukan penasihat keuangan**. Semua
+**Disclaimer:** Project Aelix adalah **alat bantu riset, bukan penasihat keuangan**. Semua
 keputusan investasi adalah tanggung jawab pribadi pengguna. Robinhood Agentic Trading masih
 beta (US, equities only); harap awasi sendiri. **Tidak ada track record dan tidak ada klaim
 kinerja** — semua data contoh bersifat ilustratif. Selalu verifikasi ulang sebelum
@@ -366,8 +366,8 @@ Draf v1.0 memframing sistem sebagai desk **crypto** dengan komponen Web3. Framin
 telah **digantikan** oleh desk **equities** Claude-Code-native. Semua elemen crypto/token
 berikut dipindahkan ke sini apa adanya untuk arsip.
 
-### B. Strategi Token ($VELORA) — TIDAK diimplementasikan
-- Ide token utility `$VLRA`/`$VELORA` di "Robinhood Chain (L2)" dengan supply contoh
+### B. Strategi Token ($AELIX) — TIDAK diimplementasikan
+- Ide token utility `$VLRA`/`$AELIX` di "Robinhood Chain (L2)" dengan supply contoh
   1.000.000.000, di-deploy via **Bankr** launchpad ("Deploy via X reply" / Bankr Console),
   klaim fee-sharing ke creator.
 - Utility yang diusulkan: akses premium, governance (voting parameter risiko/aset), diskon
@@ -389,5 +389,5 @@ Sebelum ada bagian dari Lampiran ini yang boleh dipertimbangkan untuk implementa
 2. Konfirmasi resmi ketersediaan instrumen non-equities di Robinhood Agentic.
 3. Verifikasi teknis jaringan & pihak ketiga (Robinhood Chain, Alchemy, Bankr).
 
-Sampai ketiga hal itu terpenuhi, ruang lingkup Velora tetap: **equities-only, long-only,
+Sampai ketiga hal itu terpenuhi, ruang lingkup Aelix tetap: **equities-only, long-only,
 human-in-the-loop, Claude-Code-native.**

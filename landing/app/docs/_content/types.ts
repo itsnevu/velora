@@ -1,5 +1,5 @@
 /**
- * Velora docs — content model.
+ * Aelix docs — content model.
  *
  * Every documentation page is a plain-data `DocContent` object: a title, a lede,
  * and an ordered array of typed `Block`s. A single server renderer

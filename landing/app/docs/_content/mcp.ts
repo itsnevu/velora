@@ -8,7 +8,7 @@ export const content: DocContent = {
   blocks: [
     {
       type: "prose",
-      md: "Velora reaches the broker through exactly one **Model Context Protocol (MCP)** server, named `robinhood-trading`. It is the only path to your account — there is no other API client, no scraper, and no second connection. Everything the desk reads or does at Robinhood goes through this server, and every call is subject to the permission tiers in [`.claude/settings.json`](/docs/configuration).",
+      md: "Aelix reaches the broker through exactly one **Model Context Protocol (MCP)** server, named `robinhood-trading`. It is the only path to your account — there is no other API client, no scraper, and no second connection. Everything the desk reads or does at Robinhood goes through this server, and every call is subject to the permission tiers in [`.claude/settings.json`](/docs/configuration).",
     },
     {
       type: "prose",

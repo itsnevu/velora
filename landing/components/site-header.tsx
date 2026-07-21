@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { VeloraLogo } from "@/components/ui/velora-logo";
+import { AelixLogo } from "@/components/ui/aelix-logo";
 import { ScrambleHover } from "@/components/ui/scramble-hover";
 import { NAV } from "@/lib/data";
 import { GITHUB_URL, VAULT_URL } from "@/lib/links";
@@ -75,8 +75,8 @@ export function SiteHeader() {
       <header className="hdr">
         <div className="nav">
           <a href="#top" className="brand">
-            <VeloraLogo />
-            VELORA
+            <AelixLogo />
+            AELIX
           </a>
           <nav className="nav-links">
             {NAV.map((item, i) => (
@@ -91,7 +91,7 @@ export function SiteHeader() {
             <a href="/docs">
               <span className="n">05</span> <ScrambleHover text="Docs" />
             </a>
-            <a href={GITHUB_URL} target="_blank" rel="noreferrer" aria-label="Velora on GitHub">
+            <a href={GITHUB_URL} target="_blank" rel="noreferrer" aria-label="Aelix on GitHub">
               <GitHubGlyph /> <ScrambleHover text="GitHub" />
             </a>
             <a href={VAULT_URL} className="active" aria-label="Launch the app">

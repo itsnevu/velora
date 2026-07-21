@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { VeloraLogo } from "@/components/ui/velora-logo";
+import { AelixLogo } from "@/components/ui/aelix-logo";
 import { GITHUB_URL } from "../_content/site";
 import { GitHubMark } from "./icons";
 import { NavList } from "./docs-sidebar";
@@ -47,9 +47,9 @@ export function DocsTopbar() {
       <header className="docs-topbar">
         <div className="docs-topbar-inner">
           <Link href="/docs" className="docs-brand">
-            <VeloraLogo size={30} />
+            <AelixLogo size={30} />
             <span>
-              VELORA<span className="docs-brand-sub">/ DOCS</span>
+              AELIX<span className="docs-brand-sub">/ DOCS</span>
             </span>
           </Link>
 
@@ -84,7 +84,7 @@ export function DocsTopbar() {
           </button>
         </div>
         <a href={GITHUB_URL} target="_blank" rel="noreferrer" className="docs-drawer-gh">
-          <GitHubMark /> github.com/itsnevu/velora
+          <GitHubMark /> github.com/itsnevu/aelix
         </a>
         <NavList onNavigate={() => setOpen(false)} />
       </div>

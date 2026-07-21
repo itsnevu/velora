@@ -10,7 +10,7 @@ export const content: DocContent = {
       type: "callout",
       tone: "danger",
       title: "Real money · beta · not financial advice",
-      md: "Velora is a research & recommendation tool, **not financial advice**. Robinhood Agentic Trading is in beta (US, equities only). The desk trades only inside an isolated Agentic account funded with a dedicated budget — **that budget is the most it can ever lose**. There is **no track record and no performance claim** here. All investment decisions are your own responsibility. Use only risk capital.",
+      md: "Aelix is a research & recommendation tool, **not financial advice**. Robinhood Agentic Trading is in beta (US, equities only). The desk trades only inside an isolated Agentic account funded with a dedicated budget — **that budget is the most it can ever lose**. There is **no track record and no performance claim** here. All investment decisions are your own responsibility. Use only risk capital.",
     },
     {
       type: "heading",
@@ -26,7 +26,7 @@ export const content: DocContent = {
     },
     {
       type: "prose",
-      md: "Velora is deliberately narrow: **equities-only, long-only, USD, human-in-the-loop, Claude-Code-native.** Options, futures, and crypto are not supported by the underlying beta, and the desk is configured to refuse them (option order tools are `deny`-ed).",
+      md: "Aelix is deliberately narrow: **equities-only, long-only, USD, human-in-the-loop, Claude-Code-native.** Options, futures, and crypto are not supported by the underlying beta, and the desk is configured to refuse them (option order tools are `deny`-ed).",
     },
     {
       type: "pills",
@@ -70,11 +70,11 @@ export const content: DocContent = {
       type: "callout",
       tone: "warn",
       title: "Not implemented, not verified, not a product",
-      md: "Exploratory notes reference a `$VELORA` / `$VLRA` utility token, a \"Robinhood Chain\" L2, Alchemy RPC endpoints, wallets, and a Bankr launchpad. **None of this is part of the running system.** These are aspirational ideas from an early draft — unverified, unimplemented, and gated behind legal/securities review plus official confirmation of non-equities availability. There is **no blockchain, RPC, wallet, or token code** in this repo. Do not treat any of it as a product feature.",
+      md: "Exploratory notes reference a `$AELIX` / `$VLRA` utility token, a \"Robinhood Chain\" L2, Alchemy RPC endpoints, wallets, and a Bankr launchpad. **None of this is part of the running system.** These are aspirational ideas from an early draft — unverified, unimplemented, and gated behind legal/securities review plus official confirmation of non-equities availability. There is **no blockchain, RPC, wallet, or token code** in this repo. Do not treat any of it as a product feature.",
     },
     {
       type: "prose",
-      md: "Until legal review, a technical verification of any third-party network, and official confirmation of non-equities availability are all complete, Velora's scope stays exactly what it is today: **equities-only, long-only, human-in-the-loop, Claude-Code-native.**",
+      md: "Until legal review, a technical verification of any third-party network, and official confirmation of non-equities availability are all complete, Aelix's scope stays exactly what it is today: **equities-only, long-only, human-in-the-loop, Claude-Code-native.**",
     },
     {
       type: "heading",
@@ -82,7 +82,7 @@ export const content: DocContent = {
     },
     {
       type: "prose",
-      md: "Velora is an independent, educational **reference architecture** built on Claude Code and the Robinhood Agentic beta. It is not endorsed by or affiliated with Robinhood or Anthropic. Licensed under MIT — see the `LICENSE` file.",
+      md: "Aelix is an independent, educational **reference architecture** built on Claude Code and the Robinhood Agentic beta. It is not endorsed by or affiliated with Robinhood or Anthropic. Licensed under MIT — see the `LICENSE` file.",
     },
     {
       type: "note",

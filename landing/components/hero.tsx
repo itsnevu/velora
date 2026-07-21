@@ -23,7 +23,7 @@ export function Hero() {
           <span className="dot" /> VLR // DESK_01
         </span>
         <h1 className="title">
-          <GlitchText text="VELORA" mode="always" />
+          <GlitchText text="AELIX" mode="always" />
           <span className="dot">.</span>
         </h1>
         <DecryptText

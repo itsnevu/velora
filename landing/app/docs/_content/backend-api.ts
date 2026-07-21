@@ -3,7 +3,7 @@ import type { DocContent } from "./types";
 export const content: DocContent = {
   title: "Backend API",
   description:
-    "Run the Velora public backend and call its REST API — auth, the Rule-Keeper, Portfolio X-Ray, the 24/7 desk, and alerts.",
+    "Run the Aelix public backend and call its REST API — auth, the Rule-Keeper, Portfolio X-Ray, the 24/7 desk, and alerts.",
   eyebrow: "19 — Going Public",
   blocks: [
     {

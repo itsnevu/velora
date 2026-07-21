@@ -1,4 +1,4 @@
-import { VeloraLogo } from "@/components/ui/velora-logo";
+import { AelixLogo } from "@/components/ui/aelix-logo";
 import { SquaresBg } from "@/components/ui/squares-bg";
 import { Magnetic } from "@/components/ui/magnetic";
 import { ScrambleHover } from "@/components/ui/scramble-hover";
@@ -38,8 +38,8 @@ export function CtaFooter() {
         <div className="wrap">
           <div className="foot-top">
             <a href="#top" className="brand">
-              <VeloraLogo />
-              VELORA
+              <AelixLogo />
+              AELIX
             </a>
             <div className="foot-links">
               {FOOT_LINKS.map((l) => (
@@ -65,13 +65,13 @@ export function CtaFooter() {
           </div>
           <div className="disclaimer">
             <strong>⚠ DISCLAIMER</strong>
-            Velora is a research &amp; recommendation tool, <b>not financial advice</b>. Robinhood Agentic
+            Aelix is a research &amp; recommendation tool, <b>not financial advice</b>. Robinhood Agentic
             Trading is in beta (US, equities only). The desk trades only inside an isolated Agentic account
             funded with a dedicated budget — that budget is the most it can ever lose. There is no track
             record and no performance claim here. All investment decisions are your own responsibility. Use
             only risk capital.
           </div>
-          <div className="copy">© 2026 VELORA // BUILT ON CLAUDE CODE · ROBINHOOD AGENTIC · REFERENCE ARCHITECTURE</div>
+          <div className="copy">© 2026 AELIX // BUILT ON CLAUDE CODE · ROBINHOOD AGENTIC · REFERENCE ARCHITECTURE</div>
         </div>
       </footer>
     </>

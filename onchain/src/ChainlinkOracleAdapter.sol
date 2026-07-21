@@ -7,7 +7,7 @@ import { IPriceOracle } from "./interfaces/IVaultPeriphery.sol";
 import { IAggregatorV3 } from "./interfaces/IAggregatorV3.sol";
 
 /// @title ChainlinkOracleAdapter
-/// @author Velora
+/// @author Aelix
 /// @notice Production {IPriceOracle} backed by Chainlink price feeds on Robinhood
 ///         Chain. Converts a TOKEN/USD feed into the "USDG-native value of one whole
 ///         token" the vault expects, and **fails closed** on any unsafe read:

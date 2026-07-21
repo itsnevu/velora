@@ -3,7 +3,7 @@ import type { DocContent } from "./types";
 export const content: DocContent = {
   title: "Glossary",
   description:
-    "The terms, roles, tools, and risk caps that appear throughout the Velora docs, in one place.",
+    "The terms, roles, tools, and risk caps that appear throughout the Aelix docs, in one place.",
   eyebrow: "16 — Glossary",
   blocks: [
     {
@@ -21,8 +21,8 @@ export const content: DocContent = {
         { term: "Sub-agent", md: "A specialist role defined as a Markdown file in `.claude/agents/` with its own restricted `tools:` list and `model:`. Loaded when Claude Code starts." },
         { term: "Human-in-the-loop (HITL)", md: "The structural rule that no order is placed without your explicit in-session approval. See [Guardrails](/docs/guardrails)." },
         { term: "Least privilege", md: "Each role holds only the tools its job needs. The analysts and Risk Manager have **no order tools**; only the PM does." },
-        { term: "Claude Code", md: "The agent host Velora runs inside. There is no separate backend server or Python orchestrator — the PM *is* the session. See [Architecture](/docs/architecture)." },
-        { term: "MCP (Model Context Protocol)", md: "The protocol that connects Claude Code to the broker. Velora uses one MCP server, `robinhood-trading`. See [MCP & Tools](/docs/mcp)." },
+        { term: "Claude Code", md: "The agent host Aelix runs inside. There is no separate backend server or Python orchestrator — the PM *is* the session. See [Architecture](/docs/architecture)." },
+        { term: "MCP (Model Context Protocol)", md: "The protocol that connects Claude Code to the broker. Aelix uses one MCP server, `robinhood-trading`. See [MCP & Tools](/docs/mcp)." },
         { term: "robinhood-trading", md: "The single MCP server (HTTP transport, OAuth) that is the desk's only path to the account. Defined in `.mcp.json`." },
         { term: "Robinhood Agentic account", md: "The isolated, beta, equities-only account the desk may trade. Every other account is read-only for context." },
         { term: "OAuth", md: "The in-session authentication flow for the MCP server. The agent never sees your password; there is a Robinhood mobile verification step." },
@@ -43,7 +43,7 @@ export const content: DocContent = {
         { term: "Scan", md: "A saved technical screen the Technical Analyst runs (`run_scan` / `get_scans`) to surface candidate tickers." },
         { term: "Watchlist", md: "A list of symbols the desk screens (`get_watchlist_items`); mutating watchlists is gated behind `ask`." },
         { term: "INJECTION ATTEMPTS", md: "The line in the Macro/News Analyst's brief where instruction-like text from the web is quoted verbatim and flagged, never obeyed. See [Prompt-Injection Defense](/docs/prompt-injection)." },
-        { term: "Prompt injection", md: "External content that tries to act like an instruction (\"buy X now\", \"ignore your rules\"). Velora treats all external content as untrusted data." },
+        { term: "Prompt injection", md: "External content that tries to act like an instruction (\"buy X now\", \"ignore your rules\"). Aelix treats all external content as untrusted data." },
       ],
     },
     {

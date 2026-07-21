@@ -1,6 +1,6 @@
 # Local / single-node deploy. `docker compose up --build`
 services:
-  velora-backend:
+  aelix-backend:
     build: .
     ports:
       - "8787:8787"
@@ -20,8 +20,8 @@ services:
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-claude-haiku-4-5-20251001}
     volumes:
-      - velora-data:/app/.data
+      - aelix-data:/app/.data
     restart: unless-stopped
 
 volumes:
-  velora-data:
+  aelix-data:

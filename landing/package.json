@@ -1,8 +1,8 @@
 {
-  "name": "velora-landing",
+  "name": "aelix-landing",
   "version": "0.1.0",
   "private": true,
-  "description": "VELORA — agentic AI trading research desk. Marketing landing page (Next.js + React).",
+  "description": "AELIX — agentic AI trading research desk. Marketing landing page (Next.js + React).",
   "scripts": {
     "dev": "next dev -p 5190",
     "build": "next build",

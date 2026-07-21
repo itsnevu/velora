@@ -58,7 +58,7 @@ contract HardeningTest is Test {
 
         vault = new RWAVault(
             IERC20(address(usdg)),
-            "Velora RWA Vault",
+            "Aelix RWA Vault",
             "vRWA",
             HUMAN,
             cfg,
@@ -467,7 +467,7 @@ contract HardeningTest is Test {
 
     function test_attestSelf_cannotBeSquatted() public {
         DeskRegistry reg = new DeskRegistry();
-        bytes32 label = keccak256("velora-vault:0xVAULT");
+        bytes32 label = keccak256("aelix-vault:0xVAULT");
         address VICTIM = address(0x1111);
         address ATTACKER = address(0x2222);
         bytes32 subj = reg.subjectFor(VICTIM, label);

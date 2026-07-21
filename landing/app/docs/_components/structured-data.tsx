@@ -39,7 +39,7 @@ export function docJsonLd(slug: string, content: DocContent): object {
       headline: content.title,
       description: content.description,
       url,
-      isPartOf: { "@type": "WebSite", name: "VELORA", url: SITE_URL },
+      isPartOf: { "@type": "WebSite", name: "AELIX", url: SITE_URL },
     },
   ];
 }

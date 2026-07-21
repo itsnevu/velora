@@ -7,7 +7,7 @@ import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.s
 import { RWAVault } from "./RWAVault.sol";
 
 /// @title SessionKeyExecutor
-/// @author Velora
+/// @author Aelix
 /// @notice The authorization layer between the AI desk and the vault. It is set as
 ///         the vault's `manager`, and the human owner delegates trading to agent
 ///         keys through revocable, expiring, tightly-scoped "sessions" — the same

@@ -3,20 +3,20 @@ pragma solidity ^0.8.28;
 
 import { Test } from "forge-std/Test.sol";
 import { RWAVault } from "../src/RWAVault.sol";
-import { VeloraAutosave } from "../src/VeloraAutosave.sol";
+import { AelixAutosave } from "../src/AelixAutosave.sol";
 import { GuardrailConfig } from "../src/GuardrailConfig.sol";
 import { Guardrails } from "../src/libraries/Guardrails.sol";
 import { IPriceOracle, ISwapAdapter } from "../src/interfaces/IVaultPeriphery.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { MockERC20, MockOracle, MockSwapAdapter } from "../src/mocks/Mocks.sol";
 
-contract VeloraAutosaveTest is Test {
+contract AelixAutosaveTest is Test {
     MockERC20 usdg;
     MockOracle oracle;
     MockSwapAdapter adapter;
     GuardrailConfig cfg;
     RWAVault vault;
-    VeloraAutosave save;
+    AelixAutosave save;
 
     address HUMAN = address(0xB00D);
     address ALICE = address(0xA11CE);
@@ -42,7 +42,7 @@ contract VeloraAutosaveTest is Test {
         cfg = new GuardrailConfig(HUMAN, _caps());
         vault = new RWAVault(
             IERC20(address(usdg)),
-            "Velora RWA Vault",
+            "Aelix RWA Vault",
             "vRWA",
             HUMAN,
             cfg,
@@ -50,7 +50,7 @@ contract VeloraAutosaveTest is Test {
             ISwapAdapter(address(adapter)),
             address(0)
         );
-        save = new VeloraAutosave(vault);
+        save = new AelixAutosave(vault);
 
         usdg.mint(ALICE, 1000e18);
         vm.prank(ALICE);
@@ -71,11 +71,11 @@ contract VeloraAutosaveTest is Test {
 
     function test_badParams_revert() public {
         vm.prank(ALICE);
-        vm.expectRevert(VeloraAutosave.BadParams.selector);
+        vm.expectRevert(AelixAutosave.BadParams.selector);
         save.createPlan(0, 1 weeks, 3);
 
         vm.prank(ALICE);
-        vm.expectRevert(VeloraAutosave.BadParams.selector);
+        vm.expectRevert(AelixAutosave.BadParams.selector);
         save.createPlan(10e18, 0, 3);
     }
 
@@ -97,7 +97,7 @@ contract VeloraAutosaveTest is Test {
         _createPlan(10e18, 1 weeks, 3);
         save.executeDue(ALICE); // period 1
         assertFalse(save.due(ALICE));
-        vm.expectRevert(VeloraAutosave.NotDue.selector);
+        vm.expectRevert(AelixAutosave.NotDue.selector);
         save.executeDue(ALICE);
 
         vm.warp(block.timestamp + 1 weeks);
@@ -118,7 +118,7 @@ contract VeloraAutosaveTest is Test {
 
         vm.warp(block.timestamp + 1 weeks);
         assertFalse(save.due(ALICE)); // no longer due once all periods are done
-        vm.expectRevert(VeloraAutosave.Completed.selector);
+        vm.expectRevert(AelixAutosave.Completed.selector);
         save.executeDue(ALICE);
     }
 
@@ -139,13 +139,13 @@ contract VeloraAutosaveTest is Test {
         vm.prank(ALICE);
         save.cancelPlan();
         assertFalse(save.due(ALICE));
-        vm.expectRevert(VeloraAutosave.NoPlan.selector);
+        vm.expectRevert(AelixAutosave.NoPlan.selector);
         save.executeDue(ALICE);
     }
 
     function test_cancel_withoutPlan_reverts() public {
         vm.prank(ALICE);
-        vm.expectRevert(VeloraAutosave.NoPlan.selector);
+        vm.expectRevert(AelixAutosave.NoPlan.selector);
         save.cancelPlan();
     }
 

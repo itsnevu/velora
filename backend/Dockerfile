@@ -1,4 +1,4 @@
-# Velora backend — zero runtime dependencies, so the image is tiny and buildless.
+# Aelix backend — zero runtime dependencies, so the image is tiny and buildless.
 FROM node:20-alpine
 
 WORKDIR /app

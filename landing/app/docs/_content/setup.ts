@@ -3,7 +3,7 @@ import type { DocContent } from "./types";
 export const content: DocContent = {
   title: "Installation & Setup",
   description:
-    "Connect Velora to your Robinhood Agentic account the safe way: clone the repo, trust the project MCP server, authenticate over OAuth, tighten the permission gate, and write a strategy before your first order.",
+    "Connect Aelix to your Robinhood Agentic account the safe way: clone the repo, trust the project MCP server, authenticate over OAuth, tighten the permission gate, and write a strategy before your first order.",
   eyebrow: "03 — INSTALLATION & SETUP",
   blocks: [
     {

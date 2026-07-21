@@ -1,14 +1,14 @@
 import type { DocContent } from "./types";
 
 export const content: DocContent = {
-  title: "What is Velora?",
+  title: "What is Aelix?",
   description:
-    "Velora is an agentic AI equity research desk that runs inside Claude Code, connects to a Robinhood Agentic account over MCP, and never places an order without your explicit approval.",
+    "Aelix is an agentic AI equity research desk that runs inside Claude Code, connects to a Robinhood Agentic account over MCP, and never places an order without your explicit approval.",
   eyebrow: "01 — Overview",
   blocks: [
     {
       type: "prose",
-      md: "**Velora** is a multi-agent stock-research desk that runs *inside* Claude Code. It connects to a **Robinhood Agentic** account over [MCP](/docs/mcp) and behaves like a small institutional desk: a team of specialist AI analysts screens your watchlist, debates each candidate, and hands you a one-click **preview card**. You approve; it places. It never trades on its own.",
+      md: "**Aelix** is a multi-agent stock-research desk that runs *inside* Claude Code. It connects to a **Robinhood Agentic** account over [MCP](/docs/mcp) and behaves like a small institutional desk: a team of specialist AI analysts screens your watchlist, debates each candidate, and hands you a one-click **preview card**. You approve; it places. It never trades on its own.",
     },
     {
       type: "prose",
@@ -26,7 +26,7 @@ export const content: DocContent = {
     },
     {
       type: "prose",
-      md: "Retail traders rarely get a second opinion. Velora gives you five: a **Portfolio Manager** who orchestrates the run, three **analysts** who gather evidence in parallel, and a **Risk Manager** who can kill a trade the analysts liked. The output of a run is almost never an order — it's a decision, most often *\"stand aside.\"*",
+      md: "Retail traders rarely get a second opinion. Aelix gives you five: a **Portfolio Manager** who orchestrates the run, three **analysts** who gather evidence in parallel, and a **Risk Manager** who can kill a trade the analysts liked. The output of a run is almost never an order — it's a decision, most often *\"stand aside.\"*",
     },
     {
       type: "cards",
@@ -85,7 +85,7 @@ export const content: DocContent = {
     },
     {
       type: "heading",
-      text: "Bot that YOLOs vs. the Velora desk",
+      text: "Bot that YOLOs vs. the Aelix desk",
     },
     {
       type: "compare",
@@ -101,7 +101,7 @@ export const content: DocContent = {
         ],
       },
       right: {
-        title: "The Velora desk",
+        title: "The Aelix desk",
         tone: "good",
         rows: [
           "Stops at a preview — you place the order",

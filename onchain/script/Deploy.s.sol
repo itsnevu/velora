@@ -10,11 +10,11 @@ import { DeskRegistry } from "../src/DeskRegistry.sol";
 import { PerfScore } from "../src/PerfScore.sol";
 import { RWAVault } from "../src/RWAVault.sol";
 import { SessionKeyExecutor } from "../src/SessionKeyExecutor.sol";
-import { VeloraAutosave } from "../src/VeloraAutosave.sol";
+import { AelixAutosave } from "../src/AelixAutosave.sol";
 import { IPriceOracle, ISwapAdapter } from "../src/interfaces/IVaultPeriphery.sol";
 import { MockERC20, MockOracle, MockSwapAdapter } from "../src/mocks/Mocks.sol";
 
-/// @title Deploy — full Velora on-chain stack for Robinhood Chain (testnet demo)
+/// @title Deploy — full Aelix on-chain stack for Robinhood Chain (testnet demo)
 /// @notice Deploys and fully wires all six contracts, then seeds a live demo:
 ///         a deposit, one guardrail-checked agent trade, and two desk-run
 ///         attestations — so the dashboard's on-chain panels light up immediately.
@@ -38,7 +38,7 @@ contract Deploy is Script {
         MockSwapAdapter adapter;
         RWAVault vault;
         SessionKeyExecutor exec;
-        VeloraAutosave save;
+        AelixAutosave save;
         address deployer; // attester of the seeded track record (self-namespace)
     }
 
@@ -60,7 +60,7 @@ contract Deploy is Script {
 
     /// @dev Write deployed addresses to deployments/latest.json for the bridge.
     function _persist(Stack memory s) internal {
-        string memory o = "velora";
+        string memory o = "aelix";
         vm.serializeUint(o, "chainId", block.chainid);
         vm.serializeAddress(o, "guardrailConfig", address(s.cfg));
         vm.serializeAddress(o, "deskRegistry", address(s.registry));
@@ -96,14 +96,14 @@ contract Deploy is Script {
 
         // DEMO periphery — replace with real Robinhood Chain addresses in prod.
         s.usdg = new MockERC20("USD Global (demo)", "USDG");
-        s.stk = new MockERC20("Velora Demo Stock", "vNVDA");
+        s.stk = new MockERC20("Aelix Demo Stock", "vNVDA");
         s.oracle = new MockOracle();
         s.oracle.setPrice(address(s.stk), 50e18);
         s.adapter = new MockSwapAdapter(s.oracle);
 
         s.vault = new RWAVault(
             IERC20(address(s.usdg)),
-            "Velora RWA Vault",
+            "Aelix RWA Vault",
             "vVLRA",
             owner,
             s.cfg,
@@ -112,7 +112,7 @@ contract Deploy is Script {
             address(0)
         );
         s.exec = new SessionKeyExecutor(s.vault, owner);
-        s.save = new VeloraAutosave(s.vault);
+        s.save = new AelixAutosave(s.vault);
     }
 
     function _wireAndSeed(Stack memory s, address deployer, address agent) internal {
@@ -157,7 +157,7 @@ contract Deploy is Script {
     }
 
     function _label(address vault) internal pure returns (bytes32) {
-        return keccak256(abi.encodePacked("velora-vault:", vault));
+        return keccak256(abi.encodePacked("aelix-vault:", vault));
     }
 
     /// @dev The canonical, squat-proof subject the deployer seeded — derived from the
@@ -168,13 +168,13 @@ contract Deploy is Script {
 
     function _report(Stack memory s) internal view {
         (int256 tr, uint256 dd, uint256 n) = s.perf.headline(_subjectOf(s));
-        console2.log("=============== Velora on-chain stack ===============");
+        console2.log("=============== Aelix on-chain stack ===============");
         console2.log("GuardrailConfig  ", address(s.cfg));
         console2.log("DeskRegistry     ", address(s.registry));
         console2.log("PerfScore        ", address(s.perf));
         console2.log("RWAVault (vVLRA) ", address(s.vault));
         console2.log("SessionKeyExec   ", address(s.exec));
-        console2.log("VeloraAutosave   ", address(s.save));
+        console2.log("AelixAutosave   ", address(s.save));
         console2.log("-- demo periphery (replace in prod) --");
         console2.log("USDG (demo)      ", address(s.usdg));
         console2.log("StockToken(demo) ", address(s.stk));

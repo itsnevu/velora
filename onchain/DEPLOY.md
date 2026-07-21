@@ -1,4 +1,4 @@
-# Deploying Velora to Robinhood Chain
+# Deploying Aelix to Robinhood Chain
 
 Runbook for `script/DeployProduction.s.sol`. Facts below are from research (July 2026)
 — **always re-confirm addresses against <https://docs.robinhood.com/chain> before

@@ -3,12 +3,12 @@ import type { DocContent } from "./types";
 export const content: DocContent = {
   title: "Configuration",
   description:
-    "Every config file and knob in the Velora repo — the MCP connection, the permission gate, the desk sub-agents, and where secrets must never live.",
+    "Every config file and knob in the Aelix repo — the MCP connection, the permission gate, the desk sub-agents, and where secrets must never live.",
   eyebrow: "10 — Configuration",
   blocks: [
     {
       type: "prose",
-      md: "Velora has **no settings UI and no database** — its entire configuration is a handful of plain files you can read, diff, and edit. The operating contract, the broker connection, the permission gate, the desk roles, and the risk caps are all text on disk. That is the point: every safeguard is something you can audit, not a setting hidden behind a toggle.",
+      md: "Aelix has **no settings UI and no database** — its entire configuration is a handful of plain files you can read, diff, and edit. The operating contract, the broker connection, the permission gate, the desk roles, and the risk caps are all text on disk. That is the point: every safeguard is something you can audit, not a setting hidden behind a toggle.",
     },
     {
       type: "prose",

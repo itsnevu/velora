@@ -88,7 +88,7 @@ export const COMPARE = {
     ],
   },
   good: {
-    head: "The Velora desk",
+    head: "The Aelix desk",
     rows: [
       "Stops at a preview — you place the order",
       "A team of four specialist analysts",
@@ -106,7 +106,7 @@ export const RISK = { capPct: 15, minEquity: 1000, maxEquity: 100000, maxWeight:
 
 export const FAQ = [
   {
-    q: "Can Velora place trades on its own?",
+    q: "Can Aelix place trades on its own?",
     a: "No. Every order requires your explicit in-session approval. The analysts have no order tools at all; only the Portfolio Manager can place, and only after you say yes to a preview.",
   },
   {
@@ -127,14 +127,14 @@ export const FAQ = [
   },
   {
     q: "Is any of this financial advice?",
-    a: "No. Velora is a research tool and reference architecture. There is no track record and no performance claim. All decisions — and all risk — are yours. Use only risk capital.",
+    a: "No. Aelix is a research tool and reference architecture. There is no track record and no performance claim. All decisions — and all risk — are yours. Use only risk capital.",
   },
 ] as const;
 
 /** The scripted desk run typed out by the interactive terminal. */
 export type TermTag = "cmd" | "lime" | "mint" | "warn" | "red";
 export const DESK_RUN: { tag: string; cls: TermTag; text: string; pause?: number }[] = [
-  { tag: "$", cls: "cmd", text: "velora run --watchlist", pause: 380 },
+  { tag: "$", cls: "cmd", text: "aelix run --watchlist", pause: 380 },
   { tag: "SENSE", cls: "lime", text: "agentic account — equity $10,000 · cash $3,200", pause: 460 },
   { tag: "SCREEN", cls: "lime", text: "technical scan → AAPL · NVDA · MSFT", pause: 460 },
   { tag: "FUND", cls: "mint", text: "NVDA  valuation stretched · growth strong   score +1", pause: 520 },

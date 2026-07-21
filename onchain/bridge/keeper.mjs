@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Velora Autosave keeper.
+// Aelix Autosave keeper.
 //
 // Discovers every user who created a plan (via PlanCreated events), checks which
 // are due, and calls executeDue(user) for each. Run it on a cron (or Gelato /

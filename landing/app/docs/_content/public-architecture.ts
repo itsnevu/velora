@@ -3,7 +3,7 @@ import type { DocContent } from "./types";
 export const content: DocContent = {
   title: "Public Architecture",
   description:
-    "How Velora becomes a public, multi-tenant, 24/7 product on the Robinhood network — pivoted to the safe Rule-Keeper + Portfolio X-Ray concept, with a real backend.",
+    "How Aelix becomes a public, multi-tenant, 24/7 product on the Robinhood network — pivoted to the safe Rule-Keeper + Portfolio X-Ray concept, with a real backend.",
   eyebrow: "18 — Going Public",
   blocks: [
     {
@@ -37,7 +37,7 @@ export const content: DocContent = {
       ascii: `  User (browser / app)
         │  HTTPS + JWT
         ▼
-  ┌──────────────────────── VELORA BACKEND (Node, zero-dep) ───────────────────────┐
+  ┌──────────────────────── AELIX BACKEND (Node, zero-dep) ───────────────────────┐
   │  auth (JWT · scrypt)      rules (per-user caps)      alerts (per-user)          │
   │  token vault (AES-256-GCM) ── per-user Robinhood OAuth token, encrypted at rest │
   │  Rule-Keeper (deterministic)   Portfolio X-Ray (analytics)                      │

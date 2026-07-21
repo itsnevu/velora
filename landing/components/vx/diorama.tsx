@@ -15,7 +15,7 @@ import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPa
  * a bright sky, with aerial-perspective fog, drifting mist sprites, particles,
  * birds, and a tilt-shift depth-of-field post pass. Scroll flies the camera
  * along a spline through the range — every scroll offset is a camera frame.
- * The sky/fog grade from day-blue to Velora dusk as you descend.
+ * The sky/fog grade from day-blue to Aelix dusk as you descend.
  *
  * ssr:false — import via next/dynamic from the client page.
  */
@@ -116,11 +116,17 @@ const PEAKS: PeakCfg[] = [
    drawn in chartreuse. Runs once per texture on the client. */
 function chartreuseRamp(src: THREE.Texture): THREE.Texture {
   const img = src.image as HTMLImageElement;
-  const w = img.width, h = img.height;
+  // downscale to a working cap: these are blurry backdrops (tiled ground, fogged
+  // ring, small peak windows) — full res just makes the per-pixel remap block the
+  // main thread at load. 800px keeps it crisp enough at a fraction of the pixels.
+  const MAX = 800;
+  const scale = Math.min(1, MAX / Math.max(img.width, img.height));
+  const w = Math.max(2, Math.round(img.width * scale));
+  const h = Math.max(2, Math.round(img.height * scale));
   const c = document.createElement("canvas");
   c.width = w; c.height = h;
   const ctx = c.getContext("2d")!;
-  ctx.drawImage(img, 0, 0);
+  ctx.drawImage(img, 0, 0, w, h);
   const d = ctx.getImageData(0, 0, w, h);
   const px = d.data;
   const stops: [number, number, number, number][] = [
@@ -210,6 +216,70 @@ function buildPeak(cfg: PeakCfg): THREE.BufferGeometry {
   geo.setAttribute("color", new THREE.BufferAttribute(colors, 3));
   geo.computeVertexNormals();
   return geo;
+}
+
+/* ── layered distant ridgelines: jagged silhouette curtains that replace the
+   flat horizon band. Each ring is a thin strip whose TOP edge is 1-D ridged
+   noise (abs-sine octaves over the angle), modulated by a slow angular
+   envelope so some sectors read as tall massifs and others as low foothills,
+   with the whole ring wobbled off-circle so distance-to-camera varies per
+   angle. Feet sink below the ground plane; fog + a per-layer tint grade the
+   far rings toward the horizon colour — so they stack into a real receding
+   range with parallax across the 300° sweep, not a level painted wall. ───── */
+type RidgeCfg = { rad: number; segs: number; baseH: number; ampH: number; seed: number; tint: number };
+
+/* concentric to the point the camera orbits (the hero massif) so the rings
+   frame the sweep; radii sit BEYOND every peak (peaks live within r≈31). */
+const MASSIF = { x: 2.5, z: -16 };
+const RIDGES: RidgeCfg[] = [
+  { rad: 44, segs: 256, baseH: 2.2, ampH: 10, seed: 211, tint: 0.9 },
+  { rad: 60, segs: 224, baseH: 3.0, ampH: 12, seed: 233, tint: 0.72 },
+  { rad: 78, segs: 192, baseH: 3.5, ampH: 14, seed: 251, tint: 0.55 },
+];
+
+function buildRidge(cfg: RidgeCfg): THREE.BufferGeometry {
+  let seed = cfg.seed * 7919 + 11;
+  const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+  const fr = [3, 6, 11, 19, 34]; // low freqs → big massifs, high → crags
+  const am = [1, 0.55, 0.3, 0.16, 0.09];
+  const NORM = am.reduce((a, b) => a + b, 0);
+  const ph = fr.map(() => rnd() * Math.PI * 2);
+  const eph = rnd() * Math.PI * 2; // envelope phase — which sectors tower
+  const wph = [rnd() * Math.PI * 2, rnd() * Math.PI * 2]; // radial-wobble phases
+  const bottomY = -4; // sink the feet below the y≈-0.02 ground plane
+
+  const N = cfg.segs;
+  const pos: number[] = [];
+  const col: number[] = [];
+  const uv: number[] = [];
+  for (let i = 0; i <= N; i++) {
+    const a = (i / N) * Math.PI * 2;
+    let n = 0;
+    for (let k = 0; k < fr.length; k++) n += Math.abs(Math.sin(a * fr[k] + ph[k])) * am[k];
+    n = Math.min(1, n / NORM);
+    const env = 0.5 + 0.5 * Math.sin(a * 0.7 + eph); // tall-massif vs foothill sectors
+    const top = cfg.baseH + n * cfg.ampH * (0.35 + 0.65 * env);
+    // wobble the radius off-circle → distance-to-camera varies per angle → parallax
+    const R = cfg.rad * (1 + 0.07 * Math.sin(a * 2 + wph[0]) + 0.035 * Math.sin(a * 5 + wph[1]));
+    const x = MASSIF.x + Math.sin(a) * R;
+    const z = MASSIF.z + Math.cos(a) * R;
+    pos.push(x, bottomY, z, x, top, z);
+    const crest = Math.min(0.7, 0.28 + 0.5 * n); // cap crest → controlled bloom
+    const base = 0.1;
+    col.push(base, base, base, crest, crest, crest);
+    uv.push((i / N) * 8, 0, (i / N) * 8, 1); // u wraps 8× → strokes at reference scale
+  }
+  const idx: number[] = [];
+  for (let i = 0; i < N; i++) {
+    const a0 = i * 2, a1 = i * 2 + 1, b0 = (i + 1) * 2, b1 = (i + 1) * 2 + 1;
+    idx.push(a0, b0, a1, a1, b0, b1);
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
+  g.setAttribute("color", new THREE.Float32BufferAttribute(col, 3));
+  g.setAttribute("uv", new THREE.Float32BufferAttribute(uv, 2));
+  g.setIndex(idx);
+  return g; // no normals — MeshBasicMaterial is unlit
 }
 
 /* ── tilt-shift depth-of-field post pass (sharp centre, soft edges) ────── */
@@ -393,7 +463,7 @@ function Rig({ smooth, pointer }: { smooth: RefN; pointer: Ref2 }) {
 function World() {
   const [bg, mountain, ridge, lake] = useLoader(THREE.TextureLoader, [TEX.bg, TEX.mountain, TEX.ridge, TEX.lake]);
 
-  const { peakMeshes, groundMat, ringMat } = useMemo(() => {
+  const { peakMeshes, groundMat, ridgeMeshes } = useMemo(() => {
     for (const t of [bg, mountain, ridge, lake]) {
       // NoColorSpace: the composer has no output-encode pass, so pass the
       // authored painting through untouched (WYSIWYG, no double conversion)
@@ -444,14 +514,27 @@ function World() {
     groundMap.repeat.set(9, 9);
     const groundMat = new THREE.MeshBasicMaterial({ map: groundMap, color: new THREE.Color(0.9, 0.9, 0.9), fog: true });
 
-    const ringMap = bgC.clone();
-    ringMap.needsUpdate = true;
-    ringMap.repeat.set(4, 0.3);
-    ringMap.offset.set(0, 0.3); // mid-band of the painting only
-    // low, distant, fogged — a horizon ridge line, NOT a surrounding wall
-    const ringMat = new THREE.MeshBasicMaterial({ map: ringMap, color: new THREE.Color(0.85, 0.88, 0.75), fog: true, side: THREE.BackSide });
+    // distant range: three concentric jagged silhouette curtains, each reusing
+    // the ramped background painting, fogged + tinted so far layers recede into
+    // aerial perspective instead of standing as one flat encircling band
+    const ridgeMeshes = RIDGES.map((rc) => {
+      const geo = buildRidge(rc);
+      const map = bgC.clone();
+      map.needsUpdate = true;
+      map.wrapS = map.wrapT = THREE.MirroredRepeatWrapping;
+      map.offset.set(0, 0.3); // mid silhouette band of the painting
+      map.repeat.set(1, 0.4); // u is driven by the geometry's 0..8 uv
+      const mat = new THREE.MeshBasicMaterial({
+        map,
+        vertexColors: true,
+        fog: true,
+        color: new THREE.Color(rc.tint, rc.tint, rc.tint), // far layers desaturate toward fog
+        side: THREE.DoubleSide, // the sweep views the ring from every angle
+      });
+      return { geo, mat };
+    });
 
-    return { peakMeshes, groundMat, ringMat };
+    return { peakMeshes, groundMat, ridgeMeshes };
   }, [bg, mountain, ridge, lake]);
 
   return (
@@ -470,10 +553,10 @@ function World() {
       <mesh material={groundMat} rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.02, -18]}>
         <planeGeometry args={[240, 240]} />
       </mesh>
-      {/* far horizon band */}
-      <mesh material={ringMat} position={[0, 2.5, -18]}>
-        <cylinderGeometry args={[88, 88, 16, 96, 1, true]} />
-      </mesh>
+      {/* far horizon: layered jagged ridgelines receding into fog — replaces the flat band */}
+      {ridgeMeshes.map(({ geo, mat }, i) => (
+        <mesh key={`ridge-${i}`} geometry={geo} material={mat} renderOrder={-3} frustumCulled={false} />
+      ))}
     </>
   );
 }
@@ -848,14 +931,18 @@ function FogRing({ animate }: { animate: boolean }) {
   const bands = useMemo(() => {
     let seed = 3113;
     const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+    // a LOW, WIDE valley-fog belt nestled in the gap between the near peaks
+    // (r≈31) and the nearest ridgeline (r≈44) — an aerial-perspective layer
+    // break that separates foreground from range, not upright panels ringing
+    // the hero
     return Array.from({ length: 16 }, (_, i) => ({
       a: (i / 16) * Math.PI * 2,
-      rad: 13 + rnd() * 13,
-      y: 1.2 + rnd() * 6,
-      sc: 13 + rnd() * 12,
+      rad: 33 + rnd() * 11,
+      y: 0.4 + rnd() * 2.4,
+      sc: 16 + rnd() * 14,
       v: 0.015 + rnd() * 0.05,
       ph: rnd() * Math.PI * 2,
-      base: 0.09 + rnd() * 0.12,
+      base: 0.05 + rnd() * 0.08,
     }));
   }, []);
   const materials = useMemo(() => {
@@ -879,7 +966,7 @@ function FogRing({ animate }: { animate: boolean }) {
       const spr = child as THREE.Sprite;
       const a = b.a + t * b.v;
       spr.position.set(2.5 + Math.sin(a) * b.rad, b.y + Math.sin(t * 0.15 + b.ph) * 0.4, -16 + Math.cos(a) * b.rad);
-      spr.scale.set(b.sc, b.sc * 0.5, 1);
+      spr.scale.set(b.sc, b.sc * 0.32, 1); // flatter banks — a haze belt, not standing panels
       (spr.material as THREE.SpriteMaterial).opacity = b.base;
     });
   });
@@ -932,8 +1019,24 @@ function Stars({ animate }: { animate: boolean }) {
   );
 }
 
+/* ── first-frame signal: tells the page the world has actually painted, so the
+   preloader can lift onto a live scene instead of a dark void ─────────────── */
+function ReadySignal({ onReady }: { onReady?: () => void }) {
+  const fired = useRef(false);
+  const frames = useRef(0);
+  useFrame(() => {
+    if (fired.current) return;
+    // let a couple of frames compose (bloom + tilt-shift render at priority 1)
+    if (++frames.current >= 2) {
+      fired.current = true;
+      onReady?.();
+    }
+  });
+  return null;
+}
+
 /* ── scene root: fog grading + everything wired to the smoothed scroll ─── */
-function SceneRoot({ scroll, pointer, animate }: { scroll: RefN; pointer: Ref2; animate: boolean }) {
+function SceneRoot({ scroll, pointer, animate, onReady }: { scroll: RefN; pointer: Ref2; animate: boolean; onReady?: () => void }) {
   const { scene } = useThree();
   const smooth = useRef(0);
 
@@ -960,6 +1063,7 @@ function SceneRoot({ scroll, pointer, animate }: { scroll: RefN; pointer: Ref2; 
 
   return (
     <>
+      <ReadySignal onReady={onReady} />
       <SkyAndDim smooth={smooth} />
       <Stars animate={animate} />
       <World />
@@ -968,16 +1072,21 @@ function SceneRoot({ scroll, pointer, animate }: { scroll: RefN; pointer: Ref2; 
       <FogRing animate={animate} />
       <Particles animate={animate} />
       <Flock smooth={smooth} animate={animate} />
-      {PAINT_CHAPTERS.map((cfg) => (
-        <PaintingLayer key={cfg.url + cfg.order} cfg={cfg} smooth={smooth} />
-      ))}
+      {/* river/lake panels aren't visible until the flight ends (~44% scroll):
+          stream them in their OWN Suspense so ~1.6MB of textures never blocks
+          the world's first paint */}
+      <Suspense fallback={null}>
+        {PAINT_CHAPTERS.map((cfg) => (
+          <PaintingLayer key={cfg.url + cfg.order} cfg={cfg} smooth={smooth} />
+        ))}
+      </Suspense>
       <Rig smooth={smooth} pointer={pointer} />
       <Effects />
     </>
   );
 }
 
-export default function Diorama() {
+export default function Diorama({ onReady }: { onReady?: () => void }) {
   const wrap = useRef<HTMLDivElement>(null);
   const pointer = useRef({ x: 0, y: 0 });
   const scroll = useRef(0);
@@ -1031,7 +1140,7 @@ export default function Diorama() {
         onCreated={({ gl }) => gl.setClearColor(new THREE.Color(0.12, 0.13, 0.15), 1)}
       >
         <Suspense fallback={null}>
-          <SceneRoot scroll={scroll} pointer={pointer} animate={animate} />
+          <SceneRoot scroll={scroll} pointer={pointer} animate={animate} onReady={onReady} />
         </Suspense>
       </Canvas>
     </div>

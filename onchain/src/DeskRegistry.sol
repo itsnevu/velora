@@ -2,7 +2,7 @@
 pragma solidity ^0.8.28;
 
 /// @title DeskRegistry — Proof-of-Track-Record
-/// @author Velora
+/// @author Aelix
 /// @notice Append-only, chain-stamped attestation log for an AI trading desk.
 ///         After each desk run the operator commits a compact snapshot (NAV,
 ///         cumulative realized P&L, and a hash of the full `desk-state.json`).

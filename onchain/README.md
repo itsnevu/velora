@@ -1,6 +1,6 @@
-# Velora — On-Chain Module (Robinhood Chain)
+# Aelix — On-Chain Module (Robinhood Chain)
 
-The smart-contract layer that turns the Velora AI trading desk (this repo) into a
+The smart-contract layer that turns the Aelix AI trading desk (this repo) into a
 product other people can use **and verify**: a non-custodial, AI-managed vault for
 tokenized real-world assets (Robinhood Chain **Stock Tokens**) where the risk rules
 in [`../CLAUDE.md`](../CLAUDE.md) and [`../strategies/README.md`](../strategies/README.md)
@@ -27,7 +27,7 @@ functional preview, **not** real RWA exposure.
 | DeskRegistry | [`0x381F…2ac6`](https://explorer.testnet.chain.robinhood.com/address/0x381FE4f75E5e051C90D60ba3a7553D9Cb6062ac6) |
 | PerfScore | [`0xda51…8fD0`](https://explorer.testnet.chain.robinhood.com/address/0xda5114a29B6D1C865e204AbCd9Bd39dc8d718fD0) |
 | SessionKeyExecutor | [`0x4fe4…5DF4`](https://explorer.testnet.chain.robinhood.com/address/0x4fe433Ea2234ecFc69Ef7Ce817e844D6217c5DF4) |
-| VeloraAutosave | [`0x8e0A…44B0`](https://explorer.testnet.chain.robinhood.com/address/0x8e0AcAc14594346053809837C1432f522AE044B0) |
+| AelixAutosave | [`0x8e0A…44B0`](https://explorer.testnet.chain.robinhood.com/address/0x8e0AcAc14594346053809837C1432f522AE044B0) |
 
 Mainnet: **not deployed** — pending real periphery wiring + audit.
 
@@ -61,7 +61,7 @@ GuardrailConfig ──caps──►  Guardrails (pure lib)
                            │    ▲                            ▲
               deposit/     │    │ previewTrade / redeemInKind│ trade()
               withdraw ────┘    └──────────────┐             │
-                                               │        VeloraAutosave
+                                               │        AelixAutosave
 DeskRegistry ──series──► PerfScore             │        (recurring DCA,
  (append-only,           (return / drawdown /  │         non-custodial)
   chain-stamped)          volatility / Sharpe) │
@@ -73,7 +73,7 @@ DeskRegistry ──series──► PerfScore             │        (recurring D
 | `GuardrailConfig` | Human-owned, fail-closed store of the caps (agent can't change) | [src/GuardrailConfig.sol](src/GuardrailConfig.sol) |
 | `RWAVault` | ERC-4626 vault; enforces guardrails on every trade at the custody layer | [src/RWAVault.sol](src/RWAVault.sol) |
 | `SessionKeyExecutor` | ERC-4337-style scoped/expiring/revocable delegation to agent keys | [src/SessionKeyExecutor.sol](src/SessionKeyExecutor.sol) |
-| `VeloraAutosave` | Consumer recurring DCA into the vault (keeper-triggered) | [src/VeloraAutosave.sol](src/VeloraAutosave.sol) |
+| `AelixAutosave` | Consumer recurring DCA into the vault (keeper-triggered) | [src/AelixAutosave.sol](src/AelixAutosave.sol) |
 | `DeskRegistry` + `PerfScore` | Attested track record + on-chain performance math | [src/DeskRegistry.sol](src/DeskRegistry.sol) · [src/PerfScore.sol](src/PerfScore.sol) |
 
 ## CLAUDE.md → on-chain mapping

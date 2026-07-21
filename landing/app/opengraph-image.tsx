@@ -5,7 +5,7 @@ import { ImageResponse } from "next/og";
  * the file-based metadata convention — replaces the 256px logo, which is too
  * small for a summary_large_image card. Colors mirror lib/brand.ts.
  */
-export const alt = "VELORA — on-chain agentic trading desk";
+export const alt = "AELIX — on-chain agentic trading desk";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -29,7 +29,7 @@ export default function OpengraphImage() {
           AGENTIC TRADING DESK
         </div>
         <div style={{ display: "flex", fontSize: 172, fontWeight: 800, letterSpacing: -6, marginTop: 8 }}>
-          VELORA
+          AELIX
         </div>
         <div style={{ display: "flex", fontSize: 34, marginTop: 20, color: "#9AA3A0" }}>
           On-chain · human-in-the-loop · testnet preview

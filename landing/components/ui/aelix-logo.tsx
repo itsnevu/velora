@@ -1,6 +1,6 @@
-/** The unified Velora mark — geometric V + diamond (same family as the favicon
+/** The unified Aelix mark — geometric V + diamond (same family as the favicon
  *  and the app/vault headers): charcoal mark on a chartreuse rounded tile. */
-export function VeloraLogo({ size = 34, className }: { size?: number; className?: string }) {
+export function AelixLogo({ size = 34, className }: { size?: number; className?: string }) {
   return (
     <span
       className={className}

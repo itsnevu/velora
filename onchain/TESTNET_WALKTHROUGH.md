@@ -1,4 +1,4 @@
-# Deploy Velora ke Robinhood Chain Testnet — Panduan Langkah demi Langkah
+# Deploy Aelix ke Robinhood Chain Testnet — Panduan Langkah demi Langkah
 
 Dua level:
 - **Level 1 (bisa SEKARANG):** deploy **stack demo** (`Deploy.s.sol`) yang bawa mock

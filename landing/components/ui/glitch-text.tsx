@@ -4,8 +4,8 @@ import { cn } from "@/lib/cn";
  * GlitchText — RGB-split pixel glitch (red/mint ghost slices) on a piece of
  * text. Pure CSS (see .glitch in globals.css), server-component safe.
  *
- *   <GlitchText text="VELORA" />                 → glitches on hover
- *   <GlitchText text="VELORA" mode="always" />   → periodic ambient bursts
+ *   <GlitchText text="AELIX" />                 → glitches on hover
+ *   <GlitchText text="AELIX" mode="always" />   → periodic ambient bursts
  *
  * Wrap it in the original element: <h2><GlitchText text="..." /></h2>.
  */

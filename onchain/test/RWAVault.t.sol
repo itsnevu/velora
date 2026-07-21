@@ -45,7 +45,7 @@ contract RWAVaultTest is Test {
 
         vault = new RWAVault(
             IERC20(address(usdg)),
-            "Velora RWA Vault",
+            "Aelix RWA Vault",
             "vRWA",
             HUMAN,
             cfg,

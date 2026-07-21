@@ -17,7 +17,7 @@ import { GuardrailConfig } from "./GuardrailConfig.sol";
 import { IPriceOracle, ISwapAdapter } from "./interfaces/IVaultPeriphery.sol";
 
 /// @title RWAVault
-/// @author Velora
+/// @author Aelix
 /// @notice A non-custodial, AI-managed ERC-4626 vault for tokenized real-world
 ///         assets (Robinhood Chain Stock Tokens). Depositors provide USDG and hold
 ///         vault shares; the desk `manager` rebalances the book — but EVERY trade

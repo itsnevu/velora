@@ -3,7 +3,7 @@ import type { DocContent } from "./types";
 export const content: DocContent = {
   title: "FAQ",
   description:
-    "Straight answers to the questions that matter first — scope, safety, cost of failure, and what Velora is not.",
+    "Straight answers to the questions that matter first — scope, safety, cost of failure, and what Aelix is not.",
   eyebrow: "15 — FAQ",
   blocks: [
     {
@@ -12,7 +12,7 @@ export const content: DocContent = {
     },
     {
       type: "heading",
-      text: "Can Velora place trades on its own?",
+      text: "Can Aelix place trades on its own?",
     },
     {
       type: "prose",
@@ -36,11 +36,11 @@ export const content: DocContent = {
     },
     {
       type: "heading",
-      text: "What about crypto and the $VLRA / $VELORA token?",
+      text: "What about crypto and the $VLRA / $AELIX token?",
     },
     {
       type: "prose",
-      md: "Crypto trading isn't supported by the underlying beta. The `$VELORA` / `$VLRA` token is an **out-of-scope, aspirational, testnet-first roadmap idea** — a Web3 experiment, **not** an investment product, and **not implemented** anywhere in this repo. There is no blockchain, RPC, wallet, or token code here. It is gated behind legal/securities review. See [Safety & Disclaimer](/docs/disclaimer).",
+      md: "Crypto trading isn't supported by the underlying beta. The `$AELIX` / `$VLRA` token is an **out-of-scope, aspirational, testnet-first roadmap idea** — a Web3 experiment, **not** an investment product, and **not implemented** anywhere in this repo. There is no blockchain, RPC, wallet, or token code here. It is gated behind legal/securities review. See [Safety & Disclaimer](/docs/disclaimer).",
     },
     {
       type: "heading",
@@ -56,7 +56,7 @@ export const content: DocContent = {
     },
     {
       type: "prose",
-      md: "**No.** Velora is a research tool and reference architecture. There is no track record and no performance claim anywhere in the project — all example data is illustrative. Every investment decision, and all the risk, is yours. Use only risk capital.",
+      md: "**No.** Aelix is a research tool and reference architecture. There is no track record and no performance claim anywhere in the project — all example data is illustrative. Every investment decision, and all the risk, is yours. Use only risk capital.",
     },
     {
       type: "heading",
@@ -102,7 +102,7 @@ export const content: DocContent = {
       type: "callout",
       tone: "warn",
       title: "Still evaluating?",
-      md: "Velora is beta software against a beta broker product. Expect rough edges, verify the [MCP tool names](/docs/mcp) yourself, keep your budget small, and monitor every run. Read the [Safety & Disclaimer](/docs/disclaimer) before you fund anything.",
+      md: "Aelix is beta software against a beta broker product. Expect rough edges, verify the [MCP tool names](/docs/mcp) yourself, keep your budget small, and monitor every run. Read the [Safety & Disclaimer](/docs/disclaimer) before you fund anything.",
     },
   ],
 };

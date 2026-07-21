@@ -106,7 +106,7 @@ export function StatsStrip() {
             </h2>
           </div>
           <p>
-            Velora is a small team of specialist AI analysts that screen your watchlist, debate every
+            Aelix is a small team of specialist AI analysts that screen your watchlist, debate every
             candidate, and hand you a one-click preview. You approve. It places. Never the other way around.
           </p>
         </div>

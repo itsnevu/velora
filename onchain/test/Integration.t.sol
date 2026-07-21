@@ -10,7 +10,7 @@ import { DeskRegistry } from "../src/DeskRegistry.sol";
 import { PerfScore } from "../src/PerfScore.sol";
 import { RWAVault } from "../src/RWAVault.sol";
 import { SessionKeyExecutor } from "../src/SessionKeyExecutor.sol";
-import { VeloraAutosave } from "../src/VeloraAutosave.sol";
+import { AelixAutosave } from "../src/AelixAutosave.sol";
 import { IPriceOracle, ISwapAdapter } from "../src/interfaces/IVaultPeriphery.sol";
 import { MockERC20, MockOracle, MockSwapAdapter } from "../src/mocks/Mocks.sol";
 
@@ -27,7 +27,7 @@ contract IntegrationTest is Test {
     PerfScore perf;
     RWAVault vault;
     SessionKeyExecutor exec;
-    VeloraAutosave save;
+    AelixAutosave save;
 
     address HUMAN = address(0xB00D);
     address AGENT = address(0xA6E7);
@@ -37,7 +37,7 @@ contract IntegrationTest is Test {
     function setUp() public {
         vm.warp(2_000_000_000);
         usdg = new MockERC20("USD Global", "USDG");
-        stk = new MockERC20("Velora Demo Stock", "vNVDA");
+        stk = new MockERC20("Aelix Demo Stock", "vNVDA");
         oracle = new MockOracle();
         oracle.setPrice(address(stk), 50e18);
         adapter = new MockSwapAdapter(oracle);
@@ -59,7 +59,7 @@ contract IntegrationTest is Test {
 
         vault = new RWAVault(
             IERC20(address(usdg)),
-            "Velora RWA Vault",
+            "Aelix RWA Vault",
             "vVLRA",
             HUMAN,
             cfg,
@@ -68,7 +68,7 @@ contract IntegrationTest is Test {
             address(0)
         );
         exec = new SessionKeyExecutor(vault, HUMAN);
-        save = new VeloraAutosave(vault);
+        save = new AelixAutosave(vault);
 
         vm.startPrank(HUMAN);
         vault.allowToken(address(stk));
@@ -85,7 +85,7 @@ contract IntegrationTest is Test {
 
         // Canonical, squat-proof subject: derived from the attester (this test) + label.
         subject = registry.subjectFor(
-            address(this), keccak256(abi.encodePacked("velora-vault:", address(vault)))
+            address(this), keccak256(abi.encodePacked("aelix-vault:", address(vault)))
         );
     }
 
@@ -129,7 +129,7 @@ contract IntegrationTest is Test {
         // --- 5. Desk attests the run series -> verifiable track record ---
         // Use the squat-proof self-namespace (the surface PerfScore reads); label matches
         // the derivation of `subject` above.
-        bytes32 label = keccak256(abi.encodePacked("velora-vault:", address(vault)));
+        bytes32 label = keccak256(abi.encodePacked("aelix-vault:", address(vault)));
         registry.attestSelf(label, 1, 10_000e18, 0, keccak256("d1"), "");
         registry.attestSelf(label, 2, 10_100e18, 50e18, keccak256("d2"), "");
         registry.attestSelf(label, 3, vault.navUsdg(), 100e18, keccak256("d3"), "");

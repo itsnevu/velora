@@ -36,7 +36,7 @@ export function BootOverlay() {
             shifts that burst to ~1.42s wall-clock — right as the boot bar
             fills and just before the overlay lifts at 1.65s. */}
         <GlitchText
-          text="VELORA"
+          text="AELIX"
           mode="always"
           className="[&::before]:[animation-delay:-1.75s] [&::after]:[animation-delay:-1.75s]"
         />

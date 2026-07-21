@@ -1,5 +1,5 @@
 /**
- * VELORA pixel palette — the ROBIN DROIDS lime flood, inverted from Halon.
+ * AELIX pixel palette — the ROBIN DROIDS lime flood, inverted from Halon.
  * These mirror the tokens in app/globals.css. This module exists because SVG
  * fill/stroke and <canvas> cannot read CSS custom properties reliably.
  */

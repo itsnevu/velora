@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════════════
-   VELORA — cinematic scroll-scrubbed homepage.
+   AELIX — cinematic scroll-scrubbed homepage.
    Bright painterly 3D world behind; thin serif display type in front.
    Scoped under .vx-root; overrides the site's lime-flood body while mounted.
    Fonts come from the root layout: --font-serif (Cormorant Garamond),
@@ -39,16 +39,15 @@ body:has(.vx-root)::after {
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  opacity: 0;
-  animation: vx-bg-in 1.6s 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  /* No separate fade-in. The world builds behind the opaque preloader, which
+     then crossfades away to reveal an already-painted scene (see .vx-preload) —
+     one clean handoff instead of a half-loaded world showing through. */
+  opacity: 1;
 }
 .vx-bg canvas {
   display: block;
   width: 100% !important;
   height: 100% !important;
-}
-@keyframes vx-bg-in {
-  to { opacity: 1; }
 }
 /* faint vignette — the scene is bright, keep it airy */
 .vx-veil {
@@ -432,6 +431,9 @@ body:has(.vx-root)::after {
 
 .vx-hero-title {
   position: relative;
+  /* the wordmark reveals crisper than body copy so it never smears into a dim
+     grey blob mid-blur — it should read luminous the instant it appears */
+  --rb: 0.12em;
   font-family: var(--font-serif), Georgia, serif;
   font-weight: 300;
   font-size: clamp(4.2rem, 19vw, 16rem);
@@ -444,13 +446,17 @@ body:has(.vx-root)::after {
    Clip lives on the per-char spans so each revealed letter is lit; we glow
    with text-shadow (not filter) so the reveal's blur-in stays untouched. */
 .vx-hero-title .vx-reveal {
-  background: linear-gradient(180deg, #ffffff 0%, var(--white) 44%, rgba(190, 210, 200, 0.82) 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+  /* SOLID bright fill — no transparent gradient-clip, which could read dim or
+     embossed mid-blur. A hard dark halo keeps every stroke crisp on the bright
+     world; a lime glow makes the wordmark read as luminous light, never dark. */
+  color: #ffffff;
+  -webkit-text-fill-color: #ffffff;
   text-shadow:
-    0 0 46px rgba(215, 254, 81, 0.22),
-    0 2px 22px rgba(0, 0, 0, 0.5);
+    0 0 24px rgba(233, 255, 134, 0.45),   /* luminous lime halo — reads as glowing light */
+    0 0 64px rgba(215, 254, 81, 0.28),
+    0 1px 2px rgba(6, 8, 10, 0.95),
+    0 2px 12px rgba(6, 8, 10, 0.85),
+    0 6px 32px rgba(6, 8, 10, 0.6);
 }
 .vx-title {
   font-family: var(--font-serif), Georgia, serif;
@@ -784,7 +790,7 @@ body:has(.vx-root)::after {
 /* ── reveal animations (blur-in on entry) ─────────────────────────────── */
 .vx-reveal {
   opacity: 0;
-  filter: blur(0.24em);
+  filter: blur(var(--rb, 0.24em));
   transform: translateY(0.44em);
   transition:
     opacity 1.05s cubic-bezier(0.16, 1, 0.3, 1),
@@ -817,7 +823,7 @@ body:has(.vx-root)::after {
    sticky approach, and never behind the preloader) */
 .vx-sec__inner:not(.vx-live) .vx-reveal {
   opacity: 0;
-  filter: blur(0.24em);
+  filter: blur(var(--rb, 0.24em));
   transform: translateY(0.44em);
   transition: none;
 }
@@ -859,7 +865,9 @@ body:has(.vx-root)::after {
   bottom: 16%;
   height: auto;
   transform: none;
-  background: radial-gradient(56% 50% at 50% 50%, rgba(14, 16, 19, 0.62), rgba(14, 16, 19, 0.34) 58%, transparent 78%);
+  background:
+    radial-gradient(48% 40% at 50% 46%, rgba(10, 12, 15, 0.82), rgba(10, 12, 15, 0.5) 52%, transparent 74%),
+    radial-gradient(60% 52% at 50% 50%, rgba(10, 12, 15, 0.42), transparent 72%);
 }
 /* layered dark shadows — serif stays legible on pure chartreuse */
 .vx-hero-title,

@@ -8,7 +8,7 @@ export const content: DocContent = {
   blocks: [
     {
       type: "prose",
-      md: "Velora's safety is **structural, not vibes.** The desk does not stay in bounds because a prompt politely asks it to — it stays in bounds because the boundaries are enforced by files that sit *outside* the agent's reach. Two of them do the heavy lifting: [`CLAUDE.md`](/docs/guardrails), the Portfolio Manager's written operating contract, and [`.claude/settings.json`](/docs/configuration), the tool-permission gate that Claude Code applies to every single tool call.",
+      md: "Aelix's safety is **structural, not vibes.** The desk does not stay in bounds because a prompt politely asks it to — it stays in bounds because the boundaries are enforced by files that sit *outside* the agent's reach. Two of them do the heavy lifting: [`CLAUDE.md`](/docs/guardrails), the Portfolio Manager's written operating contract, and [`.claude/settings.json`](/docs/configuration), the tool-permission gate that Claude Code applies to every single tool call.",
     },
     {
       type: "prose",
@@ -288,7 +288,7 @@ claude mcp remove robinhood-trading`,
         ],
       },
       right: {
-        title: "Velora's structural guardrails",
+        title: "Aelix's structural guardrails",
         tone: "good",
         rows: [
           "Rules live in files outside the agent's reach",

@@ -19,7 +19,7 @@ interface IUniswapV2Router {
 }
 
 /// @title UniswapSwapAdapter
-/// @author Velora
+/// @author Aelix
 /// @notice Production {ISwapAdapter} over a Uniswap-V2-style router on Robinhood
 ///         Chain (Uniswap / Pleiades). The narrow, typed surface means the vault's
 ///         `manager` can only ever route a swap through this fixed router — never an

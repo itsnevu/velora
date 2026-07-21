@@ -4,7 +4,7 @@ pragma solidity ^0.8.28;
 import { Guardrails } from "./libraries/Guardrails.sol";
 
 /// @title GuardrailConfig
-/// @author Velora
+/// @author Aelix
 /// @notice Human-owned, on-chain store of the desk risk caps. This is the literal
 ///         contract from `CLAUDE.md`:
 ///

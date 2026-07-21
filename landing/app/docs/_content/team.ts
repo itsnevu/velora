@@ -8,7 +8,7 @@ export const content: DocContent = {
   blocks: [
     {
       type: "prose",
-      md: "Velora runs as a small team of specialist sub-agents coordinated by a **Portfolio Manager (PM)** — the **main Claude Code session you talk to**. The PM senses the account, fans the analysts out in parallel, routes their findings through the Risk Manager, and comes back to you with a preview. Per [`CLAUDE.md`](/docs/guardrails), the PM is the **only** role that can place an order, and it places nothing without your explicit in-session approval.",
+      md: "Aelix runs as a small team of specialist sub-agents coordinated by a **Portfolio Manager (PM)** — the **main Claude Code session you talk to**. The PM senses the account, fans the analysts out in parallel, routes their findings through the Risk Manager, and comes back to you with a preview. Per [`CLAUDE.md`](/docs/guardrails), the PM is the **only** role that can place an order, and it places nothing without your explicit in-session approval.",
     },
     {
       type: "prose",

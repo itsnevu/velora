@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { getLenis } from "@/lib/lenis-store";
 import { Reveal, RevealLines, RevealChars } from "@/components/vx/reveal-text";
@@ -9,7 +9,7 @@ import "./vx.css";
 
 const Diorama = dynamic(() => import("@/components/vx/diorama"), { ssr: false });
 
-/* Velora "V" mark */
+/* Aelix "V" mark */
 function VMark({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 32 32" className={className} xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -91,10 +91,14 @@ function useScrollChoreography(enabled: boolean) {
         const p = total > 0 ? Math.min(1, Math.max(0, -r.top / total)) : 0.5;
 
         // content drifts up through its act; eases in/out at the seams
-        const drift = (p - 0.5) * -72;
-        const fadeIn = i === 0 ? 1 : Math.min(1, p / 0.14);
-        const fadeOut = Math.min(1, (1 - p) / 0.14);
-        const o = Math.max(0, Math.min(fadeIn, fadeOut));
+        const drift = (p - 0.5) * -46; // gentler travel — calmer read
+        // narrow fade edges + wide plateau → each act's copy HOLDS on screen much
+        // longer while scrolling instead of appearing and vanishing quickly
+        const F = 0.07;
+        const fadeIn = i === 0 ? 1 : Math.min(1, p / F);
+        const fadeOut = Math.min(1, (1 - p) / F);
+        let o = Math.max(0, Math.min(fadeIn, fadeOut));
+        o = o * o * (3 - 2 * o); // smoothstep — soft in/out, no abrupt pop
         const scale = i === 0 ? 1 - p * 0.06 : 1; // hero gently recedes
 
         inner.style.transform = `translate3d(0, ${drift.toFixed(2)}px, 0) scale(${scale.toFixed(4)})`;
@@ -135,27 +139,69 @@ function useCinematicLenis() {
 export default function HomePage() {
   const [pct, setPct] = useState(0);
   const [ready, setReady] = useState(false);
+  const [mount3d, setMount3d] = useState(false);
   const [active, setActive] = useState(0);
   const barRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLElement>(null);
+  // flipped true by the WebGL scene once it has actually painted its first frame
+  const sceneReady = useRef(false);
+  const handleSceneReady = useCallback(() => {
+    sceneReady.current = true;
+  }, []);
 
   useCinematicLenis();
   useScrollChoreography(ready);
 
-  // preloader count 0→100
+  // Mount the heavy WebGL scene (three.js eval + 12 procedural peaks + texture
+  // remap + shader compile) a beat AFTER the preloader has painted — so its
+  // synchronous init never delays the loader's own first frame. It then builds
+  // BEHIND the still-opaque preloader; we only lift the preloader once the scene
+  // has actually painted (see the honest counter below).
+  useEffect(() => {
+    const id = setTimeout(() => setMount3d(true), 220);
+    return () => clearTimeout(id);
+  }, []);
+
+  // Honest preloader. The counter eases up to ~90% during the intro, then HOLDS
+  // there while the world is still building — if it isn't loaded yet, we keep
+  // loading — and only completes to 100% (and lifts the veil) once the scene
+  // reports its first painted frame. A safety cap dismisses it if that signal
+  // never arrives, so a missing asset can't strand the page on the loader.
   useEffect(() => {
     let raf = 0;
     let start = 0;
-    const dur = 1500;
+    let cur = 0;
+    let settled = false;
+    let safety: ReturnType<typeof setTimeout> | undefined;
+    const MIN_MS = 900; // graceful floor, even on an instant/cached load
+    const finish = () => {
+      if (settled) return;
+      settled = true;
+      cancelAnimationFrame(raf);
+      if (safety) clearTimeout(safety);
+      setPct(100);
+      setTimeout(() => setReady(true), 260);
+    };
     const tick = (t: number) => {
       if (!start) start = t;
-      const p = Math.min(1, (t - start) / dur);
-      setPct(Math.round(p * 100));
-      if (p < 1) raf = requestAnimationFrame(tick);
-      else setTimeout(() => setReady(true), 300);
+      const elapsed = t - start;
+      // intro creep 0→90 (easeOut) over ~1200ms, then parked at 90
+      const introP = Math.min(1, elapsed / 1200);
+      const introTarget = 90 * (1 - Math.pow(1 - introP, 3));
+      const canFinish = sceneReady.current && elapsed >= MIN_MS;
+      const target = canFinish ? 100 : introTarget;
+      cur += (target - cur) * 0.12;
+      if (canFinish && cur > 99.3) return finish();
+      setPct(Math.round(cur));
+      raf = requestAnimationFrame(tick);
     };
+    // never strand the user on the loader if the scene never signals ready
+    safety = setTimeout(finish, 9000);
     raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
+    return () => {
+      cancelAnimationFrame(raf);
+      if (safety) clearTimeout(safety);
+    };
   }, []);
 
   // scroll progress + active section
@@ -196,8 +242,9 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* WebGL scene + veils */}
-      <Diorama />
+      {/* WebGL scene + veils — mounted behind the preloader, which lifts only
+          once the scene reports its first painted frame (see onReady) */}
+      {mount3d && <Diorama onReady={handleSceneReady} />}
       <div className="vx-veil" aria-hidden="true" />
       <div className="vx-grain" aria-hidden="true" />
 
@@ -206,9 +253,9 @@ export default function HomePage() {
 
       {/* header */}
       <header className="vx-header" ref={headerRef}>
-        <a className="vx-logo" href="/" aria-label="Velora home">
+        <a className="vx-logo" href="/" aria-label="Aelix home">
           <VMark />
-          <span>Velora</span>
+          <span>Aelix</span>
         </a>
         <nav className="vx-nav">
           <a className="vx-nav-link vx-nav-hide" href="/desk"><span>Desk</span></a>
@@ -249,7 +296,7 @@ export default function HomePage() {
             <span className="vx-eyebrow__tick" aria-hidden="true" />
             On-chain agentic desk · testnet
           </Reveal>
-          <RevealChars text="VELORA" as="h1" className="vx-hero-title" step={70} />
+          <RevealChars text="AELIX" as="h1" className="vx-hero-title" step={70} />
           <Reveal className="vx-sub vx-sub--hero" i={4} style={{ marginTop: "0.4em" }}>
             An AI trading desk that researches around the clock — and never trades without your yes.
           </Reveal>
@@ -402,13 +449,13 @@ export default function HomePage() {
 
       <footer className="vx-foot">
         <Reveal className="vx-kicker" i={0}>Approved by you. Executed with care.</Reveal>
-        <RevealChars text="Run with Velora" as="h2" className="vx-title" step={22} />
+        <RevealChars text="Run with Aelix" as="h2" className="vx-title" step={22} />
         <Reveal className="vx-cta-row" i={2}>
           <a className="vx-btn vx-btn-lime" href={VAULT_URL}><span>Launch the app</span><ArrowUpRight /></a>
           <a className="vx-btn vx-btn-glass" href="/docs"><span>Docs</span></a>
         </Reveal>
         <p className="vx-foot__legal">
-          <b>Not investment advice.</b> Velora is an agentic research tool for Robinhood
+          <b>Not investment advice.</b> Aelix is an agentic research tool for Robinhood
           Agentic (beta). The desk researches and proposes; every order requires explicit
           human approval in session. On-chain features — the Guardrails library, ERC-4626
           vault, on-chain attestations and agent executor — are testnet-first and not yet

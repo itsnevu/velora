@@ -5,7 +5,7 @@ import { GITHUB_URL } from "@/lib/links";
 export { GITHUB_URL };
 /**
  * Canonical origin for sitemap.xml, robots.txt, canonicals, OG and JSON-LD.
- * projectvex.ai is where the site is deployed (velora.ai is owned by an
+ * projectvex.ai is where the site is deployed (aelix.ai is owned by an
  * unrelated company); to move domains later, set NEXT_PUBLIC_SITE_URL.
  */
 export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.projectvex.ai").replace(/\/$/, "");

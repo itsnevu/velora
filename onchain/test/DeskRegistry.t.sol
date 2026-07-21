@@ -11,11 +11,11 @@ contract DeskRegistryTest is Test {
 
     address constant DESK = address(0xD35C);
     address constant IMPOSTER = address(0xBAD);
-    bytes32 constant SUBJECT = keccak256("velora-vault-1");
-    bytes32 constant SUBJECT_B = keccak256("velora-vault-2");
+    bytes32 constant SUBJECT = keccak256("aelix-vault-1");
+    bytes32 constant SUBJECT_B = keccak256("aelix-vault-2");
     // Labels for the squat-proof self-namespace (the canonical, PerfScore-facing path).
-    bytes32 constant LABEL = keccak256("velora-label-1");
-    bytes32 constant LABEL_B = keccak256("velora-label-2");
+    bytes32 constant LABEL = keccak256("aelix-label-1");
+    bytes32 constant LABEL_B = keccak256("aelix-label-2");
 
     function setUp() public {
         reg = new DeskRegistry();

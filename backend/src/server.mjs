@@ -1,4 +1,4 @@
-// server.mjs — Velora public backend entry point.
+// server.mjs — Aelix public backend entry point.
 import { createServer } from 'node:http'
 import { config, printBootWarnings } from './config.mjs'
 import { createRouter } from './lib/http.mjs'
@@ -25,7 +25,7 @@ const server = createServer((req, res) => {
 })
 
 server.listen(config.port, () => {
-  console.log(`✔ Velora backend on http://localhost:${config.port}  ·  broker=${config.brokerMode}  ·  coach=${services.coach.enabled ? 'on' : 'off'}`)
+  console.log(`✔ Aelix backend on http://localhost:${config.port}  ·  broker=${config.brokerMode}  ·  coach=${services.coach.enabled ? 'on' : 'off'}`)
 })
 
 function shutdown(sig) {

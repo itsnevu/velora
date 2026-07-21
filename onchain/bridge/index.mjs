@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-// Velora desk -> chain bridge.
+// Aelix desk -> chain bridge.
 //
-// Reads LIVE state from the deployed Velora contracts and writes the `onchain`
+// Reads LIVE state from the deployed Aelix contracts and writes the `onchain`
 // block into ui/public/desk-state.json — the exact block the dashboard's on-chain
 // panels (VaultPanel, GuardrailsOnChain, TrackRecord, ExecutorPanel, AutosavePanel)
 // already render. With --attest and a PRIVATE_KEY it also commits one desk-run

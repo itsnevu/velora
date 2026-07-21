@@ -6,8 +6,8 @@ import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.s
 import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import { RWAVault } from "./RWAVault.sol";
 
-/// @title VeloraAutosave
-/// @author Velora
+/// @title AelixAutosave
+/// @author Aelix
 /// @notice Consumer-facing recurring DCA into an {RWAVault}. A user sets a plan
 ///         ("save 10 USDG every week"), approves USDG once, and a permissionless
 ///         keeper triggers each contribution when due. Fully non-custodial: the
@@ -16,7 +16,7 @@ import { RWAVault } from "./RWAVault.sol";
 ///
 /// @dev    The vault's manager handles the actual Stock Token allocation; this
 ///         layer only smooths the user's *entry* by spreading deposits over time.
-contract VeloraAutosave is ReentrancyGuard {
+contract AelixAutosave is ReentrancyGuard {
     using SafeERC20 for IERC20;
 
     IERC20 public immutable usdg;

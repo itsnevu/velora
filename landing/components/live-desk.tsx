@@ -129,7 +129,7 @@ export function LiveDesk() {
               <span className="term-dot" />
               <span className="term-dot" style={{ background: "var(--warn)" }} />
               <span className="term-dot" style={{ background: "var(--green)" }} />
-              <span className="grow">velora@desk — run</span>
+              <span className="grow">aelix@desk — run</span>
             </div>
             <div className="term-body" ref={bodyRef} data-lenis-prevent>
               {phase === "idle" && lines.length === 0 && (

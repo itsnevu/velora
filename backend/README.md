@@ -1,6 +1,6 @@
-# Velora Backend — public, 24/7 agentic desk service
+# Aelix Backend — public, 24/7 agentic desk service
 
-A multi-tenant backend that runs the Velora desk **server-side** so it can be used
+A multi-tenant backend that runs the Aelix desk **server-side** so it can be used
 by many people at once, around the clock — pivoted to the safe, public-friendly
 concept: **Rule-Keeper + Portfolio X-Ray on the Robinhood Agentic network.**
 

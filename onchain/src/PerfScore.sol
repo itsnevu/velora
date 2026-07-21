@@ -5,7 +5,7 @@ import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { DeskRegistry } from "./DeskRegistry.sol";
 
 /// @title PerfScore
-/// @author Velora
+/// @author Aelix
 /// @notice Computes a verifiable performance summary from a desk's on-chain NAV
 ///         series in {DeskRegistry}. Everything is derived from attested data, so
 ///         the numbers cannot be inflated: total return, max drawdown, per-period

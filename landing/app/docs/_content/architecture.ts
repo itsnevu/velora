@@ -3,12 +3,12 @@ import type { DocContent } from "./types";
 export const content: DocContent = {
   title: "Architecture",
   description:
-    "How Velora is put together: a Claude-Code-native desk with no backend and no Python orchestrator — one main session, a folder of sub-agents, one MCP broker connection, and a JSON snapshot instead of a database.",
+    "How Aelix is put together: a Claude-Code-native desk with no backend and no Python orchestrator — one main session, a folder of sub-agents, one MCP broker connection, and a JSON snapshot instead of a database.",
   eyebrow: "04 — Architecture",
   blocks: [
     {
       type: "prose",
-      md: "Velora's architecture is **Claude-Code-native**. There is **no backend server** and **no Python orchestrator**. The **Portfolio Manager (PM)** is not a separate process — it *is* the main Claude Code session you talk to. It orchestrates a small team of sub-agents, reaches the broker through a single [MCP](/docs/mcp) server, and writes its results to a plain JSON file. That's the whole system.",
+      md: "Aelix's architecture is **Claude-Code-native**. There is **no backend server** and **no Python orchestrator**. The **Portfolio Manager (PM)** is not a separate process — it *is* the main Claude Code session you talk to. It orchestrates a small team of sub-agents, reaches the broker through a single [MCP](/docs/mcp) server, and writes its results to a plain JSON file. That's the whole system.",
     },
     {
       type: "prose",
@@ -212,7 +212,7 @@ export const content: DocContent = {
     },
     {
       type: "prose",
-      md: "Velora keeps no database. Its entire state is two kinds of file: a single **snapshot** the PM overwrites after each run, and an **append-only log** of what happened. That's enough to drive a live dashboard and a full audit trail without a server.",
+      md: "Aelix keeps no database. Its entire state is two kinds of file: a single **snapshot** the PM overwrites after each run, and an **append-only log** of what happened. That's enough to drive a live dashboard and a full audit trail without a server.",
     },
     {
       type: "deflist",
@@ -305,7 +305,7 @@ export const content: DocContent = {
     },
     {
       type: "heading",
-      text: "What Velora deliberately does not use",
+      text: "What Aelix deliberately does not use",
     },
     {
       type: "prose",
@@ -343,7 +343,7 @@ export const content: DocContent = {
         ],
       },
       right: {
-        title: "What Velora actually is",
+        title: "What Aelix actually is",
         tone: "good",
         rows: [
           "One Claude Code session as the PM",

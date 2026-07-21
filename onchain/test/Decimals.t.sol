@@ -46,7 +46,7 @@ contract DecimalsTest is Test {
         );
         vault = new RWAVault(
             IERC20(address(usdg)),
-            "Velora RWA Vault",
+            "Aelix RWA Vault",
             "vVLRA",
             HUMAN,
             cfg,

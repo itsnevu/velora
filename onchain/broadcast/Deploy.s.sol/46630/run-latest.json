@@ -91,7 +91,7 @@
       "contractAddress": "0x4b36e23baf35fb9b423695db69848bf4f78e4f2c",
       "function": null,
       "arguments": [
-        "Velora Demo Stock",
+        "Aelix Demo Stock",
         "vNVDA"
       ],
       "transaction": {
@@ -176,7 +176,7 @@
       "function": null,
       "arguments": [
         "0xB9076a53Adade773fE1915540859E3d75Ed7b993",
-        "Velora RWA Vault",
+        "Aelix RWA Vault",
         "vVLRA",
         "0xCCA7Cc4C13a3678dE18Faba705914126dFda6286",
         "0x7Ab7a94200153C473Fc35F413407aedA60D30E5b",
@@ -221,7 +221,7 @@
     {
       "hash": "0xf02eb6a161b7fc85ea6c3ad716bea5ba4161b482ff791bd5eab0a4834eba4091",
       "transactionType": "CREATE",
-      "contractName": "VeloraAutosave",
+      "contractName": "AelixAutosave",
       "contractAddress": "0x8e0acac14594346053809837c1432f522ae044b0",
       "function": null,
       "arguments": [

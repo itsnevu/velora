@@ -1,6 +1,6 @@
 <div align="center">
 
-# ◤ VELORA ◢
+# ◤ AELIX ◢
 
 ### Agentic AI Equity Research Desk
 
@@ -18,13 +18,13 @@ connect to a Robinhood Agentic account over MCP, and never place an order withou
 
 ---
 
-Velora isn't a bot that YOLOs your money. It's a small **desk of specialized sub-agents**
+Aelix isn't a bot that YOLOs your money. It's a small **desk of specialized sub-agents**
 — fundamental, technical, macro/news, and a **risk manager with veto power** — that screen
 your watchlist, debate each candidate, and hand you a one-click **preview card**. You
 approve; it places. Everything is wrapped in written guardrails (human-in-the-loop,
 position caps, prompt-injection defense) and mirrored to a Robinhood-style dashboard.
 
-![Velora — the desk dashboard](docs/demo.jpeg)
+![Aelix — the desk dashboard](docs/demo.jpeg)
 
 > [!WARNING]
 > **Real money, beta, not investment advice.** Robinhood Agentic Trading is in beta
@@ -176,7 +176,7 @@ The complete, browsable docs live at **[projectvex.ai/docs](https://www.projectv
 
 | | |
 |---|---|
-| [Overview](https://www.projectvex.ai/docs) | What Velora is and the core idea |
+| [Overview](https://www.projectvex.ai/docs) | What Aelix is and the core idea |
 | [Quickstart](https://www.projectvex.ai/docs/quickstart) · [Setup](https://www.projectvex.ai/docs/setup) | From clone to first desk run |
 | [Architecture](https://www.projectvex.ai/docs/architecture) · [The Desk Team](https://www.projectvex.ai/docs/team) · [The Desk Run](https://www.projectvex.ai/docs/workflow) | How it works |
 | [Guardrails](https://www.projectvex.ai/docs/guardrails) · [Prompt-Injection Defense](https://www.projectvex.ai/docs/prompt-injection) · [Strategies & Risk](https://www.projectvex.ai/docs/strategies) | Safety |
@@ -191,7 +191,7 @@ cd landing && npm install && npm run dev   # http://localhost:5190  (docs at /do
 
 ## Disclaimer
 
-Velora is a **research & recommendation tool, not financial advice**. Robinhood Agentic
+Aelix is a **research & recommendation tool, not financial advice**. Robinhood Agentic
 Trading is in beta (US, equities only). The desk trades only inside an isolated Agentic
 account funded with a dedicated budget — that budget is the most it can ever lose. **There
 is no track record and no performance claim here**; all example data is illustrative. All
@@ -201,6 +201,6 @@ implemented** — see [Safety & Disclaimer](https://www.projectvex.ai/docs/discl
 
 <div align="center">
 
-**[github.com/itsnevu/velora](https://github.com/itsnevu/velora)** · Built on Claude Code + Robinhood Agentic · MIT License
+**[github.com/itsnevu/aelix](https://github.com/itsnevu/aelix)** · Built on Claude Code + Robinhood Agentic · MIT License
 
 </div>

@@ -2,8 +2,8 @@
 pragma solidity ^0.8.28;
 
 /// @title Guardrails
-/// @author Velora
-/// @notice Pure, on-chain encoding of the Velora desk risk rules defined in
+/// @author Aelix
+/// @notice Pure, on-chain encoding of the Aelix desk risk rules defined in
 ///         `strategies/README.md` and `CLAUDE.md`. These are the SAME caps the
 ///         off-chain Risk Manager enforces — the difference is that here an agent
 ///         *cannot* bypass them: a violating order is rejected at the protocol

@@ -11,12 +11,12 @@ import { DeskRegistry } from "../src/DeskRegistry.sol";
 import { PerfScore } from "../src/PerfScore.sol";
 import { RWAVault } from "../src/RWAVault.sol";
 import { SessionKeyExecutor } from "../src/SessionKeyExecutor.sol";
-import { VeloraAutosave } from "../src/VeloraAutosave.sol";
+import { AelixAutosave } from "../src/AelixAutosave.sol";
 import { ChainlinkOracleAdapter } from "../src/ChainlinkOracleAdapter.sol";
 import { UniswapSwapAdapter } from "../src/UniswapSwapAdapter.sol";
 
 /// @title DeployProduction — real Robinhood Chain deploy (no mocks, no seeding)
-/// @notice Deploys the full Velora stack against REAL periphery addresses supplied
+/// @notice Deploys the full Aelix stack against REAL periphery addresses supplied
 ///         via env, wires a Chainlink oracle feed per Stock Token, sets the executor
 ///         as the vault manager, and persists addresses for the bridge.
 ///
@@ -44,7 +44,7 @@ contract DeployProduction is Script {
         UniswapSwapAdapter swap;
         RWAVault vault;
         SessionKeyExecutor exec;
-        VeloraAutosave save;
+        AelixAutosave save;
     }
 
     struct Cfg {
@@ -102,7 +102,7 @@ contract DeployProduction is Script {
         s.swap = new UniswapSwapAdapter(c.router, c.hop, c.owner);
         s.vault = new RWAVault(
             IERC20(c.usdg),
-            "Velora RWA Vault",
+            "Aelix RWA Vault",
             "vVLRA",
             c.owner,
             s.cfg,
@@ -111,7 +111,7 @@ contract DeployProduction is Script {
             address(0)
         );
         s.exec = new SessionKeyExecutor(s.vault, c.owner);
-        s.save = new VeloraAutosave(s.vault);
+        s.save = new AelixAutosave(s.vault);
     }
 
     function _wire(Stack memory s, Cfg memory c) internal {
@@ -154,7 +154,7 @@ contract DeployProduction is Script {
     }
 
     function _report(Stack memory s, Cfg memory c) internal pure {
-        console2.log("=============== Velora PRODUCTION deploy ===============");
+        console2.log("=============== Aelix PRODUCTION deploy ===============");
         console2.log("owner            ", c.owner);
         console2.log("USDG             ", c.usdg);
         console2.log("router           ", c.router);
@@ -165,13 +165,13 @@ contract DeployProduction is Script {
         console2.log("UniswapSwap      ", address(s.swap));
         console2.log("RWAVault (vVLRA) ", address(s.vault));
         console2.log("SessionKeyExec   ", address(s.exec));
-        console2.log("VeloraAutosave   ", address(s.save));
+        console2.log("AelixAutosave   ", address(s.save));
         console2.log("stocks allowlisted", c.stocks.length);
         console2.log("=======================================================");
     }
 
     function _persist(Stack memory s) internal {
-        string memory o = "velora";
+        string memory o = "aelix";
         vm.serializeUint(o, "chainId", block.chainid);
         vm.serializeAddress(o, "guardrailConfig", address(s.cfg));
         vm.serializeAddress(o, "deskRegistry", address(s.registry));
@@ -182,7 +182,7 @@ contract DeployProduction is Script {
         vm.serializeAddress(o, "executor", address(s.exec));
         vm.serializeAddress(o, "autosave", address(s.save));
         string memory out = vm.serializeBytes32(
-            o, "subject", keccak256(abi.encodePacked("velora-vault:", address(s.vault)))
+            o, "subject", keccak256(abi.encodePacked("aelix-vault:", address(s.vault)))
         );
         vm.writeJson(out, "./deployments/latest.json");
     }

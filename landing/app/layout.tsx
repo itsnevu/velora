@@ -18,12 +18,12 @@ const serif = Cormorant_Garamond({
 });
 const sans = Instrument_Sans({ weight: ["400", "500", "600"], subsets: ["latin"], variable: "--font-sans", display: "swap" });
 
-const TITLE = "VELORA";
+const TITLE = "AELIX";
 const DESC =
-  "VELORA — on-chain agentic trading desk. Testnet preview.";
+  "AELIX — on-chain agentic trading desk. Testnet preview.";
 
 // Favicons come from the file-based metadata convention: app/icon.png + app/apple-icon.png
-// (the Velora "V" mark). The 1200×630 social card comes from app/opengraph-image.tsx —
+// (the Aelix "V" mark). The 1200×630 social card comes from app/opengraph-image.tsx —
 // both are injected by Next automatically, so no images are listed here.
 
 export const metadata: Metadata = {
@@ -31,16 +31,16 @@ export const metadata: Metadata = {
   // "./" resolves per-route against metadataBase → every page gets a
   // self-referencing canonical without per-page boilerplate.
   alternates: { canonical: "./" },
-  title: { default: TITLE, template: "%s · VELORA" },
+  title: { default: TITLE, template: "%s · AELIX" },
   description: DESC,
-  applicationName: "VELORA",
-  keywords: ["Velora", "agentic AI", "trading desk", "on-chain", "RWA vault", "Robinhood Chain", "multi-agent", "human-in-the-loop"],
+  applicationName: "AELIX",
+  keywords: ["Aelix", "agentic AI", "trading desk", "on-chain", "RWA vault", "Robinhood Chain", "multi-agent", "human-in-the-loop"],
   robots: {
     index: true,
     follow: true,
     googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1, "max-video-preview": -1 },
   },
-  openGraph: { title: TITLE, description: DESC, type: "website", siteName: "VELORA", url: SITE_URL, locale: "en_US" },
+  openGraph: { title: TITLE, description: DESC, type: "website", siteName: "AELIX", url: SITE_URL, locale: "en_US" },
   twitter: { card: "summary_large_image", title: TITLE, description: DESC },
 };
 
@@ -51,15 +51,15 @@ const ORG_JSONLD = {
     {
       "@type": "Organization",
       "@id": `${SITE_URL}/#org`,
-      name: "Velora",
+      name: "Aelix",
       url: SITE_URL,
-      logo: `${SITE_URL}/velora-logo.png`,
-      sameAs: ["https://github.com/itsnevu/velora"],
+      logo: `${SITE_URL}/aelix-logo.png`,
+      sameAs: ["https://github.com/itsnevu/aelix"],
     },
     {
       "@type": "WebSite",
       "@id": `${SITE_URL}/#website`,
-      name: "VELORA",
+      name: "AELIX",
       description: DESC,
       url: SITE_URL,
       publisher: { "@id": `${SITE_URL}/#org` },
