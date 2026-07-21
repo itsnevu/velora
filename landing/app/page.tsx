@@ -9,13 +9,17 @@ import "./vx.css";
 
 const Diorama = dynamic(() => import("@/components/vx/diorama"), { ssr: false });
 
-/* Aelix "V" mark */
+/* Aelix mark — the chartreuse AX monogram tile, shared by the header, preloader
+   and section marks (same asset as the favicon). */
 function VMark({ className }: { className?: string }) {
   return (
-    <svg viewBox="0 0 32 32" className={className} xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-      <path d="M4 6 L16 27 L28 6 L22.6 6 L16 17.4 L9.4 6 Z" />
-      <rect x="13.4" y="2.2" width="5.2" height="5.2" rx="0.4" transform="rotate(45 16 4.8)" />
-    </svg>
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src="/aelix-mark.png"
+      alt="Aelix"
+      aria-hidden="true"
+      className={`vx-vmark ${className ?? ""}`}
+    />
   );
 }
 

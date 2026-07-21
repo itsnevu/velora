@@ -140,13 +140,15 @@ body:has(.vx-root)::after {
   fill: var(--white);
   text-shadow: 0 1px 12px rgba(0, 0, 0, 0.5);
 }
-.vx-logo svg {
-  width: 24px;
-  height: 24px;
-  transition: fill 0.3s var(--ease), filter 0.3s var(--ease), transform 0.4s var(--ease);
+.vx-logo .vx-vmark {
+  width: 26px;
+  height: 26px;
+  display: block;
+  border-radius: 6px;
+  object-fit: cover;
+  transition: filter 0.3s var(--ease), transform 0.4s var(--ease);
 }
-.vx-logo:hover svg {
-  fill: var(--leaf);
+.vx-logo:hover .vx-vmark {
   filter: drop-shadow(0 0 12px rgba(215, 254, 81, 0.6));
   transform: rotate(-6deg);
 }
@@ -517,11 +519,13 @@ body:has(.vx-root)::after {
   backdrop-filter: blur(6px);
   border: 1px solid rgba(233, 243, 238, 0.18);
 }
-.vx-mark svg {
+.vx-mark .vx-vmark {
   position: relative;
-  width: 46%;
-  height: 46%;
-  fill: var(--white);
+  width: 54%;
+  height: 54%;
+  display: block;
+  border-radius: 12px;
+  object-fit: cover;
   filter: drop-shadow(0 0 22px rgba(215, 254, 81, 0.45));
 }
 
@@ -722,10 +726,12 @@ body:has(.vx-root)::after {
   place-items: center;
   position: relative;
 }
-.vx-preload__mark svg {
-  width: 46%;
-  height: 46%;
-  fill: #ECF2F0;
+.vx-preload__mark .vx-vmark {
+  width: 64%;
+  height: 64%;
+  display: block;
+  border-radius: 16px;
+  object-fit: cover;
   filter: drop-shadow(0 0 18px rgba(215, 254, 81, 0.35));
   animation: vx-pre-pulse 2.4s var(--ease) infinite;
 }
@@ -836,10 +842,10 @@ body:has(.vx-root)::after {
   /* keep the aurora glow present, just hold it still */
   .vx-veil::after { animation: none; }
   .vx-cue__line::after { animation: none; }
-  .vx-preload__mark svg { animation: none; }
+  .vx-preload__mark .vx-vmark { animation: none; }
   .vx-btn-lime::before { display: none; }
   .vx-header, .vx-btn, .vx-nav-cta, .vx-navdots__dot, .vx-navdots__label,
-  .vx-nav-link::after, .vx-logo svg { transition: none !important; }
+  .vx-nav-link::after, .vx-logo .vx-vmark { transition: none !important; }
 }
 
 /* ══════════ READABILITY PASS — copy always wins over the bright world ══════════ */
